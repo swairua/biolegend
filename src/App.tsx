@@ -7,6 +7,7 @@ import { useDatabaseDiagnostics } from "@/hooks/useDatabaseDiagnostics";
 import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ComprehensiveMigrationBanner } from "@/components/ComprehensiveMigrationBanner";
+import { SupabaseConnectionTest } from "@/components/SupabaseConnectionTest";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import Quotations from "./pages/Quotations";
