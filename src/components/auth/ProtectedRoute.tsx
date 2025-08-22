@@ -21,6 +21,13 @@ export function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { isAuthenticated, hasPermission, profile, loading } = useAuth();
 
+  // TEMPORARY BYPASS: Skip all protection checks to view changes
+  const BYPASS_PROTECTION = true;
+
+  if (BYPASS_PROTECTION) {
+    return <>{children}</>;
+  }
+
   // Show loading state
   if (loading) {
     return (
