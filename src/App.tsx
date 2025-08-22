@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ComprehensiveMigrationBanner } from "@/components/ComprehensiveMigrationBanner";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { autoMigrateIfNeeded } from "@/utils/executeMigrationNow";
 import Index from "./pages/Index";
 import Quotations from "./pages/Quotations";
 import Invoices from "./pages/Invoices";
@@ -39,6 +40,9 @@ const App = () => {
 
     // Log successful fix
     console.log('✅ App loaded without setState during render errors');
+
+    // Auto-check for missing tables and suggest migration
+    autoMigrateIfNeeded().catch(console.error);
   }, []);
 
   return (
