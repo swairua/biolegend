@@ -30,6 +30,7 @@ import TestLogin from "./pages/TestLogin";
 import SupabaseQuickFix from "./pages/SupabaseQuickFix";
 import ForceMigration from "./pages/ForceMigration";
 import AutoSetup from "./pages/AutoSetup";
+import EmailLoginFix from "./pages/EmailLoginFix";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -267,6 +268,10 @@ const App = () => {
           <Route
             path="/auto-setup"
             element={<AutoSetup />}
+          />
+          <Route
+            path="/email-login-fix"
+            element={<EmailLoginFix />}
           />
 
           {/* 404 Page */}
