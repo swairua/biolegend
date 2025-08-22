@@ -2,6 +2,7 @@ import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { DatabaseStatusBanner } from '@/components/DatabaseStatusBanner';
+import { EmergencyPaymentsFix } from '@/components/EmergencyPaymentsFix';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { downloadQuotationPDF } from '@/utils/pdfGenerator';
@@ -84,6 +85,9 @@ const Index = () => {
     <div className="space-y-6">
       {/* Database Status Banner */}
       <DatabaseStatusBanner />
+
+      {/* Emergency Payments Fix */}
+      <EmergencyPaymentsFix />
 
       {/* Page Header */}
       <div className="flex items-center justify-between">
