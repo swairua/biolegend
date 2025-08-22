@@ -10,6 +10,7 @@ import { autoExecuteComprehensiveMigration } from '@/utils/comprehensiveMigratio
 
 // Import test utilities (makes them available in console)
 import '@/utils/testMigration';
+import '@/utils/testAdminSignIn';
 
 const queryClient = new QueryClient();
 
