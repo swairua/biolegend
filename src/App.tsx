@@ -44,6 +44,9 @@ const App = () => {
       <Toaster />
       <Sonner />
       <ComprehensiveMigrationBanner />
+      <div className="fixed bottom-4 left-4 z-50">
+        <SupabaseConnectionTest />
+      </div>
       <Layout>
         <Routes>
           {/* Public/Dashboard Routes */}
