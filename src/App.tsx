@@ -42,6 +42,7 @@ const App = () => {
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <ComprehensiveMigrationBanner />
       <Layout>
         <Routes>
           {/* Public/Dashboard Routes */}
