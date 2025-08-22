@@ -5,6 +5,13 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import App from './App.tsx'
 import './index.css'
 
+// Force execute comprehensive migration on app start
+import { autoExecuteComprehensiveMigration } from '@/utils/comprehensiveMigration';
+
+// Import test utilities (makes them available in console)
+import '@/utils/testMigration';
+import '@/utils/testAdminSignIn';
+
 const queryClient = new QueryClient();
 
 createRoot(document.getElementById("root")!).render(

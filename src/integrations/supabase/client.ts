@@ -2,8 +2,27 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://klifzjcfnlaxminytmyh.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtsaWZ6amNmbmxheG1pbnl0bXloIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2ODg5NzcsImV4cCI6MjA3MTI2NDk3N30.kY9eVUh2hKZvOgixYTwggsznN4gD1ktNX4phXQ5TTdU";
+// Get environment variables with fallbacks
+const SUPABASE_URL = import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+                     import.meta.env.VITE_SUPABASE_URL ||
+                     "https://mfhcbgnkxpifbhrtmgbv.supabase.co";
+
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+                                import.meta.env.VITE_SUPABASE_ANON_KEY ||
+                                "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1maGNiZ25reHBpZmJocnRtZ2J2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU4NTUwODMsImV4cCI6MjA3MTQzMTA4M30.hmyg-_30qUXJMYT7WZewoqvwBYmUgQdlFotTj_qsFeE";
+
+// Validate that we have valid values
+if (!SUPABASE_URL || SUPABASE_URL === 'undefined') {
+  console.error('❌ SUPABASE_URL is not defined. Please check your environment variables.');
+  throw new Error('Supabase URL is required but not found in environment variables.');
+}
+
+if (!SUPABASE_PUBLISHABLE_KEY || SUPABASE_PUBLISHABLE_KEY === 'undefined') {
+  console.error('❌ SUPABASE_PUBLISHABLE_KEY is not defined. Please check your environment variables.');
+  throw new Error('Supabase publishable key is required but not found in environment variables.');
+}
+
+console.log('✅ Supabase client initializing with URL:', SUPABASE_URL.substring(0, 30) + '...');
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
