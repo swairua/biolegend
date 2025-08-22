@@ -25,6 +25,7 @@ import RemittanceAdvice from "./pages/RemittanceAdvice";
 import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import NotFound from "./pages/NotFound";
+import TestLogin from "./pages/TestLogin";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -226,23 +227,28 @@ const App = () => {
           />
 
           {/* Settings - Admin and specific role access */}
-          <Route 
-            path="/settings/company" 
+          <Route
+            path="/settings/company"
             element={
               <ProtectedRoute permission="manage_company">
                 <CompanySettings />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/settings/users" 
+          <Route
+            path="/settings/users"
             element={
               <ProtectedRoute permission="manage_users">
                 <UserManagement />
               </ProtectedRoute>
-            } 
+            }
           />
 
+          {/* Test & Debug Routes */}
+          <Route
+            path="/test-login"
+            element={<TestLogin />}
+          />
 
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
