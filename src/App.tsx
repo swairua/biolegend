@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ComprehensiveMigrationBanner } from "@/components/ComprehensiveMigrationBanner";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { autoMigrateIfNeeded } from "@/utils/executeMigrationNow";
 import Index from "./pages/Index";
 import Quotations from "./pages/Quotations";
 import Invoices from "./pages/Invoices";
@@ -25,6 +26,11 @@ import RemittanceAdvice from "./pages/RemittanceAdvice";
 import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import NotFound from "./pages/NotFound";
+import TestLogin from "./pages/TestLogin";
+import SupabaseQuickFix from "./pages/SupabaseQuickFix";
+import ForceMigration from "./pages/ForceMigration";
+import AutoSetup from "./pages/AutoSetup";
+import EmailLoginFix from "./pages/EmailLoginFix";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -36,6 +42,9 @@ const App = () => {
 
     // Log successful fix
     console.log('✅ App loaded without setState during render errors');
+
+    // Auto-check for missing tables and suggest migration
+    autoMigrateIfNeeded().catch(console.error);
   }, []);
 
   return (
@@ -226,23 +235,44 @@ const App = () => {
           />
 
           {/* Settings - Admin and specific role access */}
-          <Route 
-            path="/settings/company" 
+          <Route
+            path="/settings/company"
             element={
               <ProtectedRoute permission="manage_company">
                 <CompanySettings />
               </ProtectedRoute>
-            } 
+            }
           />
-          <Route 
-            path="/settings/users" 
+          <Route
+            path="/settings/users"
             element={
               <ProtectedRoute permission="manage_users">
                 <UserManagement />
               </ProtectedRoute>
-            } 
+            }
           />
 
+          {/* Test & Debug Routes */}
+          <Route
+            path="/test-login"
+            element={<TestLogin />}
+          />
+          <Route
+            path="/supabase-fix"
+            element={<SupabaseQuickFix />}
+          />
+          <Route
+            path="/force-migration"
+            element={<ForceMigration />}
+          />
+          <Route
+            path="/auto-setup"
+            element={<AutoSetup />}
+          />
+          <Route
+            path="/email-login-fix"
+            element={<EmailLoginFix />}
+          />
 
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />

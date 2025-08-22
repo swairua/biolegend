@@ -123,14 +123,25 @@ export function ComprehensiveMigrationBanner() {
           <div className="flex items-center gap-2">
             {/* Action buttons */}
             {!isRunning && !criticalTablesExist && (
-              <Button
-                onClick={executeMigration}
-                size="sm"
-                className="text-xs"
-              >
-                <Zap className="h-3 w-3 mr-1" />
-                Run Migration
-              </Button>
+              <>
+                <Button
+                  onClick={executeMigration}
+                  size="sm"
+                  className="text-xs"
+                >
+                  <Zap className="h-3 w-3 mr-1" />
+                  Run Migration
+                </Button>
+                <Button
+                  onClick={() => window.location.href = '/force-migration'}
+                  size="sm"
+                  variant="outline"
+                  className="text-xs"
+                >
+                  <Database className="h-3 w-3 mr-1" />
+                  Force All Tables
+                </Button>
+              </>
             )}
             
             {needsManualSQL && (
