@@ -307,6 +307,9 @@ export function ViewQuotationModal({
 
           {/* Footer */}
           <div className="text-center text-sm text-muted-foreground pt-6 border-t">
+            <div className="mb-3">
+              <p className="font-medium">We trust that you will look at this quote satisfactorily........, looking forward to the order. Thank you for Your business!</p>
+            </div>
             <div className="mb-2">
               <MedPlusLogo size="sm" showText={true} className="justify-center" />
             </div>
