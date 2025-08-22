@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { usePayments, useCompanies } from '@/hooks/useDatabase';
 import { generatePaymentReceiptPDF } from '@/utils/pdfGenerator';
+import { DatabaseConnectionTest } from '@/components/DatabaseConnectionTest';
 
 interface Payment {
   id: string;
@@ -177,6 +178,9 @@ export default function Payments() {
 
   return (
     <div className="space-y-6">
+      {/* Database Connection Test */}
+      <DatabaseConnectionTest />
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
