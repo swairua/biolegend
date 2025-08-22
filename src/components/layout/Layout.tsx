@@ -15,6 +15,28 @@ export function Layout({ children }: LayoutProps) {
 
   console.log('🔍 Layout render - loading:', loading, 'isAuthenticated:', isAuthenticated);
 
+  // TEMPORARY BYPASS: Skip authentication to view changes
+  const BYPASS_AUTH = true;
+
+  if (BYPASS_AUTH) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <Header />
+          <main className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                ⚠️ Authentication bypassed for demo purposes. Navigate to Invoices to see footer changes.
+              </p>
+            </div>
+            {children}
+          </main>
+        </div>
+      </div>
+    );
+  }
+
   // Show simple login for non-authenticated users (only when not loading)
   if (!loading && !isAuthenticated) {
     return <EnhancedLogin />;
