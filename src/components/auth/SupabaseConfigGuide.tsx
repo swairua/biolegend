@@ -3,17 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Database, 
-  ExternalLink, 
-  Copy, 
-  CheckCircle, 
+import {
+  Database,
+  ExternalLink,
+  Copy,
+  CheckCircle,
   AlertTriangle,
   Settings,
   Users,
   Mail,
   Shield
 } from 'lucide-react';
+import { EmailLoginConfigGuide } from './EmailLoginConfigGuide';
 import { toast } from 'sonner';
 
 export function SupabaseConfigGuide() {
@@ -127,11 +128,14 @@ WHERE email = 'admin@biolegendscientific.co.ke';`;
             </Button>
           </div>
 
+          {/* Email Login Specific Guide */}
+          <EmailLoginConfigGuide />
+
           {/* Solution 1: Enable Email Signups */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Badge className="bg-green-100 text-green-800">Recommended</Badge>
-              <h3 className="text-lg font-semibold">Solution 1: Enable Email Authentication</h3>
+              <Badge className="bg-green-100 text-green-800">Alternative</Badge>
+              <h3 className="text-lg font-semibold">Alternative: General Email Authentication Steps</h3>
             </div>
 
             <Alert>
