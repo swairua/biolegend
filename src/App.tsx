@@ -26,6 +26,7 @@ import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import NotFound from "./pages/NotFound";
 import TestLogin from "./pages/TestLogin";
+import SupabaseQuickFix from "./pages/SupabaseQuickFix";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -248,6 +249,10 @@ const App = () => {
           <Route
             path="/test-login"
             element={<TestLogin />}
+          />
+          <Route
+            path="/supabase-fix"
+            element={<SupabaseQuickFix />}
           />
 
           {/* 404 Page */}
