@@ -29,6 +29,7 @@ import NotFound from "./pages/NotFound";
 import TestLogin from "./pages/TestLogin";
 import SupabaseQuickFix from "./pages/SupabaseQuickFix";
 import ForceMigration from "./pages/ForceMigration";
+import AutoSetup from "./pages/AutoSetup";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -262,6 +263,10 @@ const App = () => {
           <Route
             path="/force-migration"
             element={<ForceMigration />}
+          />
+          <Route
+            path="/auto-setup"
+            element={<AutoSetup />}
           />
 
           {/* 404 Page */}
