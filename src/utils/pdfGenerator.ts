@@ -811,7 +811,58 @@ export const generatePDF = (data: DocumentData) => {
         
         <!-- Footer -->
         <div class="footer">
-          ${data.type === 'quotation' ? '<strong>We trust that you will look at this quote satisfactorily........, looking forward to the order. Thank you for Your business!</strong>' : '<strong>Thank you for your business!</strong>'}<br>
+          ${data.type === 'quotation' ? '<strong>We trust that you will look at this quote satisfactorily........, looking forward to the order. Thank you for Your business!</strong>' :
+            data.type === 'invoice' ? `
+            <div class="terms-section">
+              <h4>Terms</h4>
+              <p><strong>1. PAYMENT.</strong><br>
+              Payment terms are cash on delivery, unless credit terms are established at the Seller's sole discretion.
+              Buyer agrees to pay Seller cost of collection of overdue invoices, including reasonable attorney's fees.
+              Net 30 days on all credit invoices or "Month Following invoice". In addition, Buyer shall pay all sales, use,
+              customs, excise or other taxes presently or hereafter payable in regards to this transaction, and Buyer
+              shall reimburse Seller for any such taxes or charges paid by BIOLEGEND SCIENTIFIC LTD (hereafter
+              "Seller."). Including all withholding taxes which should be remitted immediately upon payments.</p>
+
+              <p><strong>2. PAYMENT, PRICE, TRANSPORTATION</strong><br>
+              Seller shall have the continuing right to approve Buyer's credit. Seller may at any time demand advance
+              payment, additional security or guarantee of prompt payment. If Buyer refuses to give the payment,
+              security or guarantee demanded, Seller may terminate the Agreement, refuse to deliver any undelivered
+              goods and Buyer shall immediately become liable to Seller for the unpaid price of all goods delivered & for
+              damages. Buyer agrees to pay Seller cost of collection of overdue invoices, including reasonable attorney's
+              fees incurred by Seller in collecting said sums.</p>
+
+              <p><strong>3. SERVICE CHARGE AND INTEREST</strong><br>
+              A service charge of 3% of the total invoice cost per month will be made on past due accounts unless
+              otherwise agreed in writing by both parties.</p>
+
+              <p><strong>4. FORCE MAJEURE</strong><br>
+              Seller shall not be liable for any damages resulting from: any delay or failure of performance arising from
+              any cause not reasonably within Seller's control; accidents to, breakdowns or mechanical failure of
+              machinery or equipment, however caused; strikes or other labor troubles, shortage of labor,
+              transportation, raw materials, energy sources, or failure of usual means of supply; fire; flood; war, declared
+              or undeclared; insurrection; riots; acts of God or the public enemy; or priorities, allocations or limitations or
+              other acts required or requested by Federal, State or local governments or any of their sub-divisions,
+              bureaus or agencies. Seller may, at its option, cancel this Agreement or delay performance hereunder for
+              any period reasonably necessary due to any of the foregoing, during which time this Agreement shall
+              remain in full force and effect. Seller shall have the further right to then allocate its available goods
+              between its own uses and its customers in such manner as Seller may consider equitable.</p>
+
+              <p><strong>5. INDEMNITY</strong><br>
+              Buyer shall indemnify and hold Seller harmless from and against any and all claims, demands, lawsuits,
+              damages, liabilities, costs and expenses (including attorney's fees), incurred by reason of any injury to or
+              death of any person, or damage to any property, resulting from or arising out of any act, error, omission,
+              negligence, or misconduct by Buyer in connection with the goods sold hereunder.</p>
+
+              <p><strong>6. ANY OTHER TERMS AND CONDITIONS....</strong></p>
+
+              <div class="bank-details" style="margin-top: 20px; padding: 10px; background-color: #f5f5f5; border-left: 4px solid #007bff;">
+                <h4>MAKE ALL PAYMENTS THROUGH BIOLEGEND SCIENTIFIC LTD</h4>
+                <p><strong>KCB RIVER ROAD BRANCH NUMBER:</strong> 1216348367 - SWIFT CODE: KCBLKENX - BANK CODE: 01 - BRANCH CODE: 114</p>
+                <p><strong>ABSA BANK KENYA PLC:</strong> THIKA ROAD MALL BRANCH, ACC: 2051129930, BRANCH CODE: 024, SWIFT CODE: BARCKENX</p>
+                <p><strong>NCBA BANK:</strong> ACC: 1007470556, BRANCH TRM BANK CODE: 000, BRANCH CODE: 07, SWIFT CODE: CBAFKENX</p>
+              </div>
+            </div>
+            ` : '<strong>Thank you for your business!</strong>'}<br>
           <strong>${company.name}</strong><br>
           This document was generated on ${new Date().toLocaleString()}
           ${data.type === 'proforma' ? '<br><em>This is a proforma invoice and not a request for payment</em>' : ''}
