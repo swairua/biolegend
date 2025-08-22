@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, Mail, Lock, Shield, AlertTriangle } from 'lucide-react';
+import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { ADMIN_CREDENTIALS, executeStreamlinedSetup } from '@/utils/createStreamlinedSuperAdmin';
 import { forceConfirmAdminEmail } from '@/utils/forceEmailConfirmation';
 import { QuickEmailFix } from './QuickEmailFix';
@@ -121,7 +122,7 @@ export function SimpleLogin() {
         toast.error('Sign in failed. Please check your credentials or try the setup button below.');
       }
     } else {
-      toast.success('Welcome to MedPlus!');
+      toast.success('Welcome to Biolegend Scientific!');
     }
   };
 
@@ -211,7 +212,7 @@ export function SimpleLogin() {
           <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">Setting up MedPlus</h3>
+              <h3 className="text-lg font-semibold">Setting up Biolegend Scientific</h3>
               <p className="text-sm text-muted-foreground">
                 Creating admin account and configuring system...
               </p>
@@ -245,11 +246,11 @@ export function SimpleLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto h-12 w-12 bg-primary rounded-full flex items-center justify-center">
-            <Shield className="h-6 w-6 text-primary-foreground" />
+          <div className="mx-auto">
+            <BiolegendLogo size="lg" showText={false} />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold">MedPlus Africa</CardTitle>
+            <CardTitle className="text-2xl font-bold biolegend-brand">Biolegend Scientific Ltd</CardTitle>
             <p className="text-sm text-muted-foreground">
               Sign in to access your business management system
             </p>
