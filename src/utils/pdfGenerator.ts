@@ -66,14 +66,14 @@ interface CompanyDetails {
 
 // Default company details (fallback)
 const DEFAULT_COMPANY: CompanyDetails = {
-  name: 'MedPlus Africa Ltd',
-  address: 'Siens Plaza 4th floor room 1 opposite kcb bank River road',
+  name: 'Biolegend Scientific Ltd',
+  address: 'P.O. Box 85988-00200, Nairobi\nAlpha Center, Eastern Bypass, Membley',
   city: 'Nairobi',
   country: 'Kenya',
-  phone: '+254 713149223, +254 733 468610',
-  email: 'sales@medplusafrica.com',
+  phone: '0741207690/0780165490',
+  email: 'biolegend@biolegendscientific.co.ke',
   tax_number: 'P051701091X',
-  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2Ff610fc3448214bbd90346186516b9f73%2Fe848f2f1c3e24c458361afb41be3633d?format=webp&width=800'
+  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2Fe6da7596f8c24b5ab16b4dd97e814f11%2F777d6596ea424f149c22b390c9ec9489?format=webp&width=800'
 };
 
 export const generatePDF = (data: DocumentData) => {

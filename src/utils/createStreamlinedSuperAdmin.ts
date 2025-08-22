@@ -4,8 +4,8 @@ import { retryWithRateLimit, checkSupabaseHealth } from './supabaseHealthCheck';
 import { createAdminWithoutConfirmation, forceConfirmAdminEmail } from './forceEmailConfirmation';
 
 export const ADMIN_CREDENTIALS = {
-  email: 'admin@medplus.app',
-  password: 'MedPlus2024!Admin',
+  email: 'admin@biolegendscientific.co.ke',
+  password: 'Biolegend2024!Admin',
   fullName: 'System Administrator'
 };
 
@@ -285,7 +285,7 @@ export const forceCompleteSetup = async (): Promise<void> => {
       const { error: companyError } = await supabase
         .from('companies')
         .insert({
-          name: 'MedPlus Africa',
+          name: 'Biolegend Scientific Ltd',
           email: ADMIN_CREDENTIALS.email,
           currency: 'USD',
           fiscal_year_start: 1, // January
