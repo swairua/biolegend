@@ -27,6 +27,7 @@ import CreditNotes from "./pages/CreditNotes";
 import NotFound from "./pages/NotFound";
 import TestLogin from "./pages/TestLogin";
 import SupabaseQuickFix from "./pages/SupabaseQuickFix";
+import ForceMigration from "./pages/ForceMigration";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -253,6 +254,10 @@ const App = () => {
           <Route
             path="/supabase-fix"
             element={<SupabaseQuickFix />}
+          />
+          <Route
+            path="/force-migration"
+            element={<ForceMigration />}
           />
 
           {/* 404 Page */}
