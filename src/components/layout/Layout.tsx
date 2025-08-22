@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '@/contexts/AuthContext';
-import { SimpleLogin } from '@/components/auth/SimpleLogin';
+import { EnhancedLogin } from '@/components/auth/EnhancedLogin';
 import { AuthStateDebug } from '@/components/debug/AuthStateDebug';
 
 interface LayoutProps {
@@ -17,7 +17,7 @@ export function Layout({ children }: LayoutProps) {
 
   // Show simple login for non-authenticated users (only when not loading)
   if (!loading && !isAuthenticated) {
-    return <SimpleLogin />;
+    return <EnhancedLogin />;
   }
 
   // Show loading debug if stuck loading for authenticated users
