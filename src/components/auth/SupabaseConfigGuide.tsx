@@ -107,8 +107,9 @@ WHERE email = 'admin@biolegendscientific.co.ke';`;
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
               <div className="space-y-2">
-                <p><strong>❌ Email signups are disabled</strong></p>
-                <p>Your Supabase project has email signups disabled, preventing admin user creation.</p>
+                <p><strong>❌ Email authentication is disabled</strong></p>
+                <p>Your Supabase project has email/password authentication disabled, preventing user login.</p>
+                <p>This could be either "Email signups disabled" or "Email logins disabled".</p>
                 <p>Choose one of the solutions below to resolve this issue.</p>
               </div>
             </AlertDescription>
@@ -130,9 +131,9 @@ WHERE email = 'admin@biolegendscientific.co.ke';`;
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <Badge className="bg-green-100 text-green-800">Recommended</Badge>
-              <h3 className="text-lg font-semibold">Solution 1: Enable Email Signups (Temporary)</h3>
+              <h3 className="text-lg font-semibold">Solution 1: Enable Email Authentication</h3>
             </div>
-            
+
             <Alert>
               <Settings className="h-4 w-4" />
               <AlertDescription>
@@ -146,12 +147,17 @@ WHERE email = 'admin@biolegendscientific.co.ke';`;
                     </li>
                     <li>
                       <div className="flex items-center justify-between">
-                        <span>Find "Enable email confirmations" setting</span>
+                        <span>Find <strong>"Email"</strong> provider in the providers list</span>
                       </div>
                     </li>
                     <li>
                       <div className="flex items-center justify-between">
-                        <span>Temporarily <strong>DISABLE</strong> email confirmations</span>
+                        <span><strong>ENABLE</strong> the Email provider</span>
+                      </div>
+                    </li>
+                    <li>
+                      <div className="flex items-center justify-between">
+                        <span>Set "Enable email confirmations" to <strong>OFF</strong> (temporarily)</span>
                       </div>
                     </li>
                     <li>
@@ -161,12 +167,12 @@ WHERE email = 'admin@biolegendscientific.co.ke';`;
                     </li>
                     <li>
                       <div className="flex items-center justify-between">
-                        <span>Click "Retry Admin Setup" button</span>
+                        <span>Try logging in again with admin credentials</span>
                       </div>
                     </li>
                     <li>
                       <div className="flex items-center justify-between">
-                        <span>Re-enable email confirmations after admin creation</span>
+                        <span>Re-enable email confirmations after successful login</span>
                       </div>
                     </li>
                   </ol>

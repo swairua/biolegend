@@ -74,8 +74,12 @@ export function EnhancedLogin() {
     if (error) {
       console.error('Sign in error:', error);
       
-      // Check for specific signup-related errors
-      if (error.message.includes('Email signups are disabled') || 
+      // Check for specific authentication errors
+      if (error.message.includes('Email logins are disabled')) {
+        setSignupError('Email/password authentication is disabled in Supabase');
+        setShowConfigGuide(true);
+        toast.error('Email logins are disabled. Check the Configuration Guide tab.');
+      } else if (error.message.includes('Email signups are disabled') ||
           error.message.includes('Signups not allowed') ||
           error.message.includes('signup') && error.message.includes('disabled')) {
         setSignupError('Email signups are disabled in Supabase configuration');
