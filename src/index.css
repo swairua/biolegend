@@ -2,11 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* MedPlus Africa Business Management System Design */
+/* Biolegend Scientific Ltd Business Management System Design */
 
 @layer base {
   :root {
-    /* MedPlus Africa Brand Colors */
+    /* Biolegend Scientific Brand Colors */
     --background: 240 10% 98%;
     --foreground: 210 10% 15%;
 
@@ -16,25 +16,25 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 10% 15%;
 
-    /* Primary - MedPlus Blue (#4A90E2) */
-    --primary: 215 85% 58%;
+    /* Primary - Biolegend Purple (#7B3F98) */
+    --primary: 280 45% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 215 85% 53%;
-    --primary-light: 215 85% 95%;
+    --primary-hover: 280 45% 37%;
+    --primary-light: 280 45% 95%;
 
-    /* Secondary - MedPlus Green (#5CB85C) */
-    --secondary: 120 45% 54%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 120 45% 49%;
+    /* Secondary - Biolegend Gold (#F1C232) */
+    --secondary: 45 85% 57%;
+    --secondary-foreground: 0 0% 20%;
+    --secondary-hover: 45 85% 52%;
 
     /* Status Colors */
-    --success: 120 45% 54%;
+    --success: 140 50% 45%;
     --success-foreground: 0 0% 100%;
-    --success-light: 120 45% 95%;
+    --success-light: 140 50% 95%;
 
-    --warning: 45 90% 55%;
-    --warning-foreground: 0 0% 100%;
-    --warning-light: 45 90% 95%;
+    --warning: 45 85% 57%;
+    --warning-foreground: 0 0% 20%;
+    --warning-light: 45 85% 95%;
 
     --destructive: 0 75% 55%;
     --destructive-foreground: 0 0% 100%;
@@ -44,29 +44,29 @@
     --muted: 210 5% 96%;
     --muted-foreground: 210 5% 45%;
 
-    --accent: 215 85% 95%;
-    --accent-foreground: 215 85% 58%;
+    --accent: 280 45% 95%;
+    --accent-foreground: 280 45% 42%;
 
     --border: 210 10% 88%;
     --input: 210 10% 88%;
-    --ring: 215 85% 58%;
+    --ring: 280 45% 42%;
 
     --radius: 0.5rem;
 
-    /* Sidebar - MedPlus Professional */
-    --sidebar-background: 215 25% 15%;
+    /* Sidebar - Biolegend Professional */
+    --sidebar-background: 280 25% 15%;
     --sidebar-foreground: 210 5% 85%;
-    --sidebar-primary: 215 85% 58%;
+    --sidebar-primary: 280 45% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 20%;
+    --sidebar-accent: 280 25% 20%;
     --sidebar-accent-foreground: 210 5% 85%;
-    --sidebar-border: 215 25% 20%;
-    --sidebar-ring: 215 85% 58%;
+    --sidebar-border: 280 25% 20%;
+    --sidebar-ring: 280 45% 42%;
 
-    /* MedPlus Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(215 85% 58%), hsl(120 45% 54%));
+    /* Biolegend Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(280 45% 42%), hsl(45 85% 57%));
     --gradient-secondary: linear-gradient(135deg, hsl(210 5% 96%), hsl(210 5% 92%));
-    --gradient-success: linear-gradient(135deg, hsl(120 45% 54%), hsl(120 45% 59%));
+    --gradient-success: linear-gradient(135deg, hsl(140 50% 45%), hsl(140 50% 50%));
     
     /* Professional Shadows */
     --shadow-card: 0 2px 8px -2px hsl(210 10% 15% / 0.08);
@@ -79,55 +79,55 @@
   }
 
   .dark {
-    /* Dark Mode - MedPlus Professional Dark Theme */
-    --background: 215 20% 8%;
+    /* Dark Mode - Biolegend Professional Dark Theme */
+    --background: 280 20% 8%;
     --foreground: 210 5% 92%;
 
-    --card: 215 20% 12%;
+    --card: 280 20% 12%;
     --card-foreground: 210 5% 92%;
 
-    --popover: 215 20% 12%;
+    --popover: 280 20% 12%;
     --popover-foreground: 210 5% 92%;
 
-    --primary: 215 85% 65%;
+    --primary: 280 45% 65%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 215 85% 60%;
-    --primary-light: 215 85% 15%;
+    --primary-hover: 280 45% 60%;
+    --primary-light: 280 45% 15%;
 
-    --secondary: 120 45% 60%;
-    --secondary-foreground: 0 0% 100%;
-    --secondary-hover: 120 45% 55%;
+    --secondary: 45 85% 70%;
+    --secondary-foreground: 0 0% 20%;
+    --secondary-hover: 45 85% 65%;
 
-    --success: 120 45% 60%;
+    --success: 140 50% 60%;
     --success-foreground: 0 0% 100%;
-    --success-light: 120 45% 15%;
+    --success-light: 140 50% 15%;
 
-    --warning: 45 90% 65%;
-    --warning-foreground: 0 0% 100%;
-    --warning-light: 45 90% 15%;
+    --warning: 45 85% 70%;
+    --warning-foreground: 0 0% 20%;
+    --warning-light: 45 85% 15%;
 
     --destructive: 0 75% 65%;
     --destructive-foreground: 0 0% 100%;
     --destructive-light: 0 75% 15%;
 
-    --muted: 215 20% 18%;
+    --muted: 280 20% 18%;
     --muted-foreground: 210 5% 65%;
 
-    --accent: 215 85% 15%;
-    --accent-foreground: 215 85% 65%;
+    --accent: 280 45% 15%;
+    --accent-foreground: 280 45% 65%;
 
-    --border: 215 20% 22%;
-    --input: 215 20% 22%;
-    --ring: 215 85% 65%;
+    --border: 280 20% 22%;
+    --input: 280 20% 22%;
+    --ring: 280 45% 65%;
 
-    --sidebar-background: 215 25% 5%;
+    --sidebar-background: 280 25% 5%;
     --sidebar-foreground: 210 5% 85%;
-    --sidebar-primary: 215 85% 65%;
+    --sidebar-primary: 280 45% 65%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 215 25% 12%;
+    --sidebar-accent: 280 25% 12%;
     --sidebar-accent-foreground: 210 5% 85%;
-    --sidebar-border: 215 25% 12%;
-    --sidebar-ring: 215 85% 65%;
+    --sidebar-border: 280 25% 12%;
+    --sidebar-ring: 280 45% 65%;
   }
 }
 
@@ -142,7 +142,7 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
-  /* MedPlus utility classes */
+  /* Biolegend utility classes */
   .gradient-primary {
     background: var(--gradient-primary);
   }
@@ -195,16 +195,16 @@
     background: hsl(var(--muted-foreground) / 0.5);
   }
 
-  /* MedPlus specific styles */
-  .medplus-brand {
+  /* Biolegend specific styles */
+  .biolegend-brand {
     color: hsl(var(--primary));
   }
 
-  .medplus-green {
+  .biolegend-gold {
     color: hsl(var(--secondary));
   }
 
-  .medplus-gradient {
+  .biolegend-gradient {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

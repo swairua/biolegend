@@ -5,9 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, Mail, Lock, Shield, AlertTriangle } from 'lucide-react';
+import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { ADMIN_CREDENTIALS, executeStreamlinedSetup } from '@/utils/createStreamlinedSuperAdmin';
+import { createBiolegendAdmin, showEmailConfirmationInstructions, BIOLEGEND_ADMIN_CREDENTIALS } from '@/utils/enhancedAdminCreation';
 import { forceConfirmAdminEmail } from '@/utils/forceEmailConfirmation';
 import { QuickEmailFix } from './QuickEmailFix';
+import { EmailConfirmationBypass } from './EmailConfirmationBypass';
 import { AuthDiagnostic } from './AuthDiagnostic';
 import { fixAuthenticationLoop, diagnoseAuthState } from '@/utils/fixAuthenticationLoop';
 import { performCompleteLogin } from '@/utils/testLogin';
@@ -51,33 +54,57 @@ export function SimpleLogin() {
   const handleAutoSetup = async () => {
     setIsSettingUp(true);
     try {
-      console.log('🚀 Starting one-time admin setup...');
-      const result = await executeStreamlinedSetup();
+      console.log('🚀 Starting enhanced Biolegend admin setup...');
+      const result = await createBiolegendAdmin();
+
       if (result.success) {
         setSetupComplete(true);
         localStorage.setItem('admin_setup_complete', 'true');
-        // Pre-fill the form with admin credentials for convenience
+        // Pre-fill with Biolegend admin credentials
         setFormData({
-          email: ADMIN_CREDENTIALS.email,
-          password: ADMIN_CREDENTIALS.password
+          email: BIOLEGEND_ADMIN_CREDENTIALS.email,
+          password: BIOLEGEND_ADMIN_CREDENTIALS.password
         });
-        toast.success('Admin account ready! You can now sign in.');
-      } else {
-        toast.error(`Setup issue: ${result.error}`);
-        // Still allow manual sign-in attempt
+        toast.success(result.message);
+      } else if (result.requiresManualConfirmation) {
+        // Handle email confirmation requirement
         setSetupComplete(true);
         setFormData({
-          email: ADMIN_CREDENTIALS.email,
-          password: ADMIN_CREDENTIALS.password
+          email: BIOLEGEND_ADMIN_CREDENTIALS.email,
+          password: BIOLEGEND_ADMIN_CREDENTIALS.password
         });
+
+        showEmailConfirmationInstructions(result);
+        setEmailConfirmationNeeded(true);
+      } else {
+        // Try fallback to original method
+        console.log('🔄 Enhanced setup failed, trying fallback...');
+        const fallbackResult = await executeStreamlinedSetup();
+
+        if (fallbackResult.success) {
+          setSetupComplete(true);
+          localStorage.setItem('admin_setup_complete', 'true');
+          setFormData({
+            email: ADMIN_CREDENTIALS.email,
+            password: ADMIN_CREDENTIALS.password
+          });
+          toast.success('Admin account ready via fallback method!');
+        } else {
+          toast.error(`Setup failed: ${result.error || fallbackResult.error}`);
+          setSetupComplete(true);
+          setFormData({
+            email: BIOLEGEND_ADMIN_CREDENTIALS.email,
+            password: BIOLEGEND_ADMIN_CREDENTIALS.password
+          });
+        }
       }
     } catch (error) {
-      console.error('Auto-setup error:', error);
-      toast.error('Setup encountered an issue, but you can still try to sign in');
+      console.error('Enhanced setup error:', error);
+      toast.error('Setup encountered an issue. Check console for manual confirmation steps.');
       setSetupComplete(true);
       setFormData({
-        email: ADMIN_CREDENTIALS.email,
-        password: ADMIN_CREDENTIALS.password
+        email: BIOLEGEND_ADMIN_CREDENTIALS.email,
+        password: BIOLEGEND_ADMIN_CREDENTIALS.password
       });
     } finally {
       setIsSettingUp(false);
@@ -121,7 +148,7 @@ export function SimpleLogin() {
         toast.error('Sign in failed. Please check your credentials or try the setup button below.');
       }
     } else {
-      toast.success('Welcome to MedPlus!');
+      toast.success('Welcome to Biolegend Scientific!');
     }
   };
 
@@ -136,8 +163,8 @@ export function SimpleLogin() {
 
   const fillAdminCredentials = () => {
     setFormData({
-      email: ADMIN_CREDENTIALS.email,
-      password: ADMIN_CREDENTIALS.password
+      email: BIOLEGEND_ADMIN_CREDENTIALS.email,
+      password: BIOLEGEND_ADMIN_CREDENTIALS.password
     });
     setFormErrors({});
   };
@@ -211,7 +238,7 @@ export function SimpleLogin() {
           <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
             <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">Setting up MedPlus</h3>
+              <h3 className="text-lg font-semibold">Setting up Biolegend Scientific</h3>
               <p className="text-sm text-muted-foreground">
                 Creating admin account and configuring system...
               </p>
@@ -232,10 +259,14 @@ export function SimpleLogin() {
 
   if (emailConfirmationNeeded) {
     return (
-      <QuickEmailFix
-        onRetry={() => {
+      <EmailConfirmationBypass
+        onSuccess={() => {
           setEmailConfirmationNeeded(false);
-          window.location.reload();
+          setSetupComplete(true);
+          toast.success('Email confirmed! You can now sign in.');
+        }}
+        onBack={() => {
+          setEmailConfirmationNeeded(false);
         }}
       />
     );
@@ -245,11 +276,11 @@ export function SimpleLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto h-12 w-12 bg-primary rounded-full flex items-center justify-center">
-            <Shield className="h-6 w-6 text-primary-foreground" />
+          <div className="mx-auto">
+            <BiolegendLogo size="lg" showText={false} />
           </div>
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-bold">MedPlus Africa</CardTitle>
+            <CardTitle className="text-2xl font-bold biolegend-brand">Biolegend Scientific Ltd</CardTitle>
             <p className="text-sm text-muted-foreground">
               Sign in to access your business management system
             </p>
@@ -447,7 +478,7 @@ export function SimpleLogin() {
 
           {setupComplete && (
             <div className="text-center text-xs text-muted-foreground space-y-1">
-              <p>Admin Email: {ADMIN_CREDENTIALS.email}</p>
+              <p>Admin Email: {BIOLEGEND_ADMIN_CREDENTIALS.email}</p>
               <Button
                 variant="link"
                 size="sm"

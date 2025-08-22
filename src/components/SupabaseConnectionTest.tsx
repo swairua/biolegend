@@ -1,74 +1,73 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle, AlertTriangle, Database, RefreshCw } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ConnectionStatus {
-  connected: boolean;
-  message: string;
+  isConnected: boolean;
+  error: string | null;
   url: string;
-  tables: string[];
-  hasAuth: boolean;
+  keyPrefix: string;
 }
 
-export const SupabaseConnectionTest: React.FC = () => {
-  const [status, setStatus] = useState<ConnectionStatus | null>(null);
-  const [testing, setTesting] = useState(false);
+export function SupabaseConnectionTest() {
+  const [status, setStatus] = useState<ConnectionStatus>({
+    isConnected: false,
+    error: null,
+    url: '',
+    keyPrefix: ''
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
   const testConnection = async () => {
-    setTesting(true);
+    setIsLoading(true);
     try {
-      // Test basic connection
-      const { data: healthData, error: healthError } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
+      console.log('🔍 Testing Supabase connection...');
+      
+      // Get the Supabase client info
+      const clientUrl = (supabase as any).supabaseUrl || 'Unknown';
+      const clientKey = (supabase as any).supabaseKey || 'Unknown';
+      const keyPrefix = clientKey.substring(0, 20) + '...';
+      
+      console.log('Client URL:', clientUrl);
+      console.log('Client Key Prefix:', keyPrefix);
+      
+      // Test a simple query to verify connection
+      const { data, error } = await supabase
+        .from('users')
+        .select('count')
         .limit(1);
-
-      if (healthError) {
+      
+      if (error) {
+        console.log('⚠️ Connection test error:', error);
         setStatus({
-          connected: false,
-          message: `Connection failed: ${healthError.message}`,
-          url: supabase.supabaseUrl,
-          tables: [],
-          hasAuth: false
+          isConnected: false,
+          error: error.message,
+          url: clientUrl,
+          keyPrefix
         });
-        return;
+      } else {
+        console.log('✅ Supabase connection successful!');
+        setStatus({
+          isConnected: true,
+          error: null,
+          url: clientUrl,
+          keyPrefix
+        });
       }
-
-      // Get list of tables
-      const { data: tablesData } = await supabase
-        .from('information_schema.tables')
-        .select('table_name')
-        .eq('table_schema', 'public')
-        .order('table_name');
-
-      const tables = tablesData?.map(t => t.table_name) || [];
-
-      // Test auth
-      const { data: authData } = await supabase.auth.getSession();
-      const hasAuth = !!authData.session;
-
-      setStatus({
-        connected: true,
-        message: 'Successfully connected to Supabase!',
-        url: supabase.supabaseUrl,
-        tables,
-        hasAuth
-      });
-
     } catch (error) {
+      console.error('❌ Supabase connection test failed:', error);
       setStatus({
-        connected: false,
-        message: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        url: supabase.supabaseUrl,
-        tables: [],
-        hasAuth: false
+        isConnected: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        url: 'Error',
+        keyPrefix: 'Error'
       });
     } finally {
-      setTesting(false);
+      setIsLoading(false);
     }
   };
 
@@ -77,71 +76,68 @@ export const SupabaseConnectionTest: React.FC = () => {
   }, []);
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          {status?.connected ? (
-            <CheckCircle className="h-5 w-5 text-green-500" />
-          ) : status?.connected === false ? (
-            <XCircle className="h-5 w-5 text-red-500" />
-          ) : (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          )}
-          Supabase Connection Status
+          <Database className="h-5 w-5" />
+          Supabase Connection
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {status && (
+        {isLoading ? (
+          <div className="flex items-center gap-2">
+            <RefreshCw className="h-4 w-4 animate-spin" />
+            <span>Testing connection...</span>
+          </div>
+        ) : (
           <>
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Database URL:</p>
-              <code className="text-xs bg-muted p-2 rounded block">{status.url}</code>
-            </div>
-
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Status:</p>
-              <Badge variant={status.connected ? "default" : "destructive"}>
-                {status.message}
+            <div className="flex items-center gap-2">
+              {status.isConnected ? (
+                <CheckCircle className="h-4 w-4 text-green-600" />
+              ) : (
+                <AlertTriangle className="h-4 w-4 text-red-600" />
+              )}
+              <Badge 
+                variant={status.isConnected ? "default" : "destructive"}
+                className={status.isConnected ? "bg-green-100 text-green-700" : ""}
+              >
+                {status.isConnected ? 'Connected' : 'Failed'}
               </Badge>
             </div>
 
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">Authentication:</p>
-              <Badge variant={status.hasAuth ? "default" : "secondary"}>
-                {status.hasAuth ? "User Authenticated" : "Not Authenticated"}
-              </Badge>
-            </div>
-
-            <div>
-              <p className="text-sm text-muted-foreground mb-2">
-                Database Tables ({status.tables.length}):
-              </p>
-              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto">
-                {status.tables.map(table => (
-                  <Badge key={table} variant="outline" className="text-xs">
-                    {table}
-                  </Badge>
-                ))}
+            <div className="space-y-2 text-sm">
+              <div>
+                <span className="font-medium">URL: </span>
+                <span className="font-mono text-xs">{status.url}</span>
+              </div>
+              <div>
+                <span className="font-medium">Key: </span>
+                <span className="font-mono text-xs">{status.keyPrefix}</span>
               </div>
             </div>
+
+            {status.error && (
+              <Alert variant="destructive">
+                <AlertTriangle className="h-4 w-4" />
+                <AlertDescription className="text-xs">
+                  <strong>Error:</strong> {status.error}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button 
+              onClick={testConnection} 
+              size="sm" 
+              variant="outline" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+              Test Again
+            </Button>
           </>
         )}
-
-        <Button 
-          onClick={testConnection} 
-          disabled={testing}
-          className="w-full"
-        >
-          {testing ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Testing Connection...
-            </>
-          ) : (
-            'Test Connection Again'
-          )}
-        </Button>
       </CardContent>
     </Card>
   );
-};
+}

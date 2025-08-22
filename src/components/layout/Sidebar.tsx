@@ -20,7 +20,7 @@ import {
   ShoppingCart,
   RotateCcw
 } from 'lucide-react';
-import { MedPlusLogo } from '@/components/ui/medplus-logo';
+import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 
 interface SidebarItem {
   title: string;
@@ -186,9 +186,9 @@ export function Sidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border">
-      {/* MedPlus Logo/Header */}
+      {/* Biolegend Logo/Header */}
       <div className="flex h-16 items-center border-b border-sidebar-border px-6">
-        <MedPlusLogo size="md" showText={true} className="text-sidebar-foreground" />
+        <BiolegendLogo size="md" showText={true} className="text-sidebar-foreground" />
       </div>
 
       {/* Navigation */}
@@ -202,8 +202,8 @@ export function Sidebar() {
           <div className="flex items-center space-x-3 px-3 py-2 text-sm text-sidebar-foreground">
             <Building2 className="h-4 w-4 text-sidebar-primary" />
             <div>
-              <div className="font-medium">MedPlus Africa Limited</div>
-              <div className="text-xs text-sidebar-foreground/60">Medical Supplies</div>
+              <div className="font-medium">Biolegend Scientific Ltd</div>
+              <div className="text-xs text-sidebar-foreground/60">Scientific Equipment & Supplies</div>
             </div>
           </div>
         </div>

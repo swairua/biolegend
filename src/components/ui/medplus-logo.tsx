@@ -1,4 +1,5 @@
-import { cn } from "@/lib/utils";
+// Compatibility wrapper - redirects to Biolegend logo
+import { BiolegendLogo } from './biolegend-logo';
 
 interface MedPlusLogoProps {
   className?: string;
@@ -6,41 +7,11 @@ interface MedPlusLogoProps {
   showText?: boolean;
 }
 
+/**
+ * @deprecated Use BiolegendLogo instead
+ * This is a compatibility wrapper for the old MedPlus logo
+ */
 export function MedPlusLogo({ className, size = "md", showText = true }: MedPlusLogoProps) {
-  const sizeClasses = {
-    sm: "h-6 w-6",
-    md: "h-8 w-8",
-    lg: "h-12 w-12"
-  };
-
-  const textSizeClasses = {
-    sm: "text-sm",
-    md: "text-lg",
-    lg: "text-2xl"
-  };
-
-  return (
-    <div className={cn("flex items-center space-x-2", className)}>
-      {/* MedPlus Logo Image */}
-      <div className={cn("relative", sizeClasses[size])}>
-        <img
-          src="https://cdn.builder.io/api/v1/image/assets%2Ff610fc3448214bbd90346186516b9f73%2Fe848f2f1c3e24c458361afb41be3633d?format=webp&width=800"
-          alt="MedPlus Africa Logo"
-          className="w-full h-full object-contain"
-        />
-      </div>
-
-      {/* Company Text */}
-      {showText && (
-        <div className="flex flex-col">
-          <span className={cn("font-bold text-primary", textSizeClasses[size])}>
-            MEDPLUS
-          </span>
-          <span className={cn("text-xs text-muted-foreground -mt-1", size === "sm" && "text-[10px]")}>
-            AFRICA
-          </span>
-        </div>
-      )}
-    </div>
-  );
+  console.warn('MedPlusLogo is deprecated. Please use BiolegendLogo instead.');
+  return <BiolegendLogo className={className} size={size} showText={showText} />;
 }
