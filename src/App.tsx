@@ -254,11 +254,11 @@ const App = () => {
             }
           />
 
-          {/* Database Fixes - No protection needed for setup */}
-          <Route path="/database-fix-page" element={<DatabaseFixPage />} />
-
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
+
+          {/* Database Fixes - No protection needed for setup */}
+          <Route path="/database-fix-page" element={<DatabaseFixPage />} />
 
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
