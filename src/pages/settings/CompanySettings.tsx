@@ -125,7 +125,33 @@ export default function CompanySettings() {
       toast.success('Logo uploaded and saved successfully!');
     } catch (err: any) {
       console.error('Upload error', err);
-      toast.error('Failed to upload logo: ' + (err?.message || String(err)));
+
+      let errorMessage = 'Unknown error occurred';
+
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (err && typeof err === 'object') {
+        // Handle Supabase error objects
+        const supabaseError = err as any;
+        if (supabaseError.message) {
+          errorMessage = supabaseError.message;
+        } else if (supabaseError.details) {
+          errorMessage = supabaseError.details;
+        } else if (supabaseError.hint) {
+          errorMessage = supabaseError.hint;
+        } else {
+          errorMessage = JSON.stringify(err);
+        }
+      }
+
+      // Check for specific storage errors
+      if (errorMessage.includes('company-logos') && errorMessage.includes('bucket')) {
+        toast.error('Storage bucket "company-logos" does not exist. Please create the storage bucket first.');
+      } else if (errorMessage.includes('permission denied') || errorMessage.includes('insufficient_privilege')) {
+        toast.error('Permission denied: Please check your storage permissions.');
+      } else {
+        toast.error(`Failed to upload logo: ${errorMessage}`);
+      }
     } finally {
       setUploading(false);
       // Clear the file input
