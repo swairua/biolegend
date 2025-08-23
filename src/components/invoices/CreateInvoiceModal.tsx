@@ -107,6 +107,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       description: product.description || product.name,
       quantity: 1,
       unit_price: product.selling_price,
+      discount_before_vat: 0,
       tax_percentage: 0, // Default no VAT, user can add if applicable
       tax_amount: 0,
       tax_inclusive: false,
