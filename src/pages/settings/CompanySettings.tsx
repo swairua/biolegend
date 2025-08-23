@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Building2, Save, Upload, Plus, Trash2, Edit, Check, X, Image } from 'lucide-react';
+import { Building2, Save, Upload, Plus, Trash2, Edit, Check, X, Image, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useCompanies, useUpdateCompany, useCreateCompany, useTaxSettings, useCreateTaxSetting, useUpdateTaxSetting, useDeleteTaxSetting } from '@/hooks/useDatabase';
@@ -557,14 +557,29 @@ export default function CompanySettings() {
         </div>
       </div>
 
-      {/* Schema Fix Component - Show when schema errors are detected */}
+      {/* Simple Currency Column Fix - Show when schema errors are detected */}
       {schemaError && (
-        <QuickSchemaFix
-          onSuccess={() => {
-            setSchemaError(null);
-            toast.success('Schema fixed! You can now save company settings.');
-          }}
-        />
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <span className="font-medium text-orange-800">
+                Currency column missing from companies table
+              </span>
+            </div>
+            <Button
+              onClick={fixCurrencyColumn}
+              disabled={fixingCurrency}
+              size="sm"
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {fixingCurrency ? 'Adding...' : 'Add Currency Column'}
+            </Button>
+          </div>
+          <p className="text-sm text-orange-700 mt-2">
+            Click the button to add the missing currency column to the database.
+          </p>
+        </div>
       )}
 
       <div className="grid gap-6">
