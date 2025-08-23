@@ -68,9 +68,10 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: customers, isLoading: loadingCustomers } = useCustomers('550e8400-e29b-41d4-a716-446655440000');
-  const { data: products, isLoading: loadingProducts } = useProducts('550e8400-e29b-41d4-a716-446655440000');
-  const { data: taxSettings } = useTaxSettings('550e8400-e29b-41d4-a716-446655440000');
+  const { currentCompany } = useCurrentCompany();
+  const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
+  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const { data: taxSettings } = useTaxSettings(currentCompany?.id);
   const updateInvoiceWithItems = useUpdateInvoiceWithItems();
 
   // Get default tax rate
