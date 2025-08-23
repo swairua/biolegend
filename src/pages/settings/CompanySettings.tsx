@@ -240,17 +240,45 @@ export default function CompanySettings() {
     }
 
     try {
+      // Sanitize and prepare company data to match database schema
+      const sanitizedData = {
+        name: companyData.name?.trim() || '',
+        registration_number: companyData.registration_number?.trim() || null,
+        tax_number: companyData.tax_number?.trim() || null,
+        email: companyData.email?.trim() || null,
+        phone: companyData.phone?.trim() || null,
+        address: companyData.address?.trim() || null,
+        city: companyData.city?.trim() || null,
+        state: companyData.state?.trim() || null,
+        postal_code: companyData.postal_code?.trim() || null,
+        country: companyData.country?.trim() || 'Kenya',
+        currency: companyData.currency?.trim() || 'KES',
+        logo_url: companyData.logo_url?.trim() || null,
+        fiscal_year_start: companyData.fiscal_year_start || 1
+      };
+
+      // Remove empty strings and convert to null for optional fields
+      Object.keys(sanitizedData).forEach(key => {
+        if (key !== 'name' && key !== 'country' && key !== 'currency' && key !== 'fiscal_year_start') {
+          if (sanitizedData[key] === '' || sanitizedData[key] === undefined) {
+            sanitizedData[key] = null;
+          }
+        }
+      });
+
+      console.log('Sanitized company data:', JSON.stringify(sanitizedData, null, 2));
+
       if (!currentCompany) {
         // Create a new company if none exists
         console.log('No company found, creating new one');
-        await createCompany.mutateAsync(companyData);
+        await createCompany.mutateAsync(sanitizedData);
         toast.success('Company created successfully');
       } else {
         // Update existing company
         console.log('Updating existing company with ID:', currentCompany.id);
         await updateCompany.mutateAsync({
           id: currentCompany.id,
-          ...companyData
+          ...sanitizedData
         });
         toast.success('Company settings saved successfully');
       }
