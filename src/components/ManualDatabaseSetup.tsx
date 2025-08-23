@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { createSuperAdmin } from '@/utils/createSuperAdmin';
 import { forceAllMigrations } from '@/utils/forceAllMigrations';
 import { forceInitialSetup } from '@/utils/forceInitialSetup';
+import { fixCompaniesSchema } from '@/utils/fixCompaniesSchema';
 
 export function ManualDatabaseSetup() {
   const [isRunning, setIsRunning] = useState(false);
