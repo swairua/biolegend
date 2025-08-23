@@ -528,6 +528,9 @@ export default function CompanySettings() {
         {currentCompany && (
           <ForceTaxSettings companyId={currentCompany.id} />
         )}
+
+        {/* Storage Setup for Logo Upload */}
+        <StorageSetup />
       </div>
     </div>
   );
