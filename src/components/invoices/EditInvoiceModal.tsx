@@ -385,6 +385,18 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
                   </div>
                 </div>
 
+                {/* LPO Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="lpo_number">LPO Number (Optional)</Label>
+                  <Input
+                    id="lpo_number"
+                    type="text"
+                    value={lpoNumber}
+                    onChange={(e) => setLpoNumber(e.target.value)}
+                    placeholder="Enter LPO reference number"
+                  />
+                </div>
+
                 {/* Notes */}
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
@@ -489,6 +501,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
                     <TableHead>Qty</TableHead>
                     <TableHead>Unit Price</TableHead>
                     <TableHead>Discount %</TableHead>
+                    <TableHead>Disc. Before VAT</TableHead>
                     <TableHead>Tax %</TableHead>
                     <TableHead>Tax Incl.</TableHead>
                     <TableHead>Line Total</TableHead>
