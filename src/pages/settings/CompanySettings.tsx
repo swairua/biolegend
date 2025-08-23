@@ -287,7 +287,6 @@ export default function CompanySettings() {
       // Sanitize and prepare company data to match database schema
       const sanitizedData: any = {
         name: companyData.name?.trim() || '',
-        registration_number: companyData.registration_number?.trim() || null,
         tax_number: companyData.tax_number?.trim() || null,
         email: companyData.email?.trim() || null,
         phone: companyData.phone?.trim() || null,
@@ -296,10 +295,20 @@ export default function CompanySettings() {
         state: companyData.state?.trim() || null,
         postal_code: companyData.postal_code?.trim() || null,
         country: companyData.country?.trim() || 'Kenya',
-        currency: companyData.currency?.trim() || 'KES',
-        logo_url: companyData.logo_url?.trim() || null,
-        fiscal_year_start: companyData.fiscal_year_start || 1
+        logo_url: companyData.logo_url?.trim() || null
       };
+
+      // Only include optional columns if they might exist in the database
+      // This prevents errors when the schema hasn't been fully migrated
+      if (companyData.registration_number?.trim()) {
+        sanitizedData.registration_number = companyData.registration_number.trim();
+      }
+      if (companyData.currency?.trim()) {
+        sanitizedData.currency = companyData.currency.trim();
+      }
+      if (companyData.fiscal_year_start) {
+        sanitizedData.fiscal_year_start = companyData.fiscal_year_start;
+      }
 
       // Remove empty strings and convert to null for optional fields
       Object.keys(sanitizedData).forEach(key => {
