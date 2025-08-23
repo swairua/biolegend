@@ -12,11 +12,16 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
 
   console.log('🔍 Layout render - loading:', loading, 'isAuthenticated:', isAuthenticated);
 
-  // Show simple login for non-authenticated users (only when not loading)
-  if (!loading && !isAuthenticated) {
+  // Routes that don't require authentication
+  const publicRoutes = ['/auth-test', '/manual-setup'];
+  const isPublicRoute = publicRoutes.includes(location.pathname);
+
+  // Show simple login for non-authenticated users (only when not loading and not on public routes)
+  if (!loading && !isAuthenticated && !isPublicRoute) {
     return <EnhancedLogin />;
   }
 
@@ -41,6 +46,17 @@ export function Layout({ children }: LayoutProps) {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading...</p>
         </div>
+      </div>
+    );
+  }
+
+  // Show simple layout for public routes
+  if (isPublicRoute) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main className="w-full">
+          {children}
+        </main>
       </div>
     );
   }
