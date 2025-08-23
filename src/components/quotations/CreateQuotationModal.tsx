@@ -68,6 +68,14 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
   const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
   const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
   const { data: taxSettings } = useTaxSettings(currentCompany?.id);
+
+  // Debug logging to understand why customer dropdown is empty
+  console.log('=== CREATE QUOTATION MODAL DEBUG ===');
+  console.log('Companies:', companies);
+  console.log('Current Company:', currentCompany);
+  console.log('Customers:', customers);
+  console.log('Loading Customers:', loadingCustomers);
+  console.log('Company ID for customers query:', currentCompany?.id);
   const createQuotationWithItems = useCreateQuotationWithItems();
   const generateDocNumber = useGenerateDocumentNumber();
 
