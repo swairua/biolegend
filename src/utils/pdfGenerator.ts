@@ -21,6 +21,7 @@ export interface DocumentData {
     quantity: number;
     unit_price: number;
     discount_percentage?: number;
+    discount_before_vat?: number;
     discount_amount?: number;
     tax_percentage?: number;
     tax_amount?: number;
@@ -591,6 +592,12 @@ export const generatePDF = (data: DocumentData) => {
                 <tr>
                   <td class="label">Valid Until:</td>
                   <td class="value">${formatDate(data.valid_until)}</td>
+                </tr>
+                ` : ''}
+                ${data.lpo_number ? `
+                <tr>
+                  <td class="label">LPO Number:</td>
+                  <td class="value">${data.lpo_number}</td>
                 </tr>
                 ` : ''}
                 <tr>
