@@ -518,6 +518,16 @@ export default function CompanySettings() {
         </div>
       </div>
 
+      {/* Schema Fix Component - Show when schema errors are detected */}
+      {schemaError && (
+        <QuickSchemaFix
+          onSuccess={() => {
+            setSchemaError(null);
+            toast.success('Schema fixed! You can now save company settings.');
+          }}
+        />
+      )}
+
       <div className="grid gap-6">
         {/* Company Information */}
         <Card className="shadow-card">
