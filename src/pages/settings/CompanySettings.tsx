@@ -1,21 +1,24 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Building2, Save, Upload, Plus, Trash2, Edit, Check, X } from 'lucide-react';
+import { Building2, Save, Upload, Plus, Trash2, Edit, Check, X, Image } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useCompanies, useUpdateCompany, useCreateCompany, useTaxSettings, useCreateTaxSetting, useUpdateTaxSetting, useDeleteTaxSetting } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { ForceTaxSettings } from '@/components/ForceTaxSettings';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
   const [newTax, setNewTax] = useState({ name: '', rate: 0, is_default: false });
   const [showNewTaxForm, setShowNewTaxForm] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [companyData, setCompanyData] = useState({
     name: '',
     registration_number: '',
@@ -29,7 +32,7 @@ export default function CompanySettings() {
     country: '',
     currency: '',
     fiscal_year_start: 1,
-    logo_url: '/assets/medplus-logo.webp'
+    logo_url: ''
   });
 
   const { data: companies, isLoading: companiesLoading, error: companiesError } = useCompanies();
@@ -67,30 +70,69 @@ export default function CompanySettings() {
         country: currentCompany.country || 'Kenya',
         currency: currentCompany.currency || 'KES',
         fiscal_year_start: currentCompany.fiscal_year_start || 1,
-        logo_url: currentCompany.logo_url || '/assets/medplus-logo.webp'
+        logo_url: currentCompany.logo_url || ''
       });
     }
   }, [currentCompany]);
 
-  // Auto-update company logo on component mount - force update to local asset
-  useEffect(() => {
-    const updateCompanyLogo = async () => {
-      if (currentCompany && currentCompany.logo_url !== '/assets/medplus-logo.webp') {
-        try {
-          const newLogoUrl = '/assets/medplus-logo.webp';
-          await updateCompany.mutateAsync({
-            id: currentCompany.id,
-            logo_url: newLogoUrl
-          });
-          console.log('Company logo updated to local asset automatically');
-        } catch (error) {
-          console.error('Failed to auto-update company logo:', error);
-        }
-      }
-    };
+  const handleChooseFile = () => {
+    fileInputRef.current?.click();
+  };
 
-    updateCompanyLogo();
-  }, [currentCompany, updateCompany]);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !currentCompany) return;
+
+    // Basic validation
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Check file size (limit to 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('File size must be less than 5MB');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Choose a path; e.g. company-{id}/logo-{timestamp}.{ext}
+      const ext = file.name.split('.').pop();
+      const filePath = `company-${currentCompany.id}/logo-${Date.now()}.${ext}`;
+
+      // Upload to Supabase storage bucket 'company-logos'
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('company-logos')
+        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: publicUrlData } = supabase
+        .storage
+        .from('company-logos')
+        .getPublicUrl(filePath);
+
+      const publicUrl = publicUrlData.publicUrl;
+
+      // Update local state & persist using existing hook
+      setCompanyData(prev => ({ ...prev, logo_url: publicUrl }));
+      await updateCompany.mutateAsync({ id: currentCompany.id, logo_url: publicUrl });
+
+      toast.success('Logo uploaded and saved successfully!');
+    } catch (err: any) {
+      console.error('Upload error', err);
+      toast.error('Failed to upload logo: ' + (err?.message || String(err)));
+    } finally {
+      setUploading(false);
+      // Clear the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
 
   const handleSaveCompany = async () => {
     console.log('Saving company with data:', companyData);
@@ -351,8 +393,8 @@ export default function CompanySettings() {
             <CardTitle>Logo & Branding</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center overflow-hidden">
+            <div className="flex items-start space-x-6">
+              <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25">
                 {companyData.logo_url ? (
                   <img
                     src={companyData.logo_url}
@@ -360,22 +402,35 @@ export default function CompanySettings() {
                     className="w-full h-full object-contain"
                   />
                 ) : (
-                  <Building2 className="h-8 w-8 text-muted-foreground" />
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <Image className="h-6 w-6 mb-1" />
+                    <span className="text-xs">No Logo</span>
+                  </div>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label>Company Logo</Label>
-                <div className="flex flex-col space-y-2">
+              <div className="flex-1 space-y-3">
+                <div>
+                  <Label className="text-sm font-medium">Company Logo</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Upload your company logo. Recommended size: 200x200px, max 5MB. Supports PNG, JPG, GIF, WebP.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    style={{ display: 'none' }}
+                  />
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      const newLogoUrl = '/assets/medplus-logo.webp';
-                      setCompanyData(prev => ({ ...prev, logo_url: newLogoUrl }));
-                      toast.success('Logo updated! Click Save Company to apply changes.');
-                    }}
+                    onClick={handleChooseFile}
+                    disabled={uploading}
+                    className="flex items-center gap-2"
                   >
                     <Upload className="h-4 w-4" />
-                    Use New MedPlus Logo
+                    {uploading ? 'Uploading...' : 'Upload Logo'}
                   </Button>
                   {companyData.logo_url && (
                     <Button
@@ -383,15 +438,19 @@ export default function CompanySettings() {
                       size="sm"
                       onClick={() => {
                         setCompanyData(prev => ({ ...prev, logo_url: '' }));
+                        toast.success('Logo removed. Click Save Settings to apply changes.');
                       }}
+                      className="text-destructive hover:text-destructive"
                     >
                       Remove Logo
                     </Button>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Current: MedPlus Africa Logo (Local Asset)
-                </p>
+                {companyData.logo_url && (
+                  <p className="text-xs text-muted-foreground">
+                    Current: Custom uploaded logo
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
