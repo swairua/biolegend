@@ -275,21 +275,11 @@ export default function CompanySettings() {
     console.log('Saving company with data:', companyData);
     console.log('Current company:', currentCompany);
 
-    // Basic validation
-    if (!companyData.name || !companyData.name.trim()) {
-      toast.error('Company name is required');
-      return;
-    }
-
-    if (!companyData.email || !companyData.email.trim()) {
-      toast.error('Company email is required');
-      return;
-    }
-
-    // Email format validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(companyData.email)) {
-      toast.error('Please enter a valid email address');
+    // Comprehensive validation
+    const validationErrors = validateCompanyData(companyData);
+    if (validationErrors.length > 0) {
+      toast.error(`Validation failed: ${validationErrors[0]}`);
+      console.error('Validation errors:', validationErrors);
       return;
     }
 
