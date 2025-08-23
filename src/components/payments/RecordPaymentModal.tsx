@@ -50,10 +50,11 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
     customer_name: invoice?.customers?.name || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Fetch all available invoices for selection
   const { data: invoices = [] } = useInvoices();
   const createPaymentMutation = useCreatePayment();
+  const { currentCompany } = useCurrentCompany();
   
   // Filter invoices that have outstanding balance
   const availableInvoices = invoices.filter(inv => 
