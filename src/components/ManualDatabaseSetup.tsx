@@ -84,11 +84,11 @@ export function ManualDatabaseSetup() {
   const runAdminOnly = async () => {
     setIsRunning(true);
     setStep('Creating super admin account...');
-    
+
     try {
       const result = await createSuperAdmin();
       setSetupResults({ admin: result, success: result.success });
-      
+
       if (result.success) {
         toast.success('Super admin created successfully!');
       } else {
@@ -101,6 +101,32 @@ export function ManualDatabaseSetup() {
         success: false
       });
       toast.error('Admin creation failed. Check console for details.');
+    } finally {
+      setIsRunning(false);
+      setStep('');
+    }
+  };
+
+  const runSchemaFix = async () => {
+    setIsRunning(true);
+    setStep('Fixing companies table schema...');
+
+    try {
+      const result = await fixCompaniesSchema();
+      setSetupResults({ schema: result, success: result.success });
+
+      if (result.success) {
+        toast.success('Schema fixed successfully! Missing columns added.');
+      } else {
+        toast.error('Schema fix failed. Check console for details.');
+      }
+    } catch (error) {
+      console.error('❌ Schema fix failed:', error);
+      setSetupResults({
+        error: error instanceof Error ? error.message : 'Unknown error',
+        success: false
+      });
+      toast.error('Schema fix failed. Check console for details.');
     } finally {
       setIsRunning(false);
       setStep('');
