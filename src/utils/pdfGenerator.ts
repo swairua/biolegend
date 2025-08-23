@@ -176,7 +176,7 @@ export const generatePDF = (data: DocumentData) => {
           font-size: 24px;
           font-weight: bold;
           margin-bottom: 5px;
-          color: #0891B2;
+          color: #7C3AED;
         }
         
         .company-details {
@@ -274,13 +274,13 @@ export const generatePDF = (data: DocumentData) => {
           border-collapse: collapse;
           margin: 20px 0;
           font-size: 11px;
-          border: 2px solid #0891B2;
+          border: 2px solid #7C3AED;
           border-radius: 8px;
           overflow: hidden;
         }
         
         .items-table thead {
-          background: #0891B2;
+          background: #7C3AED;
           color: white;
         }
         
@@ -371,20 +371,20 @@ export const generatePDF = (data: DocumentData) => {
         }
         
         .totals-table .total-row {
-          border-top: 2px solid #0891B2;
+          border-top: 2px solid #7C3AED;
           background: #f8f9fa;
         }
         
         .totals-table .total-row .label {
           font-size: 14px;
           font-weight: bold;
-          color: #0891B2;
+          color: #7C3AED;
         }
         
         .totals-table .total-row .amount {
           font-size: 16px;
           font-weight: bold;
-          color: #0891B2;
+          color: #7C3AED;
         }
         
         .notes-section {
@@ -594,7 +594,7 @@ export const generatePDF = (data: DocumentData) => {
                 ` : ''}
                 <tr>
                   <td class="label">${data.type === 'receipt' ? 'Amount Paid' : data.type === 'remittance' ? 'Total Payment' : 'Amount'}:</td>
-                  <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#0891B2'};">${formatCurrency(data.total_amount)}</td>
+                  <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#7C3AED'};">${formatCurrency(data.total_amount)}</td>
                 </tr>
               </table>
             </div>
