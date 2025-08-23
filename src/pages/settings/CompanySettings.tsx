@@ -161,6 +161,60 @@ export default function CompanySettings() {
     }
   };
 
+  const validateCompanyData = (data: any) => {
+    const errors = [];
+
+    // Required fields
+    if (!data.name || !data.name.trim()) {
+      errors.push('Company name is required');
+    } else if (data.name.length > 255) {
+      errors.push('Company name must be less than 255 characters');
+    }
+
+    // Email validation
+    if (data.email && data.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        errors.push('Please enter a valid email address');
+      } else if (data.email.length > 255) {
+        errors.push('Email must be less than 255 characters');
+      }
+    }
+
+    // Length validations for other fields
+    if (data.registration_number && data.registration_number.length > 100) {
+      errors.push('Registration number must be less than 100 characters');
+    }
+    if (data.tax_number && data.tax_number.length > 100) {
+      errors.push('Tax number must be less than 100 characters');
+    }
+    if (data.phone && data.phone.length > 50) {
+      errors.push('Phone number must be less than 50 characters');
+    }
+    if (data.city && data.city.length > 100) {
+      errors.push('City must be less than 100 characters');
+    }
+    if (data.state && data.state.length > 100) {
+      errors.push('State must be less than 100 characters');
+    }
+    if (data.postal_code && data.postal_code.length > 20) {
+      errors.push('Postal code must be less than 20 characters');
+    }
+    if (data.country && data.country.length > 100) {
+      errors.push('Country must be less than 100 characters');
+    }
+    if (data.currency && data.currency.length > 3) {
+      errors.push('Currency code must be 3 characters or less');
+    }
+
+    // Fiscal year validation
+    if (data.fiscal_year_start && (data.fiscal_year_start < 1 || data.fiscal_year_start > 12)) {
+      errors.push('Fiscal year start must be between 1 and 12');
+    }
+
+    return errors;
+  };
+
   const testCompanySave = async () => {
     console.log('🧪 Testing company save with detailed logging...');
     console.log('Current company data:', JSON.stringify(companyData, null, 2));
