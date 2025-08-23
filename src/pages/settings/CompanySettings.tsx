@@ -16,6 +16,7 @@ import StorageSetup from '@/components/StorageSetup';
 import { getUserFriendlyMessage, logError } from '@/utils/errorParser';
 import { QuickSchemaFix } from '@/components/QuickSchemaFix';
 import { addCurrencyColumn, ADD_CURRENCY_COLUMN_SQL } from '@/utils/addCurrencyColumn';
+import { CompaniesTableAuditPanel } from '@/components/CompaniesTableAuditPanel';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
@@ -557,8 +558,13 @@ export default function CompanySettings() {
         </div>
       </div>
 
-      {/* Simple Currency Column Fix - Show when schema errors are detected */}
-      {schemaError && (
+      {/* Companies Table Schema Issues - Comprehensive Audit and Fix */}
+      {(schemaError || companiesError) && (
+        <CompaniesTableAuditPanel />
+      )}
+
+      {/* Simple Currency Column Fix - Show when schema errors are detected (fallback) */}
+      {schemaError && !companiesError && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
