@@ -256,6 +256,9 @@ const App = () => {
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
 
+          {/* Manual Database Setup - No protection needed */}
+          <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
+
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
