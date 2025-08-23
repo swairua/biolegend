@@ -244,13 +244,13 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     try {
       // Generate invoice number
       const invoiceNumber = await generateDocNumber.mutateAsync({
-        companyId: '550e8400-e29b-41d4-a716-446655440000',
+        companyId: currentCompany?.id || 'default-company-id',
         type: 'invoice'
       });
 
       // Create invoice with items
       const invoiceData = {
-        company_id: '550e8400-e29b-41d4-a716-446655440000',
+        company_id: currentCompany?.id || 'default-company-id',
         customer_id: selectedCustomerId,
         invoice_number: invoiceNumber,
         invoice_date: invoiceDate,
