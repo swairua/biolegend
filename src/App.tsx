@@ -27,6 +27,7 @@ import CreditNotes from "./pages/CreditNotes";
 import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
 import DatabaseFixPage from "./pages/DatabaseFixPage";
+import AutoFixPage from "./pages/AutoFixPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 
 const App = () => {
@@ -256,6 +257,9 @@ const App = () => {
 
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
+
+          {/* Auto-execute Database Fixes and RLS removal */}
+          <Route path="/auto-fix" element={<AutoFixPage />} />
 
           {/* Database Fixes - No protection needed for setup */}
           <Route path="/database-fix-page" element={<DatabaseFixPage />} />
