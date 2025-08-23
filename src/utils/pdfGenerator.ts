@@ -6,6 +6,7 @@ export interface DocumentData {
   type: 'quotation' | 'invoice' | 'remittance' | 'proforma' | 'delivery' | 'statement' | 'receipt';
   number: string;
   date: string;
+  lpo_number?: string;
   customer: {
     name: string;
     email?: string;
@@ -20,6 +21,7 @@ export interface DocumentData {
     quantity: number;
     unit_price: number;
     discount_percentage?: number;
+    discount_before_vat?: number;
     discount_amount?: number;
     tax_percentage?: number;
     tax_amount?: number;
@@ -76,9 +78,45 @@ const DEFAULT_COMPANY: CompanyDetails = {
   logo_url: 'https://cdn.builder.io/api/v1/image/assets%2Fe6da7596f8c24b5ab16b4dd97e814f11%2F777d6596ea424f149c22b390c9ec9489?format=webp&width=800'
 };
 
+// Helper function to determine which columns have values
+const analyzeColumns = (items: DocumentData['items']) => {
+  if (!items || items.length === 0) return {};
+
+  const columns = {
+    discountPercentage: false,
+    discountBeforeVat: false,
+    discountAmount: false,
+    taxPercentage: false,
+    taxAmount: false,
+  };
+
+  items.forEach(item => {
+    if (item.discount_percentage && item.discount_percentage > 0) {
+      columns.discountPercentage = true;
+    }
+    if (item.discount_before_vat && item.discount_before_vat > 0) {
+      columns.discountBeforeVat = true;
+    }
+    if (item.discount_amount && item.discount_amount > 0) {
+      columns.discountAmount = true;
+    }
+    if (item.tax_percentage && item.tax_percentage > 0) {
+      columns.taxPercentage = true;
+    }
+    if (item.tax_amount && item.tax_amount > 0) {
+      columns.taxAmount = true;
+    }
+  });
+
+  return columns;
+};
+
 export const generatePDF = (data: DocumentData) => {
   // Use company details from data or fall back to defaults
   const company = data.company || DEFAULT_COMPANY;
+
+  // Analyze which columns have values
+  const visibleColumns = analyzeColumns(data.items);
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -592,6 +630,12 @@ export const generatePDF = (data: DocumentData) => {
                   <td class="value">${formatDate(data.valid_until)}</td>
                 </tr>
                 ` : ''}
+                ${data.lpo_number ? `
+                <tr>
+                  <td class="label">LPO Number:</td>
+                  <td class="value">${data.lpo_number}</td>
+                </tr>
+                ` : ''}
                 <tr>
                   <td class="label">${data.type === 'receipt' ? 'Amount Paid' : data.type === 'remittance' ? 'Total Payment' : 'Amount'}:</td>
                   <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#7C3AED'};">${formatCurrency(data.total_amount)}</td>
@@ -708,11 +752,14 @@ export const generatePDF = (data: DocumentData) => {
                 <th style="width: 12%;">Balance</th>
                 ` : `
                 <th style="width: 5%;">#</th>
-                <th style="width: 35%;">Description</th>
+                <th style="width: ${visibleColumns.discountPercentage || visibleColumns.discountBeforeVat || visibleColumns.discountAmount || visibleColumns.taxPercentage || visibleColumns.taxAmount ? '30%' : '40%'};">Description</th>
                 <th style="width: 10%;">Qty</th>
                 <th style="width: 15%;">Unit Price</th>
-                <th style="width: 10%;">Tax %</th>
-                <th style="width: 15%;">Tax Amount</th>
+                ${visibleColumns.discountPercentage ? '<th style="width: 10%;">Disc %</th>' : ''}
+                ${visibleColumns.discountBeforeVat ? '<th style="width: 12%;">Disc Before VAT</th>' : ''}
+                ${visibleColumns.discountAmount ? '<th style="width: 12%;">Disc Amount</th>' : ''}
+                ${visibleColumns.taxPercentage ? '<th style="width: 10%;">Tax %</th>' : ''}
+                ${visibleColumns.taxAmount ? '<th style="width: 12%;">Tax Amount</th>' : ''}
                 <th style="width: 15%;">Total</th>
                 `}
               </tr>
@@ -736,8 +783,11 @@ export const generatePDF = (data: DocumentData) => {
                   ` : `
                   <td>${item.quantity}</td>
                   <td class="amount-cell">${formatCurrency(item.unit_price)}</td>
-                  <td>${item.tax_percentage || 0}%</td>
-                  <td class="amount-cell">${formatCurrency(item.tax_amount || 0)}</td>
+                  ${visibleColumns.discountPercentage ? `<td>${item.discount_percentage || 0}%</td>` : ''}
+                  ${visibleColumns.discountBeforeVat ? `<td class="amount-cell">${formatCurrency(item.discount_before_vat || 0)}</td>` : ''}
+                  ${visibleColumns.discountAmount ? `<td class="amount-cell">${formatCurrency(item.discount_amount || 0)}</td>` : ''}
+                  ${visibleColumns.taxPercentage ? `<td>${item.tax_percentage || 0}%</td>` : ''}
+                  ${visibleColumns.taxAmount ? `<td class="amount-cell">${formatCurrency(item.tax_amount || 0)}</td>` : ''}
                   <td class="amount-cell">${formatCurrency(item.line_total)}</td>
                   `}
                   `}
@@ -851,6 +901,7 @@ export const downloadInvoicePDF = async (invoice: any, documentType: 'INVOICE' |
     number: invoice.invoice_number,
     date: invoice.invoice_date,
     due_date: invoice.due_date,
+    lpo_number: invoice.lpo_number,
     company: company, // Pass company details
     customer: {
       name: invoice.customers?.name || 'Unknown Customer',
@@ -872,6 +923,7 @@ export const downloadInvoicePDF = async (invoice: any, documentType: 'INVOICE' |
         quantity: quantity,
         unit_price: unitPrice,
         discount_percentage: Number(item.discount_percentage || 0),
+        discount_before_vat: Number(item.discount_before_vat || 0),
         discount_amount: discountAmount,
         tax_percentage: Number(item.tax_percentage || 0),
         tax_amount: taxAmount,

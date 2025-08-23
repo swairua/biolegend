@@ -165,10 +165,11 @@ export function ViewRemittanceModal({
             </CardHeader>
             <CardContent>
               <div className="space-y-2 text-sm">
-                <div>P.O BOX 45352 - 00100, NAIROBI KENYA</div>
-                <div>Siens Plaza 4th floor room 1 opposite kcb bank River road</div>
-                <div>Tel: +254 713149223, +254 733 468610</div>
-                <div>Email: sales@medplusafrica.com</div>
+                <div>P.O Box 85988-00200, Nairobi, Kenya</div>
+                <div>Tel: 0741 207 690/0780 165 490</div>
+                <div>Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
+                <div>Website: www.biolegendscientific.co.ke</div>
+                <div className="text-xs italic text-primary/70">Delivering Discoveries.... and more</div>
               </div>
             </CardContent>
           </Card>

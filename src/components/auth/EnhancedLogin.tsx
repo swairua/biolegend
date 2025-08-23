@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -145,8 +147,19 @@ export function EnhancedLogin() {
             </Button>
           </form>
 
-          <div className="text-center text-xs text-muted-foreground">
-            <p>Contact your administrator if you need account access.</p>
+          <div className="text-center space-y-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/auth-test')}
+              className="w-full"
+            >
+              <Shield className="mr-2 h-4 w-4" />
+              Authentication Diagnostics
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              Contact your administrator if you need account access.
+            </p>
           </div>
         </CardContent>
       </Card>

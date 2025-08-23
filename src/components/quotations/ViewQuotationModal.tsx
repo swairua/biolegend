@@ -21,7 +21,7 @@ import {
   Edit,
   Send
 } from 'lucide-react';
-import { MedPlusLogo } from '@/components/ui/medplus-logo';
+import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 
 interface ViewQuotationModalProps {
   open: boolean;
@@ -114,12 +114,13 @@ export function ViewQuotationModal({
           {/* Header */}
           <div className="flex justify-between items-start">
             <div className="space-y-2">
-              <MedPlusLogo size="lg" showText={true} />
+              <BiolegendLogo size="lg" showText={true} />
               <div className="text-sm text-muted-foreground space-y-1">
-                <div>P.O BOX 45352 - 00100, NAIROBI KENYA</div>
-                <div>Siens Plaza 4th floor room 1 opposite kcb bank River road</div>
-                <div>Tel: +254 713149223, +254 733 468610</div>
-                <div>Email: info@medplusafrica.com</div>
+                <div>P.O Box 85988-00200, Nairobi, Kenya</div>
+                <div>Tel: 0741 207 690/0780 165 490</div>
+                <div>Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
+                <div>Website: www.biolegendscientific.co.ke</div>
+                <div className="text-xs italic text-primary/70">Delivering Discoveries.... and more</div>
               </div>
             </div>
             
@@ -308,7 +309,7 @@ export function ViewQuotationModal({
           {/* Footer */}
           <div className="text-center text-sm text-muted-foreground pt-6 border-t">
             <div className="mb-2">
-              <MedPlusLogo size="sm" showText={true} className="justify-center" />
+              <BiolegendLogo size="sm" showText={true} className="justify-center" />
             </div>
             <div>Your Medical & Laboratory Supplies Partner</div>
             <div className="mt-1">Medical Supplies • Laboratory Supplies • Technical Equipment</div>

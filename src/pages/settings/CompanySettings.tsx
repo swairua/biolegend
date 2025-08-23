@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { useCompanies, useUpdateCompany, useCreateCompany, useTaxSettings, useCreateTaxSetting, useUpdateTaxSetting, useDeleteTaxSetting } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { ForceTaxSettings } from '@/components/ForceTaxSettings';
-import { supabase } from '@/integrations/supabase/client\';\nimport StorageSetup from \'@/components/StorageSetup';
+import { supabase } from '@/integrations/supabase/client';
+import StorageSetup from '@/components/StorageSetup';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
@@ -24,8 +25,8 @@ export default function CompanySettings() {
     registration_number: '',
     tax_number: 'P051658002D',
     email: 'biolegend@biolegendscientific.co.ke',
-    phone: '+254780165490/ +254741207690',
-    address: 'P.O Box 85988-00200\nNAIROBI',
+    phone: 'Tel: 0741 207 690/0780 165 490',
+    address: 'P.O Box 85988-00200\nNairobi, Kenya',
     city: 'Nairobi',
     state: '',
     postal_code: '00200',

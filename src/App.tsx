@@ -19,10 +19,12 @@ import SalesReports from "./pages/reports/SalesReports";
 import InventoryReports from "./pages/reports/InventoryReports";
 import StatementOfAccounts from "./pages/reports/StatementOfAccounts";
 import CompanySettings from "./pages/settings/CompanySettings";
-import UserManagement from "./pages/settings/UserManagement\";\nimport SetupAndTest from \"./pages/SetupAndTest";
+import UserManagement from "./pages/settings/UserManagement";
+import SetupAndTest from "./pages/SetupAndTest";
 import RemittanceAdvice from "./pages/RemittanceAdvice";
 import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
+import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -249,6 +251,9 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Authentication Test - No protection needed */}
+          <Route path="/auth-test" element={<AuthTest />} />
 
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />

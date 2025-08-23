@@ -24,7 +24,7 @@ export function BiolegendLogo({ className, size = "md", showText = true }: Biole
       {/* Biolegend Logo Image */}
       <div className={cn("relative", sizeClasses[size])}>
         <img
-          src="https://cdn.builder.io/api/v1/image/assets%2Fe6da7596f8c24b5ab16b4dd97e814f11%2F777d6596ea424f149c22b390c9ec9489?format=webp&width=800"
+          src="https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800"
           alt="Biolegend Scientific Ltd Logo"
           className="w-full h-full object-contain"
         />
