@@ -170,9 +170,9 @@ export default function SetupAndTest() {
         },
         company: {
           name: 'BIOLEGEND SCIENTIFIC LTD',
-          address: 'P.O Box 85988-00200\nNAIROBI\nKenya',
+          address: 'P.O Box 85988-00200\nNairobi, Kenya',
           phone: 'Tel: 0741 207 690/0780 165 490',
-          email: 'Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke\nWebsite:www.biolegendscientific.co.ke',
+          email: 'Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke\nWebsite: www.biolegendscientific.co.ke',
           tax_number: 'P051658002D'
         },
         items: [
