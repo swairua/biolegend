@@ -191,6 +191,15 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     }));
   };
 
+  const updateItemDiscountBeforeVat = (itemId: string, discountBeforeVat: number) => {
+    setItems(items.map(item => {
+      if (item.id === itemId) {
+        return { ...item, discount_before_vat: discountBeforeVat };
+      }
+      return item;
+    }));
+  };
+
   const updateItemTaxInclusive = (itemId: string, taxInclusive: boolean) => {
     setItems(items.map(item => {
       if (item.id === itemId) {
