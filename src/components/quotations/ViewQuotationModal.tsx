@@ -21,7 +21,7 @@ import {
   Edit,
   Send
 } from 'lucide-react';
-import { MedPlusLogo } from '@/components/ui/medplus-logo';
+import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 
 interface ViewQuotationModalProps {
   open: boolean;
@@ -309,7 +309,7 @@ export function ViewQuotationModal({
           {/* Footer */}
           <div className="text-center text-sm text-muted-foreground pt-6 border-t">
             <div className="mb-2">
-              <MedPlusLogo size="sm" showText={true} className="justify-center" />
+              <BiolegendLogo size="sm" showText={true} className="justify-center" />
             </div>
             <div>Your Medical & Laboratory Supplies Partner</div>
             <div className="mt-1">Medical Supplies • Laboratory Supplies • Technical Equipment</div>
