@@ -549,6 +549,16 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
                       <TableCell>
                         <Input
                           type="number"
+                          value={item.discount_before_vat || 0}
+                          onChange={(e) => updateItemDiscountBeforeVat(item.id, parseFloat(e.target.value) || 0)}
+                          className="w-24"
+                          step="0.01"
+                          placeholder="0.00"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
                           value={item.tax_percentage}
                           onChange={(e) => updateItemTax(item.id, parseFloat(e.target.value) || 0)}
                           className="w-20"
