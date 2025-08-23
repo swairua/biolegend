@@ -281,61 +281,10 @@ export default function CompanySettings() {
       toast.success('🧪 Test save successful!');
 
     } catch (error) {
-      // Enhanced error logging and parsing for test function
-      console.error('🧪 Test save failed (detailed):', {
-        error,
-        errorType: typeof error,
-        errorConstructor: error?.constructor?.name,
-        errorString: String(error),
-        errorJSON: JSON.stringify(error, null, 2)
-      });
-
-      let errorMessage = 'Unknown test error occurred';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        console.log('🧪 Error is instance of Error, message:', error.message);
-      } else if (error && typeof error === 'object') {
-        // Handle Supabase error objects
-        const supabaseError = error as any;
-        console.log('🧪 Supabase error object:', {
-          message: supabaseError.message,
-          details: supabaseError.details,
-          hint: supabaseError.hint,
-          code: supabaseError.code,
-          status: supabaseError.status,
-          statusText: supabaseError.statusText
-        });
-
-        if (supabaseError.message) {
-          errorMessage = supabaseError.message;
-        } else if (supabaseError.details) {
-          errorMessage = supabaseError.details;
-        } else if (supabaseError.hint) {
-          errorMessage = supabaseError.hint;
-        } else if (supabaseError.code) {
-          errorMessage = `Error code: ${supabaseError.code}`;
-        } else if (supabaseError.statusText) {
-          errorMessage = supabaseError.statusText;
-        } else {
-          // Try to extract any string value from the error object
-          const errorKeys = Object.keys(supabaseError);
-          for (const key of errorKeys) {
-            if (typeof supabaseError[key] === 'string' && supabaseError[key].length > 0) {
-              errorMessage = `${key}: ${supabaseError[key]}`;
-              break;
-            }
-          }
-          if (errorMessage === 'Unknown test error occurred') {
-            errorMessage = JSON.stringify(error);
-          }
-        }
-      } else {
-        errorMessage = String(error);
-      }
-
-      console.log('🧪 Final test error message:', errorMessage);
-      toast.error(`🧪 Test failed: ${errorMessage}`);
+      // Use centralized error parsing and logging for test function
+      logError(error, '🧪 Test Save');
+      const userMessage = getUserFriendlyMessage(error, '🧪 Test failed');
+      toast.error(userMessage);
     }
   };
 
