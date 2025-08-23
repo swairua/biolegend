@@ -343,6 +343,18 @@ export default function CompanySettings() {
         toast.error('Companies table does not exist. Please run the database setup first.');
       } else if (errorMessage.includes('permission denied') || errorMessage.includes('insufficient_privilege')) {
         toast.error('Permission denied: Please check your database permissions or contact your administrator.');
+      } else if (errorMessage.includes('column') && errorMessage.includes('does not exist')) {
+        toast.error('Database schema mismatch detected. Please update your database schema or contact support.');
+      } else if (errorMessage.includes('null value') && errorMessage.includes('violates not-null constraint')) {
+        toast.error('Required field is missing. Please ensure all required fields are filled.');
+      } else if (errorMessage.includes('invalid input syntax')) {
+        toast.error('Invalid data format detected. Please check your input values.');
+      } else if (errorMessage.includes('duplicate key') || errorMessage.includes('already exists')) {
+        toast.error('A company with this information already exists.');
+      } else if (errorMessage.includes('value too long')) {
+        toast.error('One of your input values is too long. Please shorten your text fields.');
+      } else if (errorMessage.toLowerCase().includes('timeout') || errorMessage.toLowerCase().includes('network')) {
+        toast.error('Network or timeout error. Please check your connection and try again.');
       } else {
         toast.error(`Failed to save company settings: ${errorMessage}`);
       }
