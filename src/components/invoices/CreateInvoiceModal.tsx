@@ -327,6 +327,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     setSelectedCustomerId('');
     setInvoiceDate(new Date().toISOString().split('T')[0]);
     setDueDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    setLpoNumber('');
     setNotes('');
     setTermsAndConditions('Payment due within 30 days of invoice date.');
     setItems([]);
