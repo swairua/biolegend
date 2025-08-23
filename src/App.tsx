@@ -24,6 +24,7 @@ import SetupAndTest from "./pages/SetupAndTest";
 import RemittanceAdvice from "./pages/RemittanceAdvice";
 import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
+import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
