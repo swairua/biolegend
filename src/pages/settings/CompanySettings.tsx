@@ -340,6 +340,17 @@ export default function CompanySettings() {
       // Use centralized error parsing and logging
       logError(error, 'Company Save');
       const userMessage = getUserFriendlyMessage(error, 'Failed to save company settings');
+
+      // Check if this is a schema error
+      const errorString = String(error);
+      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('currency column missing');
+      } else if (errorString.includes('registration_number') && errorString.includes('column')) {
+        setSchemaError('registration_number column missing');
+      } else if (errorString.includes('fiscal_year_start') && errorString.includes('column')) {
+        setSchemaError('fiscal_year_start column missing');
+      }
+
       toast.error(userMessage);
     }
   };
