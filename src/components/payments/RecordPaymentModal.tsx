@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useInvoices, useCreatePayment } from '@/hooks/useDatabase';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 
 interface RecordPaymentModalProps {
   open: boolean;
@@ -49,10 +50,11 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
     customer_name: invoice?.customers?.name || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   // Fetch all available invoices for selection
   const { data: invoices = [] } = useInvoices();
   const createPaymentMutation = useCreatePayment();
+  const { currentCompany } = useCurrentCompany();
   
   // Filter invoices that have outstanding balance
   const availableInvoices = invoices.filter(inv => 
@@ -101,13 +103,18 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       return;
     }
 
+    if (!currentCompany?.id) {
+      toast.error('Company not found. Please refresh and try again.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Generate payment number
       const paymentNumber = `PAY-${Date.now()}`;
-      
+
       const paymentRecord = {
-        company_id: selectedInvoice?.company_id || '550e8400-e29b-41d4-a716-446655440000',
+        company_id: selectedInvoice?.company_id || currentCompany.id,
         customer_id: selectedInvoice?.customer_id || '',
         payment_number: paymentNumber,
         payment_date: paymentData.payment_date,

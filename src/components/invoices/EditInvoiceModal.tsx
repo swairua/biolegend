@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useUpdateInvoiceWithItems } from '@/hooks/useQuotationItems';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 
 interface InvoiceItem {
@@ -67,9 +68,10 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: customers, isLoading: loadingCustomers } = useCustomers('550e8400-e29b-41d4-a716-446655440000');
-  const { data: products, isLoading: loadingProducts } = useProducts('550e8400-e29b-41d4-a716-446655440000');
-  const { data: taxSettings } = useTaxSettings('550e8400-e29b-41d4-a716-446655440000');
+  const { currentCompany } = useCurrentCompany();
+  const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
+  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const { data: taxSettings } = useTaxSettings(currentCompany?.id);
   const updateInvoiceWithItems = useUpdateInvoiceWithItems();
 
   // Get default tax rate
@@ -360,7 +362,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
                     </SelectTrigger>
                     <SelectContent>
                       {loadingCustomers ? (
-                        <SelectItem value="" disabled>Loading customers...</SelectItem>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading customers...</div>
                       ) : (
                         customers?.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
