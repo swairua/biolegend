@@ -348,8 +348,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user, fetchProfile]);
 
-  // Compute derived state
-  const isAuthenticated = !!user && !!profile;
+  // Compute derived state - only require user since we removed role-based system
+  const isAuthenticated = !!user;
 
   const value: AuthContextType = {
     user,
