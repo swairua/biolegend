@@ -11,7 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { useCompanies, useUpdateCompany, useCreateCompany, useTaxSettings, useCreateTaxSetting, useUpdateTaxSetting, useDeleteTaxSetting } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { ForceTaxSettings } from '@/components/ForceTaxSettings';
-import { supabase } from '@/integrations/supabase/client\';\nimport StorageSetup from \'@/components/StorageSetup';
+import { supabase } from '@/integrations/supabase/client';
+import StorageSetup from '@/components/StorageSetup';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
