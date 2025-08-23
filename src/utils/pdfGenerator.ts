@@ -809,7 +809,7 @@ export const generatePDF = (data: DocumentData) => {
         </div>
         ` : ''}
         
-        <!-- Footer -->
+        <!-- Bank Details -->\n        <div class=\"bank-details\">\n          <strong>MAKE ALL PAYMENTS THROUGH BIOLEGEND SCIENTIFIC LTD, KCB RIVER ROAD BRANCH NUMBER : 1216348367 - SWIFT CODE; KCBLKENX - BANK CODE; 01 - BRANCH CODE; 114 ABSA BANK KENYA PLC: THIKA ROAD MALL BRANCH, ACC: 2051129930, BRANCH CODE; 024, SWIFT CODE; BARCKENX</strong>\n        </div>\n        \n        <!-- Footer -->
         <div class="footer">
           <strong>Thank you for your business!</strong><br>
           <strong>${company.name}</strong><br>
