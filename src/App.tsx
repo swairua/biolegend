@@ -6,9 +6,7 @@ import { enableResizeObserverErrorSuppression } from "@/utils/resizeObserverErro
 import { useDatabaseDiagnostics } from "@/hooks/useDatabaseDiagnostics";
 import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
-import { ComprehensiveMigrationBanner } from "@/components/ComprehensiveMigrationBanner";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { autoMigrateIfNeeded } from "@/utils/executeMigrationNow";
 import Index from "./pages/Index";
 import Quotations from "./pages/Quotations";
 import Invoices from "./pages/Invoices";
@@ -26,11 +24,6 @@ import RemittanceAdvice from "./pages/RemittanceAdvice";
 import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import NotFound from "./pages/NotFound";
-import TestLogin from "./pages/TestLogin";
-import SupabaseQuickFix from "./pages/SupabaseQuickFix";
-import ForceMigration from "./pages/ForceMigration";
-import AutoSetup from "./pages/AutoSetup";
-import EmailLoginFix from "./pages/EmailLoginFix";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -42,23 +35,19 @@ const App = () => {
 
     // Log successful fix
     console.log('✅ App loaded without setState during render errors');
-
-    // Auto-check for missing tables and suggest migration
-    autoMigrateIfNeeded().catch(console.error);
   }, []);
 
   return (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <ComprehensiveMigrationBanner />
       <Layout>
         <Routes>
-          {/* Public/Dashboard Routes */}
+          {/* Dashboard */}
           <Route 
             path="/" 
             element={
-              <ProtectedRoute permission="view_dashboard">
+              <ProtectedRoute>
                 <Index />
               </ProtectedRoute>
             } 
@@ -68,7 +57,7 @@ const App = () => {
           <Route 
             path="/quotations" 
             element={
-              <ProtectedRoute permission="create_quotations">
+              <ProtectedRoute>
                 <Quotations />
               </ProtectedRoute>
             } 
@@ -76,7 +65,7 @@ const App = () => {
           <Route 
             path="/quotations/new" 
             element={
-              <ProtectedRoute permission="create_quotations">
+              <ProtectedRoute>
                 <Quotations />
               </ProtectedRoute>
             } 
@@ -84,7 +73,7 @@ const App = () => {
           <Route 
             path="/customers" 
             element={
-              <ProtectedRoute permission="view_customers">
+              <ProtectedRoute>
                 <Customers />
               </ProtectedRoute>
             } 
@@ -92,7 +81,7 @@ const App = () => {
           <Route 
             path="/customers/new" 
             element={
-              <ProtectedRoute permission="view_customers">
+              <ProtectedRoute>
                 <Customers />
               </ProtectedRoute>
             } 
@@ -102,7 +91,7 @@ const App = () => {
           <Route 
             path="/invoices" 
             element={
-              <ProtectedRoute permission="manage_invoices">
+              <ProtectedRoute>
                 <Invoices />
               </ProtectedRoute>
             } 
@@ -110,7 +99,7 @@ const App = () => {
           <Route 
             path="/invoices/new" 
             element={
-              <ProtectedRoute permission="manage_invoices">
+              <ProtectedRoute>
                 <Invoices />
               </ProtectedRoute>
             } 
@@ -118,7 +107,7 @@ const App = () => {
           <Route 
             path="/payments" 
             element={
-              <ProtectedRoute permission="manage_payments">
+              <ProtectedRoute>
                 <Payments />
               </ProtectedRoute>
             } 
@@ -126,7 +115,7 @@ const App = () => {
           <Route 
             path="/payments/new" 
             element={
-              <ProtectedRoute permission="manage_payments">
+              <ProtectedRoute>
                 <Payments />
               </ProtectedRoute>
             } 
@@ -134,7 +123,7 @@ const App = () => {
           <Route 
             path="/credit-notes" 
             element={
-              <ProtectedRoute permission="manage_credit_notes">
+              <ProtectedRoute>
                 <CreditNotes />
               </ProtectedRoute>
             } 
@@ -142,7 +131,7 @@ const App = () => {
           <Route 
             path="/credit-notes/new" 
             element={
-              <ProtectedRoute permission="manage_credit_notes">
+              <ProtectedRoute>
                 <CreditNotes />
               </ProtectedRoute>
             } 
@@ -150,7 +139,7 @@ const App = () => {
           <Route 
             path="/proforma" 
             element={
-              <ProtectedRoute permission="create_quotations">
+              <ProtectedRoute>
                 <Proforma />
               </ProtectedRoute>
             } 
@@ -160,7 +149,7 @@ const App = () => {
           <Route 
             path="/lpos" 
             element={
-              <ProtectedRoute permission="manage_lpos">
+              <ProtectedRoute>
                 <LPOs />
               </ProtectedRoute>
             } 
@@ -168,7 +157,7 @@ const App = () => {
           <Route 
             path="/lpos/new" 
             element={
-              <ProtectedRoute permission="manage_lpos">
+              <ProtectedRoute>
                 <LPOs />
               </ProtectedRoute>
             } 
@@ -176,7 +165,7 @@ const App = () => {
           <Route 
             path="/inventory" 
             element={
-              <ProtectedRoute permission="manage_inventory">
+              <ProtectedRoute>
                 <Inventory />
               </ProtectedRoute>
             } 
@@ -184,7 +173,7 @@ const App = () => {
           <Route 
             path="/inventory/new" 
             element={
-              <ProtectedRoute permission="manage_inventory">
+              <ProtectedRoute>
                 <Inventory />
               </ProtectedRoute>
             } 
@@ -192,7 +181,7 @@ const App = () => {
           <Route 
             path="/delivery-notes" 
             element={
-              <ProtectedRoute permission="manage_delivery_notes">
+              <ProtectedRoute>
                 <DeliveryNotes />
               </ProtectedRoute>
             } 
@@ -202,17 +191,17 @@ const App = () => {
           <Route 
             path="/remittance" 
             element={
-              <ProtectedRoute permission="manage_payments">
+              <ProtectedRoute>
                 <RemittanceAdvice />
               </ProtectedRoute>
             } 
           />
 
-          {/* Reports - Most require view_reports permission */}
+          {/* Reports */}
           <Route 
             path="/reports/sales" 
             element={
-              <ProtectedRoute permission="view_reports">
+              <ProtectedRoute>
                 <SalesReports />
               </ProtectedRoute>
             } 
@@ -220,7 +209,7 @@ const App = () => {
           <Route 
             path="/reports/inventory" 
             element={
-              <ProtectedRoute permission="view_reports">
+              <ProtectedRoute>
                 <InventoryReports />
               </ProtectedRoute>
             } 
@@ -228,17 +217,17 @@ const App = () => {
           <Route 
             path="/reports/statements" 
             element={
-              <ProtectedRoute permission="view_reports">
+              <ProtectedRoute>
                 <StatementOfAccounts />
               </ProtectedRoute>
             } 
           />
 
-          {/* Settings - Admin and specific role access */}
+          {/* Settings */}
           <Route
             path="/settings/company"
             element={
-              <ProtectedRoute permission="manage_company">
+              <ProtectedRoute>
                 <CompanySettings />
               </ProtectedRoute>
             }
@@ -246,32 +235,10 @@ const App = () => {
           <Route
             path="/settings/users"
             element={
-              <ProtectedRoute permission="manage_users">
+              <ProtectedRoute>
                 <UserManagement />
               </ProtectedRoute>
             }
-          />
-
-          {/* Test & Debug Routes */}
-          <Route
-            path="/test-login"
-            element={<TestLogin />}
-          />
-          <Route
-            path="/supabase-fix"
-            element={<SupabaseQuickFix />}
-          />
-          <Route
-            path="/force-migration"
-            element={<ForceMigration />}
-          />
-          <Route
-            path="/auto-setup"
-            element={<AutoSetup />}
-          />
-          <Route
-            path="/email-login-fix"
-            element={<EmailLoginFix />}
           />
 
           {/* 404 Page */}

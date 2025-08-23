@@ -28,7 +28,7 @@ import {
   Search,
   Calculator
 } from 'lucide-react';
-import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { useCreateQuotationWithItems } from '@/hooks/useQuotationItems';
 import { toast } from 'sonner';
 
@@ -63,9 +63,19 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: customers, isLoading: loadingCustomers } = useCustomers('550e8400-e29b-41d4-a716-446655440000');
-  const { data: products, isLoading: loadingProducts } = useProducts('550e8400-e29b-41d4-a716-446655440000');
-  const { data: taxSettings } = useTaxSettings('550e8400-e29b-41d4-a716-446655440000');
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
+  const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
+  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const { data: taxSettings } = useTaxSettings(currentCompany?.id);
+
+  // Debug logging to understand why customer dropdown is empty
+  console.log('=== CREATE QUOTATION MODAL DEBUG ===');
+  console.log('Companies:', companies);
+  console.log('Current Company:', currentCompany);
+  console.log('Customers:', customers);
+  console.log('Loading Customers:', loadingCustomers);
+  console.log('Company ID for customers query:', currentCompany?.id);
   const createQuotationWithItems = useCreateQuotationWithItems();
   const generateDocNumber = useGenerateDocumentNumber();
 
@@ -235,7 +245,7 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
       // Generate quotation number
       console.log('Generating quotation number...');
       const quotationNumber = await generateDocNumber.mutateAsync({
-        companyId: '550e8400-e29b-41d4-a716-446655440000',
+        companyId: currentCompany?.id || 'default-company-id',
         type: 'quotation'
       });
       console.log('Generated quotation number:', quotationNumber);
@@ -243,7 +253,7 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
       // Create quotation with items
       console.log('Preparing quotation data...');
       const quotationData = {
-        company_id: '550e8400-e29b-41d4-a716-446655440000',
+        company_id: currentCompany?.id || 'default-company-id',
         customer_id: selectedCustomerId,
         quotation_number: quotationNumber,
         quotation_date: quotationDate,
@@ -372,6 +382,15 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
           <DialogDescription>
             Create a detailed quotation with multiple items for your customer
           </DialogDescription>
+
+          {/* Debug Info - Remove this after fixing */}
+          <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
+            <strong>Debug Info:</strong><br/>
+            Companies: {companies?.length || 0} found<br/>
+            Current Company: {currentCompany?.name || 'None'}<br/>
+            Customers: {loadingCustomers ? 'Loading...' : `${customers?.length || 0} found`}<br/>
+            Company ID: {currentCompany?.id || 'undefined'}
+          </div>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -391,9 +410,13 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
                     </SelectTrigger>
                     <SelectContent>
                       {loadingCustomers ? (
-                        <SelectItem value="" disabled>Loading customers...</SelectItem>
+                        <SelectItem value="loading" disabled>Loading customers...</SelectItem>
+                      ) : !currentCompany ? (
+                        <SelectItem value="no-company" disabled>No company found - please refresh</SelectItem>
+                      ) : !customers || customers.length === 0 ? (
+                        <SelectItem value="no-customers" disabled>No customers found - create customers first</SelectItem>
                       ) : (
-                        customers?.map((customer) => (
+                        customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.name} ({customer.customer_code})
                           </SelectItem>

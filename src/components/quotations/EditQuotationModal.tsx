@@ -29,7 +29,7 @@ import {
   Calculator,
   FileText
 } from 'lucide-react';
-import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 
 interface QuotationItem {
@@ -64,9 +64,11 @@ export function EditQuotationModal({ open, onOpenChange, onSuccess, quotation }:
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: customers, isLoading: loadingCustomers } = useCustomers('550e8400-e29b-41d4-a716-446655440000');
-  const { data: products, isLoading: loadingProducts } = useProducts('550e8400-e29b-41d4-a716-446655440000');
-  const { data: taxSettings } = useTaxSettings('550e8400-e29b-41d4-a716-446655440000');
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
+  const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
+  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const { data: taxSettings } = useTaxSettings(currentCompany?.id);
 
   // Get default tax rate
   const defaultTax = taxSettings?.find(tax => tax.is_default && tax.is_active);
