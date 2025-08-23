@@ -404,87 +404,10 @@ export default function CompanySettings() {
         toast.success('Company settings saved successfully');
       }
     } catch (error) {
-      // Enhanced error logging for debugging
-      console.error('Company save error (detailed):', {
-        error,
-        errorType: typeof error,
-        errorConstructor: error?.constructor?.name,
-        errorString: String(error),
-        errorJSON: JSON.stringify(error, null, 2)
-      });
-
-      let errorMessage = 'Unknown error occurred';
-
-      if (error instanceof Error) {
-        errorMessage = error.message;
-        console.log('Error is instance of Error, message:', error.message);
-      } else if (error && typeof error === 'object') {
-        // Handle Supabase error objects
-        const supabaseError = error as any;
-        console.log('Supabase error object:', {
-          message: supabaseError.message,
-          details: supabaseError.details,
-          hint: supabaseError.hint,
-          code: supabaseError.code,
-          status: supabaseError.status,
-          statusText: supabaseError.statusText
-        });
-
-        if (supabaseError.message) {
-          errorMessage = supabaseError.message;
-        } else if (supabaseError.details) {
-          errorMessage = supabaseError.details;
-        } else if (supabaseError.hint) {
-          errorMessage = supabaseError.hint;
-        } else if (supabaseError.code) {
-          errorMessage = `Error code: ${supabaseError.code}`;
-        } else if (supabaseError.statusText) {
-          errorMessage = supabaseError.statusText;
-        } else {
-          // Try to extract any string value from the error object
-          const errorKeys = Object.keys(supabaseError);
-          for (const key of errorKeys) {
-            if (typeof supabaseError[key] === 'string' && supabaseError[key].length > 0) {
-              errorMessage = `${key}: ${supabaseError[key]}`;
-              break;
-            }
-          }
-          if (errorMessage === 'Unknown error occurred') {
-            errorMessage = JSON.stringify(error);
-          }
-        }
-      } else {
-        errorMessage = String(error);
-      }
-
-      console.log('Final error message to display:', errorMessage);
-
-      // Check for specific table missing errors
-      if (errorMessage.includes('companies') && (errorMessage.includes('does not exist') || errorMessage.includes('relation') || errorMessage.includes('table'))) {
-        toast.error('Companies table does not exist. Please run the database setup first.');
-      } else if (errorMessage.includes('permission denied') || errorMessage.includes('insufficient_privilege')) {
-        toast.error('Permission denied: Please check your database permissions or contact your administrator.');
-      } else if (errorMessage.includes('column') && errorMessage.includes('does not exist')) {
-        if (errorMessage.includes('currency')) {
-          toast.error('Currency column is missing from companies table. Please run the schema fix to add missing columns.');
-        } else if (errorMessage.includes('registration_number') || errorMessage.includes('fiscal_year_start')) {
-          toast.error('Database schema is incomplete. Please run the schema fix to add missing columns.');
-        } else {
-          toast.error('Database schema mismatch detected. Please update your database schema or contact support.');
-        }
-      } else if (errorMessage.includes('null value') && errorMessage.includes('violates not-null constraint')) {
-        toast.error('Required field is missing. Please ensure all required fields are filled.');
-      } else if (errorMessage.includes('invalid input syntax')) {
-        toast.error('Invalid data format detected. Please check your input values.');
-      } else if (errorMessage.includes('duplicate key') || errorMessage.includes('already exists')) {
-        toast.error('A company with this information already exists.');
-      } else if (errorMessage.includes('value too long')) {
-        toast.error('One of your input values is too long. Please shorten your text fields.');
-      } else if (errorMessage.toLowerCase().includes('timeout') || errorMessage.toLowerCase().includes('network')) {
-        toast.error('Network or timeout error. Please check your connection and try again.');
-      } else {
-        toast.error(`Failed to save company settings: ${errorMessage}`);
-      }
+      // Use centralized error parsing and logging
+      logError(error, 'Company Save');
+      const userMessage = getUserFriendlyMessage(error, 'Failed to save company settings');
+      toast.error(userMessage);
     }
   };
 
