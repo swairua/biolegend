@@ -397,7 +397,13 @@ export default function CompanySettings() {
       } else if (errorMessage.includes('permission denied') || errorMessage.includes('insufficient_privilege')) {
         toast.error('Permission denied: Please check your database permissions or contact your administrator.');
       } else if (errorMessage.includes('column') && errorMessage.includes('does not exist')) {
-        toast.error('Database schema mismatch detected. Please update your database schema or contact support.');
+        if (errorMessage.includes('currency')) {
+          toast.error('Currency column is missing from companies table. Please run the schema fix to add missing columns.');
+        } else if (errorMessage.includes('registration_number') || errorMessage.includes('fiscal_year_start')) {
+          toast.error('Database schema is incomplete. Please run the schema fix to add missing columns.');
+        } else {
+          toast.error('Database schema mismatch detected. Please update your database schema or contact support.');
+        }
       } else if (errorMessage.includes('null value') && errorMessage.includes('violates not-null constraint')) {
         toast.error('Required field is missing. Please ensure all required fields are filled.');
       } else if (errorMessage.includes('invalid input syntax')) {
