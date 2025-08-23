@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useCreateProduct } from '@/hooks/useDatabase';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -58,6 +59,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createProduct = useCreateProduct();
+  const { currentCompany } = useCurrentCompany();
 
   // Fetch product categories
   const { data: categories, isLoading: categoriesLoading } = useQuery({
@@ -93,6 +95,11 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
       return;
     }
 
+    if (!currentCompany?.id) {
+      toast.error('Company not found. Please refresh and try again.');
+      return;
+    }
+
     if (!formData.product_code.trim()) {
       handleInputChange('product_code', generateProductCode());
     }
@@ -105,7 +112,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
     setIsSubmitting(true);
     try {
       const newProduct = {
-        company_id: '550e8400-e29b-41d4-a716-446655440000',
+        company_id: currentCompany.id,
         name: formData.name,
         product_code: formData.product_code || generateProductCode(),
         description: formData.description,
@@ -138,10 +145,15 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
           errorMessage = supabaseError.message;
         } else if (supabaseError.details) {
           errorMessage = supabaseError.details;
+        } else if (supabaseError.code) {
+          errorMessage = `Database error (${supabaseError.code}): ${supabaseError.hint || 'Unknown error'}`;
+        } else {
+          // Handle case where error is an object but doesn't have expected properties
+          errorMessage = `Error: ${JSON.stringify(error)}`;
         }
       }
 
-      toast.error(errorMessage);
+      toast.error(`Error adding inventory item: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -226,7 +238,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
                     </SelectTrigger>
                     <SelectContent>
                       {categoriesLoading ? (
-                        <SelectItem value="" disabled>Loading categories...</SelectItem>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading categories...</div>
                       ) : categories && categories.length > 0 ? (
                         categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
@@ -234,7 +246,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>No categories available</SelectItem>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">No categories available</div>
                       )}
                     </SelectContent>
                   </Select>
