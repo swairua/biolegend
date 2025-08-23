@@ -6,6 +6,7 @@ export interface DocumentData {
   type: 'quotation' | 'invoice' | 'remittance' | 'proforma' | 'delivery' | 'statement' | 'receipt';
   number: string;
   date: string;
+  lpo_number?: string;
   customer: {
     name: string;
     email?: string;
@@ -873,6 +874,7 @@ export const downloadInvoicePDF = async (invoice: any, documentType: 'INVOICE' |
         quantity: quantity,
         unit_price: unitPrice,
         discount_percentage: Number(item.discount_percentage || 0),
+        discount_before_vat: Number(item.discount_before_vat || 0),
         discount_amount: discountAmount,
         tax_percentage: Number(item.tax_percentage || 0),
         tax_amount: taxAmount,
