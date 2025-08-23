@@ -264,7 +264,14 @@ export default function CompanySettings() {
           .single();
 
         if (error) {
-          console.error('Direct Supabase error:', error);
+          console.error('Direct Supabase update error (detailed):', {
+            error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+            jsonError: JSON.stringify(error, null, 2)
+          });
           throw error;
         }
         console.log('Direct update success:', data);
