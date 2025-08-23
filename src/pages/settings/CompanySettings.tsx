@@ -285,7 +285,7 @@ export default function CompanySettings() {
 
     try {
       // Sanitize and prepare company data to match database schema
-      const sanitizedData = {
+      const sanitizedData: any = {
         name: companyData.name?.trim() || '',
         registration_number: companyData.registration_number?.trim() || null,
         tax_number: companyData.tax_number?.trim() || null,
