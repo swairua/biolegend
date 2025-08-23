@@ -48,7 +48,7 @@ export default function CompanySettings() {
   const updateTaxSetting = useUpdateTaxSetting();
   const deleteTaxSetting = useDeleteTaxSetting();
 
-  // Debug logging
+  // Debug logging and schema check
   useEffect(() => {
     console.log('Companies data:', companies);
     console.log('Companies loading:', companiesLoading);
@@ -57,6 +57,16 @@ export default function CompanySettings() {
     console.log('Tax settings:', taxSettings);
     console.log('Tax settings loading:', taxSettingsLoading);
     console.log('Tax settings error:', taxSettingsError);
+
+    // Check for schema errors in the companies query
+    if (companiesError) {
+      const errorString = String(companiesError);
+      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('currency column missing');
+      } else if (errorString.includes('registration_number') && errorString.includes('column')) {
+        setSchemaError('registration_number column missing');
+      }
+    }
   }, [companies, companiesLoading, companiesError, currentCompany, taxSettings, taxSettingsLoading, taxSettingsError]);
 
   useEffect(() => {
