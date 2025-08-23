@@ -59,6 +59,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const createProduct = useCreateProduct();
+  const { currentCompany } = useCurrentCompany();
 
   // Fetch product categories
   const { data: categories, isLoading: categoriesLoading } = useQuery({
