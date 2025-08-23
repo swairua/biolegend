@@ -95,6 +95,11 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
       return;
     }
 
+    if (!currentCompany?.id) {
+      toast.error('Company not found. Please refresh and try again.');
+      return;
+    }
+
     if (!formData.product_code.trim()) {
       handleInputChange('product_code', generateProductCode());
     }
@@ -107,7 +112,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
     setIsSubmitting(true);
     try {
       const newProduct = {
-        company_id: '550e8400-e29b-41d4-a716-446655440000',
+        company_id: currentCompany.id,
         name: formData.name,
         product_code: formData.product_code || generateProductCode(),
         description: formData.description,
@@ -140,10 +145,15 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
           errorMessage = supabaseError.message;
         } else if (supabaseError.details) {
           errorMessage = supabaseError.details;
+        } else if (supabaseError.code) {
+          errorMessage = `Database error (${supabaseError.code}): ${supabaseError.hint || 'Unknown error'}`;
+        } else {
+          // Handle case where error is an object but doesn't have expected properties
+          errorMessage = `Error: ${JSON.stringify(error)}`;
         }
       }
 
-      toast.error(errorMessage);
+      toast.error(`Error adding inventory item: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
