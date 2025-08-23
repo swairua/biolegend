@@ -241,6 +241,15 @@ const App = () => {
             }
           />
 
+          <Route
+            path="/setup-test"
+            element={
+              <ProtectedRoute>
+                <SetupAndTest />
+              </ProtectedRoute>
+            }
+          />
+
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
