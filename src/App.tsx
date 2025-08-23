@@ -28,6 +28,7 @@ import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
 import DatabaseFixPage from "./pages/DatabaseFixPage";
 import AutoFixPage from "./pages/AutoFixPage";
+import AuditPage from "./pages/AuditPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 
 const App = () => {
@@ -257,6 +258,9 @@ const App = () => {
 
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
+
+          {/* Database and Forms Audit */}
+          <Route path="/audit" element={<AuditPage />} />
 
           {/* Auto-execute Database Fixes and RLS removal */}
           <Route path="/auto-fix" element={<AutoFixPage />} />
