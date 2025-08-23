@@ -226,7 +226,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
                     </SelectTrigger>
                     <SelectContent>
                       {categoriesLoading ? (
-                        <SelectItem value="" disabled>Loading categories...</SelectItem>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">Loading categories...</div>
                       ) : categories && categories.length > 0 ? (
                         categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
@@ -234,7 +234,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
                           </SelectItem>
                         ))
                       ) : (
-                        <SelectItem value="" disabled>No categories available</SelectItem>
+                        <div className="px-2 py-1.5 text-sm text-muted-foreground">No categories available</div>
                       )}
                     </SelectContent>
                   </Select>
