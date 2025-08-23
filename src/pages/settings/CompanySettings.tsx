@@ -14,6 +14,7 @@ import { ForceTaxSettings } from '@/components/ForceTaxSettings';
 import { supabase } from '@/integrations/supabase/client';
 import StorageSetup from '@/components/StorageSetup';
 import { getUserFriendlyMessage, logError } from '@/utils/errorParser';
+import { QuickSchemaFix } from '@/components/QuickSchemaFix';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
