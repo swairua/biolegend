@@ -783,8 +783,11 @@ export const generatePDF = (data: DocumentData) => {
                   ` : `
                   <td>${item.quantity}</td>
                   <td class="amount-cell">${formatCurrency(item.unit_price)}</td>
-                  <td>${item.tax_percentage || 0}%</td>
-                  <td class="amount-cell">${formatCurrency(item.tax_amount || 0)}</td>
+                  ${visibleColumns.discountPercentage ? `<td>${item.discount_percentage || 0}%</td>` : ''}
+                  ${visibleColumns.discountBeforeVat ? `<td class="amount-cell">${formatCurrency(item.discount_before_vat || 0)}</td>` : ''}
+                  ${visibleColumns.discountAmount ? `<td class="amount-cell">${formatCurrency(item.discount_amount || 0)}</td>` : ''}
+                  ${visibleColumns.taxPercentage ? `<td>${item.tax_percentage || 0}%</td>` : ''}
+                  ${visibleColumns.taxAmount ? `<td class="amount-cell">${formatCurrency(item.tax_amount || 0)}</td>` : ''}
                   <td class="amount-cell">${formatCurrency(item.line_total)}</td>
                   `}
                   `}
