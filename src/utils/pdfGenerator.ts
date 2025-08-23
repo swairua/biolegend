@@ -78,9 +78,45 @@ const DEFAULT_COMPANY: CompanyDetails = {
   logo_url: 'https://cdn.builder.io/api/v1/image/assets%2Fe6da7596f8c24b5ab16b4dd97e814f11%2F777d6596ea424f149c22b390c9ec9489?format=webp&width=800'
 };
 
+// Helper function to determine which columns have values
+const analyzeColumns = (items: DocumentData['items']) => {
+  if (!items || items.length === 0) return {};
+
+  const columns = {
+    discountPercentage: false,
+    discountBeforeVat: false,
+    discountAmount: false,
+    taxPercentage: false,
+    taxAmount: false,
+  };
+
+  items.forEach(item => {
+    if (item.discount_percentage && item.discount_percentage > 0) {
+      columns.discountPercentage = true;
+    }
+    if (item.discount_before_vat && item.discount_before_vat > 0) {
+      columns.discountBeforeVat = true;
+    }
+    if (item.discount_amount && item.discount_amount > 0) {
+      columns.discountAmount = true;
+    }
+    if (item.tax_percentage && item.tax_percentage > 0) {
+      columns.taxPercentage = true;
+    }
+    if (item.tax_amount && item.tax_amount > 0) {
+      columns.taxAmount = true;
+    }
+  });
+
+  return columns;
+};
+
 export const generatePDF = (data: DocumentData) => {
   // Use company details from data or fall back to defaults
   const company = data.company || DEFAULT_COMPANY;
+
+  // Analyze which columns have values
+  const visibleColumns = analyzeColumns(data.items);
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
       style: 'currency',
@@ -716,11 +752,14 @@ export const generatePDF = (data: DocumentData) => {
                 <th style="width: 12%;">Balance</th>
                 ` : `
                 <th style="width: 5%;">#</th>
-                <th style="width: 35%;">Description</th>
+                <th style="width: ${visibleColumns.discountPercentage || visibleColumns.discountBeforeVat || visibleColumns.discountAmount || visibleColumns.taxPercentage || visibleColumns.taxAmount ? '30%' : '40%'};">Description</th>
                 <th style="width: 10%;">Qty</th>
                 <th style="width: 15%;">Unit Price</th>
-                <th style="width: 10%;">Tax %</th>
-                <th style="width: 15%;">Tax Amount</th>
+                ${visibleColumns.discountPercentage ? '<th style="width: 10%;">Disc %</th>' : ''}
+                ${visibleColumns.discountBeforeVat ? '<th style="width: 12%;">Disc Before VAT</th>' : ''}
+                ${visibleColumns.discountAmount ? '<th style="width: 12%;">Disc Amount</th>' : ''}
+                ${visibleColumns.taxPercentage ? '<th style="width: 10%;">Tax %</th>' : ''}
+                ${visibleColumns.taxAmount ? '<th style="width: 12%;">Tax Amount</th>' : ''}
                 <th style="width: 15%;">Total</th>
                 `}
               </tr>
