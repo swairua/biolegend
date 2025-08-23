@@ -366,16 +366,19 @@ export function ManualDatabaseSetup() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">
-              1. Run "Complete Setup" to create all database tables and admin account
+              <strong>New Installation:</strong> Run "Complete Setup" to create all database tables and admin account
             </p>
             <p className="text-sm text-muted-foreground">
-              2. Navigate back to the login page and sign in with the admin credentials
+              <strong>Missing Currency Column:</strong> Run "Fix Schema" to add missing columns like currency, registration_number, etc.
             </p>
             <p className="text-sm text-muted-foreground">
-              3. Go to Company Settings to set up your company information
+              <strong>Login:</strong> Navigate back to the login page and sign in with the admin credentials
             </p>
             <p className="text-sm text-muted-foreground">
-              4. Start creating customers, products, and invoices
+              <strong>Setup Company:</strong> Go to Company Settings to set up your company information
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <strong>Start Using:</strong> Begin creating customers, products, and invoices
             </p>
           </CardContent>
         </Card>
