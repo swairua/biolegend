@@ -473,10 +473,15 @@ export default function CompanySettings() {
             Manage company information and preferences
           </p>
         </div>
-        <Button variant="primary-gradient" size="lg" onClick={handleSaveCompany}>
-          <Save className="h-4 w-4" />
-          Save Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="primary-gradient" size="lg" onClick={handleSaveCompany}>
+            <Save className="h-4 w-4" />
+            Save Settings
+          </Button>
+          <Button variant="outline" size="lg" onClick={testCompanySave}>
+            🧪 Debug Test
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-6">
