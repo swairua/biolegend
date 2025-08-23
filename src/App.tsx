@@ -26,6 +26,7 @@ import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
+import DatabaseFixPage from "./pages/DatabaseFixPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 
 const App = () => {
@@ -252,6 +253,9 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* Database Fixes - No protection needed for setup */}
+          <Route path="/database-fix-page" element={<DatabaseFixPage />} />
 
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
