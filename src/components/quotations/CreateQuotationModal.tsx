@@ -410,11 +410,11 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
                     </SelectTrigger>
                     <SelectContent>
                       {loadingCustomers ? (
-                        <SelectItem value="" disabled>Loading customers...</SelectItem>
+                        <SelectItem value="loading" disabled>Loading customers...</SelectItem>
                       ) : !currentCompany ? (
-                        <SelectItem value="" disabled>No company found - please refresh</SelectItem>
+                        <SelectItem value="no-company" disabled>No company found - please refresh</SelectItem>
                       ) : !customers || customers.length === 0 ? (
-                        <SelectItem value="" disabled>No customers found - create customers first</SelectItem>
+                        <SelectItem value="no-customers" disabled>No customers found - create customers first</SelectItem>
                       ) : (
                         customers.map((customer) => (
                           <SelectItem key={customer.id} value={customer.id}>
