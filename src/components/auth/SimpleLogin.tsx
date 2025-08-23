@@ -1,115 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Eye, EyeOff, Mail, Lock, Shield, AlertTriangle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
-import { ADMIN_CREDENTIALS, executeStreamlinedSetup } from '@/utils/createStreamlinedSuperAdmin';
-import { createBiolegendAdmin, showEmailConfirmationInstructions, BIOLEGEND_ADMIN_CREDENTIALS } from '@/utils/enhancedAdminCreation';
-import { forceConfirmAdminEmail } from '@/utils/forceEmailConfirmation';
-import { QuickEmailFix } from './QuickEmailFix';
-import { EmailConfirmationBypass } from './EmailConfirmationBypass';
-import { AuthDiagnostic } from './AuthDiagnostic';
-import { fixAuthenticationLoop, diagnoseAuthState } from '@/utils/fixAuthenticationLoop';
-import { performCompleteLogin } from '@/utils/testLogin';
 import { toast } from 'sonner';
 
 export function SimpleLogin() {
-  const { signIn, loading, isAuthenticated } = useAuth();
+  const { signIn, loading } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [isSettingUp, setIsSettingUp] = useState(false);
-  const [setupComplete, setSetupComplete] = useState(false);
-  const [setupAttempted, setSetupAttempted] = useState(false);
-  const [emailConfirmationNeeded, setEmailConfirmationNeeded] = useState(false);
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
-  const [isFixingAuth, setIsFixingAuth] = useState(false);
-  const [isTestingLogin, setIsTestingLogin] = useState(false);
-
-  // Auto-setup on component mount - only once
-  useEffect(() => {
-    const hasSetupAttempted = localStorage.getItem('admin_setup_attempted');
-
-    if (!hasSetupAttempted && !setupAttempted && !isAuthenticated && !setupComplete) {
-      setSetupAttempted(true);
-      localStorage.setItem('admin_setup_attempted', 'true');
-      handleAutoSetup();
-    } else if (hasSetupAttempted) {
-      setSetupAttempted(true);
-      setSetupComplete(true);
-      // Pre-fill the form with admin credentials
-      setFormData({
-        email: ADMIN_CREDENTIALS.email,
-        password: ADMIN_CREDENTIALS.password
-      });
-    }
-  }, [isAuthenticated, setupComplete, setupAttempted]);
-
-  const handleAutoSetup = async () => {
-    setIsSettingUp(true);
-    try {
-      console.log('🚀 Starting enhanced Biolegend admin setup...');
-      const result = await createBiolegendAdmin();
-
-      if (result.success) {
-        setSetupComplete(true);
-        localStorage.setItem('admin_setup_complete', 'true');
-        // Pre-fill with Biolegend admin credentials
-        setFormData({
-          email: BIOLEGEND_ADMIN_CREDENTIALS.email,
-          password: BIOLEGEND_ADMIN_CREDENTIALS.password
-        });
-        toast.success(result.message);
-      } else if (result.requiresManualConfirmation) {
-        // Handle email confirmation requirement
-        setSetupComplete(true);
-        setFormData({
-          email: BIOLEGEND_ADMIN_CREDENTIALS.email,
-          password: BIOLEGEND_ADMIN_CREDENTIALS.password
-        });
-
-        showEmailConfirmationInstructions(result);
-        setEmailConfirmationNeeded(true);
-      } else {
-        // Try fallback to original method
-        console.log('🔄 Enhanced setup failed, trying fallback...');
-        const fallbackResult = await executeStreamlinedSetup();
-
-        if (fallbackResult.success) {
-          setSetupComplete(true);
-          localStorage.setItem('admin_setup_complete', 'true');
-          setFormData({
-            email: ADMIN_CREDENTIALS.email,
-            password: ADMIN_CREDENTIALS.password
-          });
-          toast.success('Admin account ready via fallback method!');
-        } else {
-          toast.error(`Setup failed: ${result.error || fallbackResult.error}`);
-          setSetupComplete(true);
-          setFormData({
-            email: BIOLEGEND_ADMIN_CREDENTIALS.email,
-            password: BIOLEGEND_ADMIN_CREDENTIALS.password
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Enhanced setup error:', error);
-      toast.error('Setup encountered an issue. Check console for manual confirmation steps.');
-      setSetupComplete(true);
-      setFormData({
-        email: BIOLEGEND_ADMIN_CREDENTIALS.email,
-        password: BIOLEGEND_ADMIN_CREDENTIALS.password
-      });
-    } finally {
-      setIsSettingUp(false);
-    }
-  };
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -139,14 +45,7 @@ export function SimpleLogin() {
     
     if (error) {
       console.error('Sign in error:', error);
-
-      // Handle email confirmation error specifically for admin
-      if (error.message.includes('Email not confirmed') && formData.email === ADMIN_CREDENTIALS.email) {
-        setEmailConfirmationNeeded(true);
-        toast.error('Email confirmation required - showing fix instructions');
-      } else {
-        toast.error('Sign in failed. Please check your credentials or try the setup button below.');
-      }
+      toast.error('Sign in failed. Please check your credentials.');
     } else {
       toast.success('Welcome to Biolegend Scientific!');
     }
@@ -160,117 +59,6 @@ export function SimpleLogin() {
       setFormErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
-
-  const fillAdminCredentials = () => {
-    setFormData({
-      email: BIOLEGEND_ADMIN_CREDENTIALS.email,
-      password: BIOLEGEND_ADMIN_CREDENTIALS.password
-    });
-    setFormErrors({});
-  };
-
-  const handleFixAuthentication = async () => {
-    setIsFixingAuth(true);
-    try {
-      console.log('🔧 Starting authentication fix...');
-
-      // Diagnose current state
-      const diagnosis = await diagnoseAuthState();
-      console.log('🔍 Auth diagnosis:', diagnosis);
-
-      if (diagnosis.isAuthenticated) {
-        toast.success('Authentication is already working! Refreshing page...');
-        setTimeout(() => window.location.reload(), 1000);
-        return;
-      }
-
-      // Apply fix
-      const result = await fixAuthenticationLoop();
-
-      if (result.success) {
-        toast.success(result.message);
-        if (result.needsReload) {
-          toast.info('Refreshing page to apply changes...');
-          setTimeout(() => window.location.reload(), 2000);
-        }
-      } else {
-        toast.error(`Fix failed: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Authentication fix error:', error);
-      toast.error('Authentication fix failed. Check console for details.');
-    } finally {
-      setIsFixingAuth(false);
-    }
-  };
-
-  const handleTestLogin = async () => {
-    setIsTestingLogin(true);
-    try {
-      console.log('🧪 Starting test login process...');
-      toast.info('Testing login flow...');
-
-      const result = await performCompleteLogin();
-
-      if (result.success) {
-        toast.success(result.message);
-        if (result.authenticated) {
-          toast.info('Login successful! Refreshing to show dashboard...');
-          setTimeout(() => window.location.reload(), 1500);
-        } else {
-          toast.info('Profile ready! Now try clicking Sign In button.');
-        }
-      } else {
-        toast.error(`Test login failed: ${result.message}`);
-      }
-    } catch (error) {
-      console.error('Test login error:', error);
-      toast.error('Test login failed. Check console for details.');
-    } finally {
-      setIsTestingLogin(false);
-    }
-  };
-
-  if (isSettingUp) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
-        <Card className="w-full max-w-md">
-          <CardContent className="flex flex-col items-center justify-center p-8 space-y-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold">Setting up Biolegend Scientific</h3>
-              <p className="text-sm text-muted-foreground">
-                Creating admin account and configuring system...
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  if (showDiagnostic) {
-    return (
-      <AuthDiagnostic
-        onBack={() => setShowDiagnostic(false)}
-      />
-    );
-  }
-
-  if (emailConfirmationNeeded) {
-    return (
-      <EmailConfirmationBypass
-        onSuccess={() => {
-          setEmailConfirmationNeeded(false);
-          setSetupComplete(true);
-          toast.success('Email confirmed! You can now sign in.');
-        }}
-        onBack={() => {
-          setEmailConfirmationNeeded(false);
-        }}
-      />
-    );
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
@@ -288,23 +76,6 @@ export function SimpleLogin() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          {setupComplete && !isSettingUp && (
-            <div className="bg-success-light border border-success/20 rounded-lg p-3 text-center">
-              <p className="text-sm text-success">
-                ✅ System ready! Use admin credentials to sign in.
-              </p>
-            </div>
-          )}
-
-          {isSettingUp && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-              <p className="text-sm text-blue-700">
-                ⚙️ Setting up admin account... This may take a moment.
-              </p>
-            </div>
-          )}
-
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
@@ -372,126 +143,10 @@ export function SimpleLogin() {
                 'Sign In'
               )}
             </Button>
-
-            <div className="space-y-2">
-              {!isSettingUp && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={fillAdminCredentials}
-                  disabled={loading}
-                >
-                  <Shield className="mr-2 h-4 w-4" />
-                  Use Admin Credentials
-                </Button>
-              )}
-
-              {setupComplete && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
-                  <p className="text-xs text-blue-700">
-                    💡 If sign-in keeps returning to this form, click "Fix Authentication Loop"
-                  </p>
-                </div>
-              )}
-
-              {setupComplete && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="w-full"
-                  onClick={() => {
-                    localStorage.removeItem('admin_setup_attempted');
-                    localStorage.removeItem('admin_setup_complete');
-                    setSetupAttempted(false);
-                    setSetupComplete(false);
-                    handleAutoSetup();
-                  }}
-                  disabled={loading || isSettingUp}
-                >
-                  {isSettingUp ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Setting up admin...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className="mr-2 h-4 w-4" />
-                      Retry Admin Setup
-                    </>
-                  )}
-                </Button>
-              )}
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full"
-                onClick={() => setShowDiagnostic(true)}
-                disabled={loading}
-              >
-                <AlertTriangle className="mr-2 h-4 w-4" />
-                Run Authentication Diagnostics
-              </Button>
-
-              <Button
-                type="button"
-                variant="secondary"
-                className="w-full bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
-                onClick={handleFixAuthentication}
-                disabled={loading || isFixingAuth || isTestingLogin}
-              >
-                {isFixingAuth ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Fixing Authentication...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Fix Authentication Loop
-                  </>
-                )}
-              </Button>
-
-              <Button
-                type="button"
-                variant="default"
-                className="w-full bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleTestLogin}
-                disabled={loading || isFixingAuth || isTestingLogin}
-              >
-                {isTestingLogin ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Testing Login...
-                  </>
-                ) : (
-                  <>
-                    <Shield className="mr-2 h-4 w-4" />
-                    Test Complete Login Flow
-                  </>
-                )}
-              </Button>
-            </div>
           </form>
 
-          {setupComplete && (
-            <div className="text-center text-xs text-muted-foreground space-y-1">
-              <p>Admin Email: {BIOLEGEND_ADMIN_CREDENTIALS.email}</p>
-              <Button
-                variant="link"
-                size="sm"
-                onClick={fillAdminCredentials}
-                className="h-auto p-0 text-xs"
-              >
-                Fill credentials
-              </Button>
-            </div>
-          )}
-
           <div className="text-center text-xs text-muted-foreground">
-            <p>Only administrators can create new user accounts.</p>
+            <p>Contact your administrator if you need account access.</p>
           </div>
         </CardContent>
       </Card>

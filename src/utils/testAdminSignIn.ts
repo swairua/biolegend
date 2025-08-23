@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { BIOLEGEND_ADMIN_CREDENTIALS } from './enhancedAdminCreation';
+import { ADMIN_CREDENTIALS } from './createStreamlinedSuperAdmin';
 
 export interface SignInTestResult {
   canSignIn: boolean;
@@ -10,16 +10,16 @@ export interface SignInTestResult {
 }
 
 /**
- * Test if the Biolegend admin can sign in successfully
+ * Test if the admin can sign in successfully
  */
-export const testBiolegendAdminSignIn = async (): Promise<SignInTestResult> => {
+export const testAdminSignIn = async (): Promise<SignInTestResult> => {
   try {
-    console.log('🧪 Testing Biolegend admin sign in...');
+    console.log('🧪 Testing admin sign in...');
 
     // Attempt sign in
     const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-      email: BIOLEGEND_ADMIN_CREDENTIALS.email,
-      password: BIOLEGEND_ADMIN_CREDENTIALS.password,
+      email: ADMIN_CREDENTIALS.email,
+      password: ADMIN_CREDENTIALS.password,
     });
 
     if (signInError) {
@@ -102,13 +102,10 @@ export const getAdminUserStatus = async (): Promise<{
   status: string;
 }> => {
   try {
-    // Note: This won't work directly as we can't query auth.users from client
-    // This is more for demonstration/console use
-    
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', BIOLEGEND_ADMIN_CREDENTIALS.email)
+      .eq('email', ADMIN_CREDENTIALS.email)
       .single();
 
     if (profileError && profileError.code !== 'PGRST116') {
@@ -118,7 +115,7 @@ export const getAdminUserStatus = async (): Promise<{
     let status = 'Unknown';
     
     if (profile) {
-      status = `Profile exists: ${profile.status || 'no status'}, Role: ${profile.role || 'no role'}`;
+      status = `Profile exists with email: ${profile.email}`;
     } else {
       status = 'No profile found';
     }
@@ -140,11 +137,11 @@ export const getAdminUserStatus = async (): Promise<{
  * Run a comprehensive admin diagnostic
  */
 export const runAdminDiagnostic = async () => {
-  console.log('🔍 Running Biolegend Admin Diagnostic...');
-  console.log('=====================================');
+  console.log('🔍 Running Admin Diagnostic...');
+  console.log('============================');
   
   // Test sign in
-  const signInResult = await testBiolegendAdminSignIn();
+  const signInResult = await testAdminSignIn();
   console.log('Sign In Test:', signInResult);
   
   // Get user status
@@ -163,15 +160,15 @@ export const runAdminDiagnostic = async () => {
     
     if (signInResult.error?.includes('Email not confirmed')) {
       console.log('\n🔧 Next Steps:');
-      console.log('1. Use the email confirmation bypass SQL script');
+      console.log('1. Disable email confirmations in Supabase Auth settings');
       console.log('2. Or manually confirm in Supabase Dashboard');
-      console.log('3. Admin email:', BIOLEGEND_ADMIN_CREDENTIALS.email);
+      console.log('3. Admin email:', ADMIN_CREDENTIALS.email);
     }
   } else {
     console.log('🎉 Admin is ready to use!');
   }
   
-  console.log('=====================================');
+  console.log('============================');
   
   return {
     signInResult,
@@ -182,12 +179,12 @@ export const runAdminDiagnostic = async () => {
 
 // Make functions available in browser console for testing
 if (typeof window !== 'undefined') {
-  (window as any).testBiolegendAdmin = testBiolegendAdminSignIn;
+  (window as any).testAdmin = testAdminSignIn;
   (window as any).runAdminDiagnostic = runAdminDiagnostic;
   (window as any).getAdminStatus = getAdminUserStatus;
   
   console.log('🧪 Admin testing functions available:');
-  console.log('• testBiolegendAdmin() - Test sign in');
+  console.log('• testAdmin() - Test sign in');
   console.log('• runAdminDiagnostic() - Full diagnostic');
   console.log('• getAdminStatus() - Check user status');
 }
