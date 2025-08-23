@@ -221,7 +221,7 @@ export default function CompanySettings() {
     console.log('Current company:', JSON.stringify(currentCompany, null, 2));
 
     try {
-      // Test direct Supabase call first
+      // Test direct Supabase call first - Include fiscal_year_start to test the specific error
       const testData = {
         name: companyData.name || 'Test Company',
         email: companyData.email || 'test@example.com',
@@ -229,7 +229,10 @@ export default function CompanySettings() {
         address: companyData.address,
         city: companyData.city,
         country: companyData.country || 'Kenya',
-        currency: companyData.currency || 'KES'
+        currency: companyData.currency || 'KES',
+        fiscal_year_start: companyData.fiscal_year_start || 1,
+        registration_number: companyData.registration_number,
+        tax_number: companyData.tax_number
       };
 
       console.log('Test data to be saved:', JSON.stringify(testData, null, 2));
