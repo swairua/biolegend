@@ -19,7 +19,7 @@ import SalesReports from "./pages/reports/SalesReports";
 import InventoryReports from "./pages/reports/InventoryReports";
 import StatementOfAccounts from "./pages/reports/StatementOfAccounts";
 import CompanySettings from "./pages/settings/CompanySettings";
-import UserManagement from "./pages/settings/UserManagement";
+import UserManagement from "./pages/settings/UserManagement\";\nimport SetupAndTest from \"./pages/SetupAndTest";
 import RemittanceAdvice from "./pages/RemittanceAdvice";
 import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
@@ -237,6 +237,15 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <UserManagement />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/setup-test"
+            element={
+              <ProtectedRoute>
+                <SetupAndTest />
               </ProtectedRoute>
             }
           />
