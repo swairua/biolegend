@@ -64,7 +64,9 @@ export default function CompanySettings() {
     // Check for schema errors in the companies query
     if (companiesError) {
       const errorString = String(companiesError);
-      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+      if (errorString.includes('fiscal_year_start') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('fiscal_year_start column missing');
+      } else if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
         setSchemaError('currency column missing');
       } else if (errorString.includes('registration_number') && errorString.includes('column')) {
         setSchemaError('registration_number column missing');
@@ -383,12 +385,12 @@ export default function CompanySettings() {
 
       // Check if this is a schema error
       const errorString = String(error);
-      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+      if (errorString.includes('fiscal_year_start') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('fiscal_year_start column missing');
+      } else if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
         setSchemaError('currency column missing');
       } else if (errorString.includes('registration_number') && errorString.includes('column')) {
         setSchemaError('registration_number column missing');
-      } else if (errorString.includes('fiscal_year_start') && errorString.includes('column')) {
-        setSchemaError('fiscal_year_start column missing');
       }
 
       toast.error(userMessage);
