@@ -9,10 +9,11 @@ export function BiolegendHeader() {
       </div>
       
       <div className="text-right text-sm">
-        <div className="font-semibold">Biolegend Scientific Ltd</div>
-        <div className="text-xs opacity-90">P.O. Box 85988-00200, Nairobi</div>
-        <div className="text-xs opacity-90">Tel: 0741207690/0780165490</div>
-        <div className="text-xs opacity-90">biolegend@biolegendscientific.co.ke</div>
+        <div className="font-semibold">BIOLEGEND SCIENTIFIC LTD</div>
+        <div className="text-xs opacity-90">P.O Box 85988-00200, Nairobi, Kenya</div>
+        <div className="text-xs opacity-90">Tel: 0741 207 690/0780 165 490</div>
+        <div className="text-xs opacity-90">biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
+        <div className="text-xs opacity-90">Website: www.biolegendscientific.co.ke</div>
       </div>
     </div>
   );
@@ -23,13 +24,14 @@ export function BiolegendCompanyInfo() {
     <div className="space-y-2">
       <div className="flex items-center space-x-2">
         <Building2 className="h-4 w-4 text-primary" />
-        <span className="font-semibold">Biolegend Scientific Ltd</span>
+        <span className="font-semibold">BIOLEGEND SCIENTIFIC LTD</span>
       </div>
       <div className="text-sm text-muted-foreground space-y-1">
-        <div>P.O. Box 85988-00200, Nairobi</div>
-        <div>Alpha Center, Eastern Bypass, Membley</div>
-        <div>Tel: 0741207690/0780165490</div>
-        <div>Email: biolegend@biolegendscientific.co.ke</div>
+        <div>P.O Box 85988-00200, Nairobi, Kenya</div>
+        <div>Tel: 0741 207 690/0780 165 490</div>
+        <div>Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
+        <div>Website: www.biolegendscientific.co.ke</div>
+        <div className="text-xs italic text-primary/70">Delivering Discoveries.... and more</div>
       </div>
     </div>
   );

@@ -7,19 +7,21 @@ export const BIOLEGEND_BRANDING = {
   // Company Information
   COMPANY_NAME: 'Biolegend Scientific Ltd',
   COMPANY_NAME_FULL: 'Biolegend Scientific Ltd',
-  COMPANY_TAGLINE: 'Scientific Equipment & Supplies',
+  COMPANY_TAGLINE: 'Delivering Discoveries.... and more',
   
   // Contact Information
-  ADDRESS: 'P.O. Box 85988-00200, Nairobi\nAlpha Center, Eastern Bypass, Membley',
-  PHONE: '0741207690/0780165490',
+  ADDRESS: 'P.O Box 85988-00200, Nairobi, Kenya',
+  PHONE: 'Tel: 0741 207 690/0780 165 490',
   EMAIL: 'biolegend@biolegendscientific.co.ke',
+  EMAIL_SECONDARY: 'info@biolegendscientific.co.ke',
+  WEBSITE: 'www.biolegendscientific.co.ke',
   
   // Admin Credentials
   ADMIN_EMAIL: 'admin@biolegendscientific.co.ke',
   ADMIN_PASSWORD: 'Biolegend2024!Admin',
   
   // Branding Assets
-  LOGO_URL: 'https://cdn.builder.io/api/v1/image/assets%2Fe6da7596f8c24b5ab16b4dd97e814f11%2F777d6596ea424f149c22b390c9ec9489?format=webp&width=800',
+  LOGO_URL: 'https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800',
   
   // Colors (HSL values for CSS variables)
   COLORS: {
@@ -31,15 +33,16 @@ export const BIOLEGEND_BRANDING = {
   // Email Templates
   EMAIL_SIGNATURE: `Best regards,
 Biolegend Scientific Ltd Team
-Tel: 0741207690/0780165490
-Email: biolegend@biolegendscientific.co.ke`,
+Tel: 0741 207 690/0780 165 490
+Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke
+Website: www.biolegendscientific.co.ke`,
   
   // PDF Headers
   PDF_HEADER_INFO: [
-    'P.O. Box 85988-00200, Nairobi',
-    'Alpha Center, Eastern Bypass, Membley',
-    'Tel: 0741207690/0780165490',
-    'Email: biolegend@biolegendscientific.co.ke'
+    'P.O Box 85988-00200, Nairobi, Kenya',
+    'Tel: 0741 207 690/0780 165 490',
+    'Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke',
+    'Website: www.biolegendscientific.co.ke'
   ],
 };
 

@@ -40,6 +40,7 @@ interface InvoiceItem {
   description: string;
   quantity: number;
   unit_price: number;
+  discount_before_vat?: number;
   tax_percentage: number;
   tax_amount: number;
   tax_inclusive: boolean;
@@ -59,6 +60,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const [dueDate, setDueDate] = useState(
     new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   );
+  const [lpoNumber, setLpoNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [termsAndConditions, setTermsAndConditions] = useState('Payment due within 30 days of invoice date.');
   
@@ -105,6 +107,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       description: product.description || product.name,
       quantity: 1,
       unit_price: product.selling_price,
+      discount_before_vat: 0,
       tax_percentage: 0, // Default no VAT, user can add if applicable
       tax_amount: 0,
       tax_inclusive: false,
@@ -188,6 +191,15 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     }));
   };
 
+  const updateItemDiscountBeforeVat = (itemId: string, discountBeforeVat: number) => {
+    setItems(items.map(item => {
+      if (item.id === itemId) {
+        return { ...item, discount_before_vat: discountBeforeVat };
+      }
+      return item;
+    }));
+  };
+
   const updateItemTaxInclusive = (itemId: string, taxInclusive: boolean) => {
     setItems(items.map(item => {
       if (item.id === itemId) {
@@ -255,6 +267,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         invoice_number: invoiceNumber,
         invoice_date: invoiceDate,
         due_date: dueDate,
+        lpo_number: lpoNumber || null,
         status: 'draft',
         subtotal: subtotal,
         tax_amount: taxAmount,
@@ -271,6 +284,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
+        discount_before_vat: item.discount_before_vat || 0,
         tax_percentage: item.tax_percentage,
         tax_amount: item.tax_amount,
         tax_inclusive: item.tax_inclusive,
@@ -322,6 +336,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     setSelectedCustomerId('');
     setInvoiceDate(new Date().toISOString().split('T')[0]);
     setDueDate(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+    setLpoNumber('');
     setNotes('');
     setTermsAndConditions('Payment due within 30 days of invoice date.');
     setItems([]);
@@ -390,6 +405,18 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                       onChange={(e) => setDueDate(e.target.value)}
                     />
                   </div>
+                </div>
+
+                {/* LPO Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="lpo_number">LPO Number (Optional)</Label>
+                  <Input
+                    id="lpo_number"
+                    type="text"
+                    value={lpoNumber}
+                    onChange={(e) => setLpoNumber(e.target.value)}
+                    placeholder="Enter LPO reference number"
+                  />
                 </div>
 
                 {/* Notes */}
@@ -495,6 +522,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                     <TableHead>Product</TableHead>
                     <TableHead>Qty</TableHead>
                     <TableHead>Unit Price</TableHead>
+                    <TableHead>Disc. Before VAT</TableHead>
                     <TableHead>VAT %</TableHead>
                     <TableHead>VAT Incl.</TableHead>
                     <TableHead>Line Total</TableHead>
@@ -526,6 +554,16 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                           onChange={(e) => updateItemPrice(item.id, parseFloat(e.target.value) || 0)}
                           className="w-24"
                           step="0.01"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={item.discount_before_vat || 0}
+                          onChange={(e) => updateItemDiscountBeforeVat(item.id, parseFloat(e.target.value) || 0)}
+                          className="w-24"
+                          step="0.01"
+                          placeholder="0.00"
                         />
                       </TableCell>
                       <TableCell>

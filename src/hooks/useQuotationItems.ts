@@ -21,6 +21,8 @@ export interface InvoiceItem {
   description: string;
   quantity: number;
   unit_price: number;
+  discount_percentage?: number;
+  discount_before_vat?: number;
   tax_setting_id?: string;
   tax_percentage?: number;
   tax_amount?: number;

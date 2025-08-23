@@ -41,6 +41,7 @@ interface InvoiceItem {
   quantity: number;
   unit_price: number;
   discount_percentage: number;
+  discount_before_vat?: number;
   tax_percentage: number;
   tax_amount: number;
   tax_inclusive: boolean;
@@ -58,6 +59,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [lpoNumber, setLpoNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [termsAndConditions, setTermsAndConditions] = useState('');
   
@@ -80,9 +82,10 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
       setSelectedCustomerId(invoice.customer_id || '');
       setInvoiceDate(invoice.invoice_date || '');
       setDueDate(invoice.due_date || '');
+      setLpoNumber(invoice.lpo_number || '');
       setNotes(invoice.notes || '');
       setTermsAndConditions(invoice.terms_and_conditions || '');
-      
+
       // Convert invoice items to local format
       const invoiceItems = (invoice.invoice_items || []).map((item: any, index: number) => ({
         id: item.id || `existing-${index}`,
@@ -92,6 +95,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
         quantity: item.quantity || 0,
         unit_price: item.unit_price || 0,
         discount_percentage: item.discount_percentage || 0,
+        discount_before_vat: item.discount_before_vat || 0,
         tax_percentage: item.tax_percentage || 16,
         tax_amount: item.tax_amount || 0,
         tax_inclusive: item.tax_inclusive || false,
@@ -149,6 +153,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
       quantity: 1,
       unit_price: product.selling_price,
       discount_percentage: 0,
+      discount_before_vat: 0,
       tax_percentage: 0,
       tax_amount: 0,
       tax_inclusive: false,
@@ -193,6 +198,15 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
       if (item.id === itemId) {
         const { lineTotal, taxAmount } = calculateLineTotal(item, undefined, undefined, discountPercentage);
         return { ...item, discount_percentage: discountPercentage, line_total: lineTotal, tax_amount: taxAmount };
+      }
+      return item;
+    }));
+  };
+
+  const updateItemDiscountBeforeVat = (itemId: string, discountBeforeVat: number) => {
+    setItems(items.map(item => {
+      if (item.id === itemId) {
+        return { ...item, discount_before_vat: discountBeforeVat };
       }
       return item;
     }));
@@ -277,6 +291,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
         customer_id: selectedCustomerId,
         invoice_date: invoiceDate,
         due_date: dueDate,
+        lpo_number: lpoNumber || null,
         subtotal: subtotal,
         tax_amount: taxAmount,
         total_amount: totalAmount,
@@ -291,6 +306,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
         quantity: item.quantity,
         unit_price: item.unit_price,
         discount_percentage: item.discount_percentage,
+        discount_before_vat: item.discount_before_vat || 0,
         tax_percentage: item.tax_percentage,
         tax_amount: item.tax_amount,
         tax_inclusive: item.tax_inclusive,
@@ -376,6 +392,18 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
                       onChange={(e) => setDueDate(e.target.value)}
                     />
                   </div>
+                </div>
+
+                {/* LPO Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="lpo_number">LPO Number (Optional)</Label>
+                  <Input
+                    id="lpo_number"
+                    type="text"
+                    value={lpoNumber}
+                    onChange={(e) => setLpoNumber(e.target.value)}
+                    placeholder="Enter LPO reference number"
+                  />
                 </div>
 
                 {/* Notes */}
@@ -482,6 +510,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
                     <TableHead>Qty</TableHead>
                     <TableHead>Unit Price</TableHead>
                     <TableHead>Discount %</TableHead>
+                    <TableHead>Disc. Before VAT</TableHead>
                     <TableHead>Tax %</TableHead>
                     <TableHead>Tax Incl.</TableHead>
                     <TableHead>Line Total</TableHead>
@@ -524,6 +553,16 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
                           min="0"
                           max="100"
                           step="0.1"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          value={item.discount_before_vat || 0}
+                          onChange={(e) => updateItemDiscountBeforeVat(item.id, parseFloat(e.target.value) || 0)}
+                          className="w-24"
+                          step="0.01"
+                          placeholder="0.00"
                         />
                       </TableCell>
                       <TableCell>
