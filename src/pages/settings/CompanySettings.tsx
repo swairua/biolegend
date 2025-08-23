@@ -20,17 +20,17 @@ export default function CompanySettings() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [companyData, setCompanyData] = useState({
-    name: '',
+    name: 'BIOLEGEND SCIENTIFIC LTD',
     registration_number: '',
-    tax_number: '',
-    email: '',
-    phone: '',
-    address: '',
-    city: '',
+    tax_number: 'P051658002D',
+    email: 'biolegend@biolegendscientific.co.ke',
+    phone: '+254780165490/ +254741207690',
+    address: 'P.O Box 85988-00200\nNAIROBI',
+    city: 'Nairobi',
     state: '',
-    postal_code: '',
-    country: '',
-    currency: '',
+    postal_code: '00200',
+    country: 'Kenya',
+    currency: 'KES',
     fiscal_year_start: 1,
     logo_url: ''
   });
