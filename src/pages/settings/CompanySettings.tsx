@@ -21,6 +21,7 @@ export default function CompanySettings() {
   const [newTax, setNewTax] = useState({ name: '', rate: 0, is_default: false });
   const [showNewTaxForm, setShowNewTaxForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [schemaError, setSchemaError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [companyData, setCompanyData] = useState({
     name: 'BIOLEGEND SCIENTIFIC LTD',
