@@ -161,6 +161,62 @@ export default function CompanySettings() {
     }
   };
 
+  const testCompanySave = async () => {
+    console.log('🧪 Testing company save with detailed logging...');
+    console.log('Current company data:', JSON.stringify(companyData, null, 2));
+    console.log('Current company:', JSON.stringify(currentCompany, null, 2));
+
+    try {
+      // Test direct Supabase call first
+      const testData = {
+        name: companyData.name || 'Test Company',
+        email: companyData.email || 'test@example.com',
+        phone: companyData.phone,
+        address: companyData.address,
+        city: companyData.city,
+        country: companyData.country || 'Kenya',
+        currency: companyData.currency || 'KES'
+      };
+
+      console.log('Test data to be saved:', JSON.stringify(testData, null, 2));
+
+      if (!currentCompany) {
+        console.log('Creating new company directly...');
+        const { data, error } = await supabase
+          .from('companies')
+          .insert([testData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Direct Supabase error:', error);
+          throw error;
+        }
+        console.log('Direct creation success:', data);
+      } else {
+        console.log('Updating company directly...');
+        const { data, error } = await supabase
+          .from('companies')
+          .update(testData)
+          .eq('id', currentCompany.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Direct Supabase error:', error);
+          throw error;
+        }
+        console.log('Direct update success:', data);
+      }
+
+      toast.success('🧪 Test save successful!');
+
+    } catch (error) {
+      console.error('🧪 Test save failed:', error);
+      toast.error('🧪 Test failed - check console for details');
+    }
+  };
+
   const handleSaveCompany = async () => {
     console.log('Saving company with data:', companyData);
     console.log('Current company:', currentCompany);
