@@ -151,7 +151,7 @@ export const generatePDF = (data: DocumentData) => {
           align-items: flex-start;
           margin-bottom: 30px;
           padding-bottom: 20px;
-          border-bottom: 2px solid #0891B2;
+          border-bottom: 2px solid #7C3AED;
         }
         
         .company-info {
