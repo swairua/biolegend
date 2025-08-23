@@ -252,6 +252,9 @@ const App = () => {
             }
           />
 
+          {/* Authentication Test - No protection needed */}
+          <Route path="/auth-test" element={<AuthTest />} />
+
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
         </Routes>
