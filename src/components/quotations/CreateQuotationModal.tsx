@@ -28,7 +28,7 @@ import {
   Search,
   Calculator
 } from 'lucide-react';
-import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { useCreateQuotationWithItems } from '@/hooks/useQuotationItems';
 import { toast } from 'sonner';
 
@@ -63,9 +63,11 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: customers, isLoading: loadingCustomers } = useCustomers('550e8400-e29b-41d4-a716-446655440000');
-  const { data: products, isLoading: loadingProducts } = useProducts('550e8400-e29b-41d4-a716-446655440000');
-  const { data: taxSettings } = useTaxSettings('550e8400-e29b-41d4-a716-446655440000');
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
+  const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
+  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const { data: taxSettings } = useTaxSettings(currentCompany?.id);
   const createQuotationWithItems = useCreateQuotationWithItems();
   const generateDocNumber = useGenerateDocumentNumber();
 
@@ -235,7 +237,7 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
       // Generate quotation number
       console.log('Generating quotation number...');
       const quotationNumber = await generateDocNumber.mutateAsync({
-        companyId: '550e8400-e29b-41d4-a716-446655440000',
+        companyId: currentCompany?.id || 'default-company-id',
         type: 'quotation'
       });
       console.log('Generated quotation number:', quotationNumber);
@@ -243,7 +245,7 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
       // Create quotation with items
       console.log('Preparing quotation data...');
       const quotationData = {
-        company_id: '550e8400-e29b-41d4-a716-446655440000',
+        company_id: currentCompany?.id || 'default-company-id',
         customer_id: selectedCustomerId,
         quotation_number: quotationNumber,
         quotation_date: quotationDate,
