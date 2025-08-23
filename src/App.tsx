@@ -26,6 +26,7 @@ import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
+import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -254,6 +255,9 @@ const App = () => {
 
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
+
+          {/* Manual Database Setup - No protection needed */}
+          <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
 
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />

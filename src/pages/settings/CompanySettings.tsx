@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Building2, Save, Upload, Plus, Trash2, Edit, Check, X, Image } from 'lucide-react';
+import { Building2, Save, Upload, Plus, Trash2, Edit, Check, X, Image, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { useCompanies, useUpdateCompany, useCreateCompany, useTaxSettings, useCreateTaxSetting, useUpdateTaxSetting, useDeleteTaxSetting } from '@/hooks/useDatabase';
@@ -13,12 +13,17 @@ import { toast } from 'sonner';
 import { ForceTaxSettings } from '@/components/ForceTaxSettings';
 import { supabase } from '@/integrations/supabase/client';
 import StorageSetup from '@/components/StorageSetup';
+import { getUserFriendlyMessage, logError } from '@/utils/errorParser';
+import { QuickSchemaFix } from '@/components/QuickSchemaFix';
+import { addCurrencyColumn, ADD_CURRENCY_COLUMN_SQL } from '@/utils/addCurrencyColumn';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
   const [newTax, setNewTax] = useState({ name: '', rate: 0, is_default: false });
   const [showNewTaxForm, setShowNewTaxForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [schemaError, setSchemaError] = useState<string | null>(null);
+  const [fixingCurrency, setFixingCurrency] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [companyData, setCompanyData] = useState({
     name: 'BIOLEGEND SCIENTIFIC LTD',
@@ -45,7 +50,7 @@ export default function CompanySettings() {
   const updateTaxSetting = useUpdateTaxSetting();
   const deleteTaxSetting = useDeleteTaxSetting();
 
-  // Debug logging
+  // Debug logging and schema check
   useEffect(() => {
     console.log('Companies data:', companies);
     console.log('Companies loading:', companiesLoading);
@@ -54,6 +59,16 @@ export default function CompanySettings() {
     console.log('Tax settings:', taxSettings);
     console.log('Tax settings loading:', taxSettingsLoading);
     console.log('Tax settings error:', taxSettingsError);
+
+    // Check for schema errors in the companies query
+    if (companiesError) {
+      const errorString = String(companiesError);
+      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('currency column missing');
+      } else if (errorString.includes('registration_number') && errorString.includes('column')) {
+        setSchemaError('registration_number column missing');
+      }
+    }
   }, [companies, companiesLoading, companiesError, currentCompany, taxSettings, taxSettingsLoading, taxSettingsError]);
 
   useEffect(() => {
@@ -124,8 +139,16 @@ export default function CompanySettings() {
 
       toast.success('Logo uploaded and saved successfully!');
     } catch (err: any) {
-      console.error('Upload error', err);
-      toast.error('Failed to upload logo: ' + (err?.message || String(err)));
+      // Use centralized error parsing and logging for file upload
+      logError(err, 'Logo Upload');
+      let userMessage = getUserFriendlyMessage(err, 'Failed to upload logo');
+
+      // Add specific handling for storage errors
+      if (userMessage.includes('company-logos') || userMessage.includes('bucket')) {
+        userMessage = 'Storage bucket "company-logos" does not exist. Please create the storage bucket first.';
+      }
+
+      toast.error(userMessage);
     } finally {
       setUploading(false);
       // Clear the file input
@@ -135,29 +158,239 @@ export default function CompanySettings() {
     }
   };
 
+  const validateCompanyData = (data: any) => {
+    const errors = [];
+
+    // Required fields
+    if (!data.name || !data.name.trim()) {
+      errors.push('Company name is required');
+    } else if (data.name.length > 255) {
+      errors.push('Company name must be less than 255 characters');
+    }
+
+    // Email validation
+    if (data.email && data.email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        errors.push('Please enter a valid email address');
+      } else if (data.email.length > 255) {
+        errors.push('Email must be less than 255 characters');
+      }
+    }
+
+    // Length validations for other fields
+    if (data.registration_number && data.registration_number.length > 100) {
+      errors.push('Registration number must be less than 100 characters');
+    }
+    if (data.tax_number && data.tax_number.length > 100) {
+      errors.push('Tax number must be less than 100 characters');
+    }
+    if (data.phone && data.phone.length > 50) {
+      errors.push('Phone number must be less than 50 characters');
+    }
+    if (data.city && data.city.length > 100) {
+      errors.push('City must be less than 100 characters');
+    }
+    if (data.state && data.state.length > 100) {
+      errors.push('State must be less than 100 characters');
+    }
+    if (data.postal_code && data.postal_code.length > 20) {
+      errors.push('Postal code must be less than 20 characters');
+    }
+    if (data.country && data.country.length > 100) {
+      errors.push('Country must be less than 100 characters');
+    }
+    if (data.currency && data.currency.length > 3) {
+      errors.push('Currency code must be 3 characters or less');
+    }
+
+    // Fiscal year validation
+    if (data.fiscal_year_start && (data.fiscal_year_start < 1 || data.fiscal_year_start > 12)) {
+      errors.push('Fiscal year start must be between 1 and 12');
+    }
+
+    return errors;
+  };
+
+  const testCompanySave = async () => {
+    console.log('🧪 Testing company save with detailed logging...');
+    console.log('Current company data:', JSON.stringify(companyData, null, 2));
+    console.log('Current company:', JSON.stringify(currentCompany, null, 2));
+
+    try {
+      // Test direct Supabase call first
+      const testData = {
+        name: companyData.name || 'Test Company',
+        email: companyData.email || 'test@example.com',
+        phone: companyData.phone,
+        address: companyData.address,
+        city: companyData.city,
+        country: companyData.country || 'Kenya',
+        currency: companyData.currency || 'KES'
+      };
+
+      console.log('Test data to be saved:', JSON.stringify(testData, null, 2));
+
+      if (!currentCompany) {
+        console.log('Creating new company directly...');
+        const { data, error } = await supabase
+          .from('companies')
+          .insert([testData])
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Direct Supabase creation error (detailed):', {
+            error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+            jsonError: JSON.stringify(error, null, 2)
+          });
+          throw error;
+        }
+        console.log('Direct creation success:', data);
+      } else {
+        console.log('Updating company directly...');
+        const { data, error } = await supabase
+          .from('companies')
+          .update(testData)
+          .eq('id', currentCompany.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('Direct Supabase update error (detailed):', {
+            error,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code,
+            jsonError: JSON.stringify(error, null, 2)
+          });
+          throw error;
+        }
+        console.log('Direct update success:', data);
+      }
+
+      toast.success('🧪 Test save successful!');
+
+    } catch (error) {
+      // Use centralized error parsing and logging for test function
+      logError(error, '🧪 Test Save');
+      const userMessage = getUserFriendlyMessage(error, '🧪 Test failed');
+
+      // Check if this is a schema error
+      const errorString = String(error);
+      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('currency column missing');
+      }
+
+      toast.error(userMessage);
+    }
+  };
+
+  const fixCurrencyColumn = async () => {
+    setFixingCurrency(true);
+    try {
+      const result = await addCurrencyColumn();
+      if (result.success) {
+        toast.success('Currency column added! You can now save company settings.');
+        setSchemaError(null);
+      } else {
+        toast.error(result.message);
+        // Copy SQL to clipboard for manual execution
+        navigator.clipboard.writeText(ADD_CURRENCY_COLUMN_SQL);
+        toast.info('SQL copied to clipboard for manual execution');
+      }
+    } catch (error) {
+      toast.error('Failed to add currency column');
+    } finally {
+      setFixingCurrency(false);
+    }
+  };
+
   const handleSaveCompany = async () => {
     console.log('Saving company with data:', companyData);
     console.log('Current company:', currentCompany);
 
+    // Comprehensive validation
+    const validationErrors = validateCompanyData(companyData);
+    if (validationErrors.length > 0) {
+      toast.error(`Validation failed: ${validationErrors[0]}`);
+      console.error('Validation errors:', validationErrors);
+      return;
+    }
+
     try {
+      // Sanitize and prepare company data to match database schema
+      const sanitizedData: any = {
+        name: companyData.name?.trim() || '',
+        tax_number: companyData.tax_number?.trim() || null,
+        email: companyData.email?.trim() || null,
+        phone: companyData.phone?.trim() || null,
+        address: companyData.address?.trim() || null,
+        city: companyData.city?.trim() || null,
+        state: companyData.state?.trim() || null,
+        postal_code: companyData.postal_code?.trim() || null,
+        country: companyData.country?.trim() || 'Kenya',
+        logo_url: companyData.logo_url?.trim() || null
+      };
+
+      // Only include optional columns if they might exist in the database
+      // This prevents errors when the schema hasn't been fully migrated
+      if (companyData.registration_number?.trim()) {
+        sanitizedData.registration_number = companyData.registration_number.trim();
+      }
+      if (companyData.currency?.trim()) {
+        sanitizedData.currency = companyData.currency.trim();
+      }
+      if (companyData.fiscal_year_start) {
+        sanitizedData.fiscal_year_start = companyData.fiscal_year_start;
+      }
+
+      // Remove empty strings and convert to null for optional fields
+      Object.keys(sanitizedData).forEach(key => {
+        if (key !== 'name' && key !== 'country' && key !== 'currency' && key !== 'fiscal_year_start') {
+          if (sanitizedData[key] === '' || sanitizedData[key] === undefined) {
+            sanitizedData[key] = null;
+          }
+        }
+      });
+
+      console.log('Sanitized company data:', JSON.stringify(sanitizedData, null, 2));
+
       if (!currentCompany) {
         // Create a new company if none exists
         console.log('No company found, creating new one');
-        await createCompany.mutateAsync(companyData);
+        await createCompany.mutateAsync(sanitizedData);
         toast.success('Company created successfully');
       } else {
         // Update existing company
         console.log('Updating existing company with ID:', currentCompany.id);
         await updateCompany.mutateAsync({
           id: currentCompany.id,
-          ...companyData
+          ...sanitizedData
         });
         toast.success('Company settings saved successfully');
       }
     } catch (error) {
-      console.error('Company save error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      toast.error(`Failed to save company settings: ${errorMessage}`);
+      // Use centralized error parsing and logging
+      logError(error, 'Company Save');
+      const userMessage = getUserFriendlyMessage(error, 'Failed to save company settings');
+
+      // Check if this is a schema error
+      const errorString = String(error);
+      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('currency column missing');
+      } else if (errorString.includes('registration_number') && errorString.includes('column')) {
+        setSchemaError('registration_number column missing');
+      } else if (errorString.includes('fiscal_year_start') && errorString.includes('column')) {
+        setSchemaError('fiscal_year_start column missing');
+      }
+
+      toast.error(userMessage);
     }
   };
 
@@ -313,11 +546,41 @@ export default function CompanySettings() {
             Manage company information and preferences
           </p>
         </div>
-        <Button variant="primary-gradient" size="lg" onClick={handleSaveCompany}>
-          <Save className="h-4 w-4" />
-          Save Settings
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="primary-gradient" size="lg" onClick={handleSaveCompany}>
+            <Save className="h-4 w-4" />
+            Save Settings
+          </Button>
+          <Button variant="outline" size="lg" onClick={testCompanySave}>
+            🧪 Debug Test
+          </Button>
+        </div>
       </div>
+
+      {/* Simple Currency Column Fix - Show when schema errors are detected */}
+      {schemaError && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <AlertTriangle className="h-5 w-5 text-orange-600" />
+              <span className="font-medium text-orange-800">
+                Currency column missing from companies table
+              </span>
+            </div>
+            <Button
+              onClick={fixCurrencyColumn}
+              disabled={fixingCurrency}
+              size="sm"
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {fixingCurrency ? 'Adding...' : 'Add Currency Column'}
+            </Button>
+          </div>
+          <p className="text-sm text-orange-700 mt-2">
+            Click the button to add the missing currency column to the database.
+          </p>
+        </div>
+      )}
 
       <div className="grid gap-6">
         {/* Company Information */}
