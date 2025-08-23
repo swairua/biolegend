@@ -268,6 +268,13 @@ export default function CompanySettings() {
       // Use centralized error parsing and logging for test function
       logError(error, '🧪 Test Save');
       const userMessage = getUserFriendlyMessage(error, '🧪 Test failed');
+
+      // Check if this is a schema error
+      const errorString = String(error);
+      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('currency column missing');
+      }
+
       toast.error(userMessage);
     }
   };
