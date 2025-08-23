@@ -398,6 +398,18 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                   </div>
                 </div>
 
+                {/* LPO Number */}
+                <div className="space-y-2">
+                  <Label htmlFor="lpo_number">LPO Number (Optional)</Label>
+                  <Input
+                    id="lpo_number"
+                    type="text"
+                    value={lpoNumber}
+                    onChange={(e) => setLpoNumber(e.target.value)}
+                    placeholder="Enter LPO reference number"
+                  />
+                </div>
+
                 {/* Notes */}
                 <div className="space-y-2">
                   <Label htmlFor="notes">Notes</Label>
