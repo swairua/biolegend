@@ -151,7 +151,7 @@ export const generatePDF = (data: DocumentData) => {
           align-items: flex-start;
           margin-bottom: 30px;
           padding-bottom: 20px;
-          border-bottom: 2px solid #0891B2;
+          border-bottom: 2px solid #7C3AED;
         }
         
         .company-info {
@@ -176,7 +176,7 @@ export const generatePDF = (data: DocumentData) => {
           font-size: 24px;
           font-weight: bold;
           margin-bottom: 5px;
-          color: #0891B2;
+          color: #7C3AED;
         }
         
         .company-details {
@@ -274,13 +274,13 @@ export const generatePDF = (data: DocumentData) => {
           border-collapse: collapse;
           margin: 20px 0;
           font-size: 11px;
-          border: 2px solid #0891B2;
+          border: 2px solid #7C3AED;
           border-radius: 8px;
           overflow: hidden;
         }
         
         .items-table thead {
-          background: #0891B2;
+          background: #7C3AED;
           color: white;
         }
         
@@ -371,20 +371,20 @@ export const generatePDF = (data: DocumentData) => {
         }
         
         .totals-table .total-row {
-          border-top: 2px solid #0891B2;
+          border-top: 2px solid #7C3AED;
           background: #f8f9fa;
         }
         
         .totals-table .total-row .label {
           font-size: 14px;
           font-weight: bold;
-          color: #0891B2;
+          color: #7C3AED;
         }
         
         .totals-table .total-row .amount {
           font-size: 16px;
           font-weight: bold;
-          color: #0891B2;
+          color: #7C3AED;
         }
         
         .notes-section {
@@ -545,7 +545,7 @@ export const generatePDF = (data: DocumentData) => {
             padding: 20px;
           }
         }
-      </style>
+        \n        .payment-banner {\n          background: #f8f9fa;\n          padding: 8px 15px;\n          margin-bottom: 20px;\n          border-left: 4px solid #7C3AED;\n          font-size: 10px;\n          color: #333;\n          text-align: center;\n          border-radius: 4px;\n          font-weight: 600;\n        }\n        \n        .bank-details {\n          background: #f8f9fa;\n          padding: 10px;\n          margin: 15px 0;\n          border-left: 4px solid #7C3AED;\n          font-size: 10px;\n          color: #333;\n          text-align: center;\n          border-radius: 4px;\n          font-weight: 600;\n        }\n      </style>
     </head>
     <body>
       <div class="page">
@@ -594,7 +594,7 @@ export const generatePDF = (data: DocumentData) => {
                 ` : ''}
                 <tr>
                   <td class="label">${data.type === 'receipt' ? 'Amount Paid' : data.type === 'remittance' ? 'Total Payment' : 'Amount'}:</td>
-                  <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#0891B2'};">${formatCurrency(data.total_amount)}</td>
+                  <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#7C3AED'};">${formatCurrency(data.total_amount)}</td>
                 </tr>
               </table>
             </div>
@@ -809,7 +809,7 @@ export const generatePDF = (data: DocumentData) => {
         </div>
         ` : ''}
         
-        <!-- Footer -->
+        <!-- Bank Details -->\n        <div class=\"bank-details\">\n          <strong>MAKE ALL PAYMENTS THROUGH BIOLEGEND SCIENTIFIC LTD, KCB RIVER ROAD BRANCH NUMBER : 1216348367 - SWIFT CODE; KCBLKENX - BANK CODE; 01 - BRANCH CODE; 114 ABSA BANK KENYA PLC: THIKA ROAD MALL BRANCH, ACC: 2051129930, BRANCH CODE; 024, SWIFT CODE; BARCKENX</strong>\n        </div>\n        \n        <!-- Footer -->
         <div class="footer">
           <strong>Thank you for your business!</strong><br>
           <strong>${company.name}</strong><br>
