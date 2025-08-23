@@ -545,7 +545,7 @@ export const generatePDF = (data: DocumentData) => {
             padding: 20px;
           }
         }
-      </style>
+        \n        .payment-banner {\n          background: #f8f9fa;\n          padding: 8px 15px;\n          margin-bottom: 20px;\n          border-left: 4px solid #7C3AED;\n          font-size: 10px;\n          color: #333;\n          text-align: center;\n          border-radius: 4px;\n          font-weight: 600;\n        }\n        \n        .bank-details {\n          background: #f8f9fa;\n          padding: 10px;\n          margin: 15px 0;\n          border-left: 4px solid #7C3AED;\n          font-size: 10px;\n          color: #333;\n          text-align: center;\n          border-radius: 4px;\n          font-weight: 600;\n        }\n      </style>
     </head>
     <body>
       <div class="page">
