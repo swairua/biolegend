@@ -16,6 +16,7 @@ import StorageSetup from '@/components/StorageSetup';
 import { getUserFriendlyMessage, logError } from '@/utils/errorParser';
 import { QuickSchemaFix } from '@/components/QuickSchemaFix';
 import { addCurrencyColumn, ADD_CURRENCY_COLUMN_SQL } from '@/utils/addCurrencyColumn';
+import { CompaniesTableAuditPanel } from '@/components/CompaniesTableAuditPanel';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
@@ -63,7 +64,9 @@ export default function CompanySettings() {
     // Check for schema errors in the companies query
     if (companiesError) {
       const errorString = String(companiesError);
-      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+      if (errorString.includes('fiscal_year_start') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('fiscal_year_start column missing');
+      } else if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
         setSchemaError('currency column missing');
       } else if (errorString.includes('registration_number') && errorString.includes('column')) {
         setSchemaError('registration_number column missing');
@@ -218,7 +221,7 @@ export default function CompanySettings() {
     console.log('Current company:', JSON.stringify(currentCompany, null, 2));
 
     try {
-      // Test direct Supabase call first
+      // Test direct Supabase call first - Include fiscal_year_start to test the specific error
       const testData = {
         name: companyData.name || 'Test Company',
         email: companyData.email || 'test@example.com',
@@ -226,7 +229,10 @@ export default function CompanySettings() {
         address: companyData.address,
         city: companyData.city,
         country: companyData.country || 'Kenya',
-        currency: companyData.currency || 'KES'
+        currency: companyData.currency || 'KES',
+        fiscal_year_start: companyData.fiscal_year_start || 1,
+        registration_number: companyData.registration_number,
+        tax_number: companyData.tax_number
       };
 
       console.log('Test data to be saved:', JSON.stringify(testData, null, 2));
@@ -382,12 +388,12 @@ export default function CompanySettings() {
 
       // Check if this is a schema error
       const errorString = String(error);
-      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+      if (errorString.includes('fiscal_year_start') && (errorString.includes('column') || errorString.includes('schema cache'))) {
+        setSchemaError('fiscal_year_start column missing');
+      } else if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
         setSchemaError('currency column missing');
       } else if (errorString.includes('registration_number') && errorString.includes('column')) {
         setSchemaError('registration_number column missing');
-      } else if (errorString.includes('fiscal_year_start') && errorString.includes('column')) {
-        setSchemaError('fiscal_year_start column missing');
       }
 
       toast.error(userMessage);
@@ -557,8 +563,13 @@ export default function CompanySettings() {
         </div>
       </div>
 
-      {/* Simple Currency Column Fix - Show when schema errors are detected */}
-      {schemaError && (
+      {/* Companies Table Schema Issues - Comprehensive Audit and Fix */}
+      {(schemaError || companiesError) && (
+        <CompaniesTableAuditPanel />
+      )}
+
+      {/* Simple Currency Column Fix - Show when schema errors are detected (fallback) */}
+      {schemaError && !companiesError && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
