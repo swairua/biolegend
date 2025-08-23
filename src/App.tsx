@@ -26,6 +26,7 @@ import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
+import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
