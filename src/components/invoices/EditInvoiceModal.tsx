@@ -203,6 +203,15 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
     }));
   };
 
+  const updateItemDiscountBeforeVat = (itemId: string, discountBeforeVat: number) => {
+    setItems(items.map(item => {
+      if (item.id === itemId) {
+        return { ...item, discount_before_vat: discountBeforeVat };
+      }
+      return item;
+    }));
+  };
+
   const updateItemTax = (itemId: string, taxPercentage: number) => {
     setItems(items.map(item => {
       if (item.id === itemId) {
