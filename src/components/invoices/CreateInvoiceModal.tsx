@@ -40,6 +40,7 @@ interface InvoiceItem {
   description: string;
   quantity: number;
   unit_price: number;
+  discount_before_vat?: number;
   tax_percentage: number;
   tax_amount: number;
   tax_inclusive: boolean;
