@@ -337,6 +337,24 @@ export function ManualDatabaseSetup() {
                   )}
                 </div>
               )}
+
+              {setupResults.schema && (
+                <div className="space-y-2">
+                  <Badge variant={setupResults.schema.success ? "default" : "destructive"}>
+                    Schema: {setupResults.schema.success ? "Fixed" : "Failed"}
+                  </Badge>
+                  {setupResults.schema.columnsAdded && setupResults.schema.columnsAdded.length > 0 && (
+                    <div className="text-sm text-green-600">
+                      Added columns: {setupResults.schema.columnsAdded.join(', ')}
+                    </div>
+                  )}
+                  {setupResults.schema.errors && setupResults.schema.errors.length > 0 && (
+                    <div className="text-sm text-red-600">
+                      Errors: {setupResults.schema.errors.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         )}
