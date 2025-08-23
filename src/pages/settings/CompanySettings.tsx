@@ -23,6 +23,7 @@ export default function CompanySettings() {
   const [showNewTaxForm, setShowNewTaxForm] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [schemaError, setSchemaError] = useState<string | null>(null);
+  const [fixingCurrency, setFixingCurrency] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [companyData, setCompanyData] = useState({
     name: 'BIOLEGEND SCIENTIFIC LTD',
@@ -287,6 +288,26 @@ export default function CompanySettings() {
       }
 
       toast.error(userMessage);
+    }
+  };
+
+  const fixCurrencyColumn = async () => {
+    setFixingCurrency(true);
+    try {
+      const result = await addCurrencyColumn();
+      if (result.success) {
+        toast.success('Currency column added! You can now save company settings.');
+        setSchemaError(null);
+      } else {
+        toast.error(result.message);
+        // Copy SQL to clipboard for manual execution
+        navigator.clipboard.writeText(ADD_CURRENCY_COLUMN_SQL);
+        toast.info('SQL copied to clipboard for manual execution');
+      }
+    } catch (error) {
+      toast.error('Failed to add currency column');
+    } finally {
+      setFixingCurrency(false);
     }
   };
 
