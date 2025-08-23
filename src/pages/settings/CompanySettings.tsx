@@ -125,34 +125,16 @@ export default function CompanySettings() {
 
       toast.success('Logo uploaded and saved successfully!');
     } catch (err: any) {
-      console.error('Upload error', err);
+      // Use centralized error parsing and logging for file upload
+      logError(err, 'Logo Upload');
+      let userMessage = getUserFriendlyMessage(err, 'Failed to upload logo');
 
-      let errorMessage = 'Unknown error occurred';
-
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (err && typeof err === 'object') {
-        // Handle Supabase error objects
-        const supabaseError = err as any;
-        if (supabaseError.message) {
-          errorMessage = supabaseError.message;
-        } else if (supabaseError.details) {
-          errorMessage = supabaseError.details;
-        } else if (supabaseError.hint) {
-          errorMessage = supabaseError.hint;
-        } else {
-          errorMessage = JSON.stringify(err);
-        }
+      // Add specific handling for storage errors
+      if (userMessage.includes('company-logos') || userMessage.includes('bucket')) {
+        userMessage = 'Storage bucket "company-logos" does not exist. Please create the storage bucket first.';
       }
 
-      // Check for specific storage errors
-      if (errorMessage.includes('company-logos') && errorMessage.includes('bucket')) {
-        toast.error('Storage bucket "company-logos" does not exist. Please create the storage bucket first.');
-      } else if (errorMessage.includes('permission denied') || errorMessage.includes('insufficient_privilege')) {
-        toast.error('Permission denied: Please check your storage permissions.');
-      } else {
-        toast.error(`Failed to upload logo: ${errorMessage}`);
-      }
+      toast.error(userMessage);
     } finally {
       setUploading(false);
       // Clear the file input
