@@ -41,6 +41,7 @@ interface InvoiceItem {
   quantity: number;
   unit_price: number;
   discount_percentage: number;
+  discount_before_vat?: number;
   tax_percentage: number;
   tax_amount: number;
   tax_inclusive: boolean;
@@ -58,6 +59,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   const [invoiceDate, setInvoiceDate] = useState('');
   const [dueDate, setDueDate] = useState('');
+  const [lpoNumber, setLpoNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [termsAndConditions, setTermsAndConditions] = useState('');
   
@@ -80,9 +82,10 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
       setSelectedCustomerId(invoice.customer_id || '');
       setInvoiceDate(invoice.invoice_date || '');
       setDueDate(invoice.due_date || '');
+      setLpoNumber(invoice.lpo_number || '');
       setNotes(invoice.notes || '');
       setTermsAndConditions(invoice.terms_and_conditions || '');
-      
+
       // Convert invoice items to local format
       const invoiceItems = (invoice.invoice_items || []).map((item: any, index: number) => ({
         id: item.id || `existing-${index}`,
@@ -92,6 +95,7 @@ export function EditInvoiceModal({ open, onOpenChange, onSuccess, invoice }: Edi
         quantity: item.quantity || 0,
         unit_price: item.unit_price || 0,
         discount_percentage: item.discount_percentage || 0,
+        discount_before_vat: item.discount_before_vat || 0,
         tax_percentage: item.tax_percentage || 16,
         tax_amount: item.tax_amount || 0,
         tax_inclusive: item.tax_inclusive || false,
