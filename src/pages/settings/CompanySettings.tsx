@@ -199,25 +199,60 @@ export default function CompanySettings() {
         toast.success('Company settings saved successfully');
       }
     } catch (error) {
-      console.error('Company save error:', error);
+      // Enhanced error logging for debugging
+      console.error('Company save error (detailed):', {
+        error,
+        errorType: typeof error,
+        errorConstructor: error?.constructor?.name,
+        errorString: String(error),
+        errorJSON: JSON.stringify(error, null, 2)
+      });
 
       let errorMessage = 'Unknown error occurred';
 
       if (error instanceof Error) {
         errorMessage = error.message;
+        console.log('Error is instance of Error, message:', error.message);
       } else if (error && typeof error === 'object') {
         // Handle Supabase error objects
         const supabaseError = error as any;
+        console.log('Supabase error object:', {
+          message: supabaseError.message,
+          details: supabaseError.details,
+          hint: supabaseError.hint,
+          code: supabaseError.code,
+          status: supabaseError.status,
+          statusText: supabaseError.statusText
+        });
+
         if (supabaseError.message) {
           errorMessage = supabaseError.message;
         } else if (supabaseError.details) {
           errorMessage = supabaseError.details;
         } else if (supabaseError.hint) {
           errorMessage = supabaseError.hint;
+        } else if (supabaseError.code) {
+          errorMessage = `Error code: ${supabaseError.code}`;
+        } else if (supabaseError.statusText) {
+          errorMessage = supabaseError.statusText;
         } else {
-          errorMessage = JSON.stringify(error);
+          // Try to extract any string value from the error object
+          const errorKeys = Object.keys(supabaseError);
+          for (const key of errorKeys) {
+            if (typeof supabaseError[key] === 'string' && supabaseError[key].length > 0) {
+              errorMessage = `${key}: ${supabaseError[key]}`;
+              break;
+            }
+          }
+          if (errorMessage === 'Unknown error occurred') {
+            errorMessage = JSON.stringify(error);
+          }
         }
+      } else {
+        errorMessage = String(error);
       }
+
+      console.log('Final error message to display:', errorMessage);
 
       // Check for specific table missing errors
       if (errorMessage.includes('companies') && (errorMessage.includes('does not exist') || errorMessage.includes('relation') || errorMessage.includes('table'))) {
