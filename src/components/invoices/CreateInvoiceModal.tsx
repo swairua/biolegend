@@ -513,6 +513,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                     <TableHead>Product</TableHead>
                     <TableHead>Qty</TableHead>
                     <TableHead>Unit Price</TableHead>
+                    <TableHead>Disc. Before VAT</TableHead>
                     <TableHead>VAT %</TableHead>
                     <TableHead>VAT Incl.</TableHead>
                     <TableHead>Line Total</TableHead>
