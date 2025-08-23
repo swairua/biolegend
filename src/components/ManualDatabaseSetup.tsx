@@ -158,7 +158,7 @@ export function ManualDatabaseSetup() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Button
                 onClick={runCompleteSetup}
                 disabled={isRunning}
@@ -190,6 +190,23 @@ export function ManualDatabaseSetup() {
                 <span className="font-medium">Tables Only</span>
                 <span className="text-xs text-center">
                   Create database schema
+                </span>
+              </Button>
+
+              <Button
+                onClick={runSchemaFix}
+                disabled={isRunning}
+                variant="outline"
+                className="h-auto p-4 flex flex-col items-center space-y-2"
+              >
+                {isRunning ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <AlertCircle className="h-5 w-5" />
+                )}
+                <span className="font-medium">Fix Schema</span>
+                <span className="text-xs text-center">
+                  Add missing columns
                 </span>
               </Button>
 
