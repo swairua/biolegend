@@ -156,8 +156,33 @@ export default function CompanySettings() {
       }
     } catch (error) {
       console.error('Company save error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      toast.error(`Failed to save company settings: ${errorMessage}`);
+
+      let errorMessage = 'Unknown error occurred';
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (error && typeof error === 'object') {
+        // Handle Supabase error objects
+        const supabaseError = error as any;
+        if (supabaseError.message) {
+          errorMessage = supabaseError.message;
+        } else if (supabaseError.details) {
+          errorMessage = supabaseError.details;
+        } else if (supabaseError.hint) {
+          errorMessage = supabaseError.hint;
+        } else {
+          errorMessage = JSON.stringify(error);
+        }
+      }
+
+      // Check for specific table missing errors
+      if (errorMessage.includes('companies') && (errorMessage.includes('does not exist') || errorMessage.includes('relation') || errorMessage.includes('table'))) {
+        toast.error('Companies table does not exist. Please run the database setup first.');
+      } else if (errorMessage.includes('permission denied') || errorMessage.includes('insufficient_privilege')) {
+        toast.error('Permission denied: Please check your database permissions or contact your administrator.');
+      } else {
+        toast.error(`Failed to save company settings: ${errorMessage}`);
+      }
     }
   };
 
