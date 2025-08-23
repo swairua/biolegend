@@ -299,13 +299,16 @@ const RemittanceAdvice = () => {
                 <div className="mt-4 space-y-1">
                   <div className="font-semibold">MedPlus Africa Limited</div>
                   <div className="text-sm text-muted-foreground">
-                    P.O BOX 45352 - 00100, NAIROBI KENYA
+                    P.O Box 85988-00200, Nairobi, Kenya
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Siens Plaza 4th floor room 1 opposite kcb bank River road
+                    Tel: 0741 207 690/0780 165 490
                   </div>
                   <div className="text-sm text-muted-foreground">
-                    Tel: +254 713149223, +254 733 468610
+                    Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Website: www.biolegendscientific.co.ke
                   </div>
                 </div>
               </div>
