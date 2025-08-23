@@ -29,7 +29,7 @@ import {
   Calculator,
   Receipt
 } from 'lucide-react';
-import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { useCreateInvoiceWithItems } from '@/hooks/useQuotationItems';
 import { toast } from 'sonner';
 
@@ -66,9 +66,11 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { data: customers, isLoading: loadingCustomers } = useCustomers('550e8400-e29b-41d4-a716-446655440000');
-  const { data: products, isLoading: loadingProducts } = useProducts('550e8400-e29b-41d4-a716-446655440000');
-  const { data: taxSettings } = useTaxSettings('550e8400-e29b-41d4-a716-446655440000');
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
+  const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
+  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const { data: taxSettings } = useTaxSettings(currentCompany?.id);
   const createInvoiceWithItems = useCreateInvoiceWithItems();
   const generateDocNumber = useGenerateDocumentNumber();
 
