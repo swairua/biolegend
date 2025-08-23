@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useUpdateInvoiceWithItems } from '@/hooks/useQuotationItems';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 
 interface InvoiceItem {
