@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { useCreateInvoiceWithItems } from '@/hooks/useQuotationItems';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface InvoiceItem {
@@ -68,6 +69,8 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Get current user and company from context
+  const { profile } = useAuth();
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
@@ -276,7 +279,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         balance_due: balanceDue,
         terms_and_conditions: termsAndConditions,
         notes: notes,
-        created_by: '660e8400-e29b-41d4-a716-446655440000'
+        created_by: profile?.id
       };
 
       const invoiceItems = items.map(item => ({
