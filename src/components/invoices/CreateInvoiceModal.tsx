@@ -255,17 +255,28 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       return;
     }
 
+    // Validate required fields
+    if (!currentCompany?.id) {
+      toast.error('No company selected. Please ensure you are associated with a company.');
+      return;
+    }
+
+    if (!profile?.id) {
+      toast.error('User not authenticated. Please sign in and try again.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Generate invoice number
       const invoiceNumber = await generateDocNumber.mutateAsync({
-        companyId: currentCompany?.id || 'default-company-id',
+        companyId: currentCompany.id,
         type: 'invoice'
       });
 
       // Create invoice with items
       const invoiceData = {
-        company_id: currentCompany?.id || 'default-company-id',
+        company_id: currentCompany.id,
         customer_id: selectedCustomerId,
         invoice_number: invoiceNumber,
         invoice_date: invoiceDate,
