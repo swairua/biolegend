@@ -26,12 +26,20 @@ interface CreateCategoryModalProps {
 interface CategoryData {
   name: string;
   description: string;
+  parent_id: string;
+  category_code: string;
+  color: string;
+  sort_order: number;
 }
 
 export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCategoryModalProps) {
   const [formData, setFormData] = useState<CategoryData>({
     name: '',
-    description: ''
+    description: '',
+    parent_id: '',
+    category_code: '',
+    color: '#3B82F6', // Default blue color
+    sort_order: 0
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { currentCompany } = useCurrentCompany();
