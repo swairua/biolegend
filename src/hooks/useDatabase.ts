@@ -37,8 +37,8 @@ export interface StockMovement {
   id: string;
   company_id: string;
   product_id: string;
-  movement_type: 'IN' | 'OUT' | 'ADJUSTMENT';
-  reference_type: 'INVOICE' | 'DELIVERY_NOTE' | 'RESTOCK' | 'ADJUSTMENT';
+  movement_type: 'in' | 'out' | 'adjustment';
+  reference_type: 'invoice' | 'delivery_note' | 'adjustment' | 'purchase';
   reference_id?: string;
   quantity: number;
   cost_per_unit?: number;
