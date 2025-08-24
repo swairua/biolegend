@@ -90,18 +90,29 @@ export function QuickTestResult() {
             </div>
 
             {/* Test Steps */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div className="space-y-2">
-                <div className="text-sm font-medium">User Association</div>
+                <div className="text-sm font-medium">User Profile</div>
                 <div className="space-y-1">
-                  {getStatusBadge(testResult.initialDiagnosis?.success, "Initial Check")}
-                  {testResult.fixAttempt && getStatusBadge(testResult.fixAttempt.success, "Fix Applied")}
-                  {testResult.finalDiagnosis && getStatusBadge(testResult.finalDiagnosis.success, "Final Check")}
+                  {getStatusBadge(
+                    testResult.profileDiagnosis?.success && testResult.profileDiagnosis?.issue !== 'profile_incomplete',
+                    "Profile"
+                  )}
+                  {testResult.profileFix && getStatusBadge(testResult.profileFix.success, "Profile Fix")}
                 </div>
               </div>
-              
+
               <div className="space-y-2">
-                <div className="text-sm font-medium">Quotation Creation</div>
+                <div className="text-sm font-medium">Company Association</div>
+                <div className="space-y-1">
+                  {getStatusBadge(testResult.initialDiagnosis?.success, "Association")}
+                  {testResult.fixAttempt && getStatusBadge(testResult.fixAttempt.success, "Assoc Fix")}
+                  {testResult.finalDiagnosis && getStatusBadge(testResult.finalDiagnosis.success, "Final")}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-sm font-medium">Quotation Test</div>
                 <div className="space-y-1">
                   {getStatusBadge(testResult.quotationTest?.success, "Quote Test")}
                 </div>
