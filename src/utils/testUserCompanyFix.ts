@@ -47,33 +47,33 @@ export async function testUserCompanyFixProcess() {
       results.success = true;
     } else {
       console.log('⚠️ User-company association issue detected:', results.initialDiagnosis.message);
-      
-      // Step 2: Attempt fix
-      console.log('🔧 Step 2: Attempting to fix user-company association...');
+
+      // Step 3: Attempt company association fix
+      console.log('🔧 Step 3: Attempting to fix user-company association...');
       results.fixAttempt = await fixUserCompanyAssociation();
-      
+
       if (!results.fixAttempt.success) {
         results.errors.push(`Fix failed: ${results.fixAttempt.message}`);
         return results;
       }
-      
+
       console.log('✅ Fix completed successfully');
-      
-      // Step 3: Verify fix worked
-      console.log('🔍 Step 3: Verifying fix...');
+
+      // Step 4: Verify fix worked
+      console.log('🔍 Step 4: Verifying fix...');
       results.finalDiagnosis = await diagnoseUserCompanyIssue();
-      
+
       if (!results.finalDiagnosis.success) {
         results.errors.push(`Verification failed: ${results.finalDiagnosis.message}`);
         return results;
       }
-      
+
       console.log('✅ Fix verification successful');
       results.success = true;
     }
 
-    // Step 4: Test quotation creation
-    console.log('📝 Step 4: Testing quotation creation...');
+    // Step 5: Test quotation creation
+    console.log('📝 Step 5: Testing quotation creation...');
     results.quotationTest = await testQuotationCreation();
     
     if (!results.quotationTest.success) {
