@@ -140,7 +140,7 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
             <span>Restock Inventory Item</span>
           </DialogTitle>
           <DialogDescription>
-            Add stock for {item.name} ({item.sku})
+            Add stock for {item.name} ({item.product_code})
           </DialogDescription>
         </DialogHeader>
 
@@ -161,15 +161,15 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
                 </div>
                 <div>
                   <span className="text-muted-foreground">SKU:</span>
-                  <div className="font-medium">{item.sku}</div>
+                  <div className="font-medium">{item.product_code}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Current Stock:</span>
-                  <div className="font-bold text-xl text-destructive">{item.currentStock}</div>
+                  <div className="font-bold text-xl text-destructive">{item.stock_quantity}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Min Level:</span>
-                  <div className="font-medium">{item.minStock}</div>
+                  <div className="font-medium">{item.minimum_stock_level}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Category:</span>
@@ -177,7 +177,7 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
                 </div>
                 <div>
                   <span className="text-muted-foreground">Unit Price:</span>
-                  <div className="font-medium">{item.unitPrice}</div>
+                  <div className="font-medium">{item.selling_price ? `KES ${item.selling_price.toLocaleString()}` : 'N/A'}</div>
                 </div>
               </div>
 
@@ -187,7 +187,7 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
                   <div>
                     <div className="font-medium text-warning">Low Stock Alert</div>
                     <div className="text-sm text-warning">
-                      Current stock ({item.currentStock}) is below minimum level ({item.minStock})
+                      Current stock ({item.stock_quantity}) is below minimum level ({item.minimum_stock_level})
                     </div>
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
                   placeholder="Enter quantity to add"
                 />
                 <div className="text-xs text-muted-foreground">
-                  Suggested: {item.minStock * 2} units (2x minimum level)
+                  Suggested: {item.minimum_stock_level * 2} units (2x minimum level)
                 </div>
               </div>
 
@@ -285,7 +285,7 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <div className="text-sm text-muted-foreground">Current Stock</div>
-                <div className="text-2xl font-bold text-destructive">{item.currentStock}</div>
+                <div className="text-2xl font-bold text-destructive">{item.stock_quantity}</div>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
                 <div className="text-sm text-muted-foreground">Restock Quantity</div>
@@ -303,7 +303,7 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
               </div>
             </div>
 
-            {newStockLevel >= item.minStock && (
+            {newStockLevel >= item.minimum_stock_level && (
               <div className="mt-4 p-3 bg-success-light rounded-lg">
                 <div className="flex items-center space-x-2">
                   <Package className="h-5 w-5 text-success" />
