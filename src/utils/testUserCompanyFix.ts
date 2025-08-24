@@ -1,5 +1,6 @@
 import { diagnoseUserCompanyIssue, fixUserCompanyAssociation } from './userCompanyDiagnostic';
 import { testQuotationCreation } from './verifyQuotationConstraintFixes';
+import { diagnoseUserProfile, fixUserProfile } from './userProfileDiagnostic';
 
 /**
  * Comprehensive test that verifies the user-company fix process
