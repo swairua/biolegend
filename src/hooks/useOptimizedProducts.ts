@@ -35,50 +35,58 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
     queryFn: async () => {
       if (!companyId) return [];
 
-      let query = supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          product_code,
-          unit_of_measure,
-          unit_price,
-          stock_quantity,
-          product_categories (
-            name
-          )
-        `)
-        .eq('company_id', companyId)
-        .eq('is_active', true);
+      try {
+        let query = supabase
+          .from('products')
+          .select(`
+            id,
+            name,
+            product_code,
+            unit_of_measure,
+            unit_price,
+            stock_quantity,
+            category_id,
+            product_categories!category_id (
+              name
+            )
+          `)
+          .eq('company_id', companyId)
+          .eq('is_active', true);
 
-      // Add search filter if search term exists
-      if (debouncedSearchTerm.trim()) {
-        const searchPattern = `%${debouncedSearchTerm.trim()}%`;
-        query = query.or(`name.ilike.${searchPattern},product_code.ilike.${searchPattern}`);
+        // Add search filter if search term exists
+        if (debouncedSearchTerm.trim()) {
+          const searchPattern = `%${debouncedSearchTerm.trim()}%`;
+          query = query.or(`name.ilike.${searchPattern},product_code.ilike.${searchPattern}`);
+        }
+
+        // Limit results for performance
+        query = query.limit(50).order('name');
+
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('Error searching products:', error);
+          throw new Error(`Failed to search products: ${error.message}`);
+        }
+
+        // Transform data to include category name and normalize price fields
+        const transformedData: ProductSearchResult[] = (data || []).map(product => ({
+          id: product.id,
+          name: product.name,
+          product_code: product.product_code,
+          unit_of_measure: product.unit_of_measure || 'pieces',
+          unit_price: product.unit_price || 0,
+          // Ensure both price fields are available for compatibility
+          selling_price: product.unit_price || 0,
+          stock_quantity: product.stock_quantity || 0,
+          category_name: product.product_categories?.name || 'Uncategorized'
+        }));
+
+        return transformedData;
+      } catch (error) {
+        console.error('Error in useOptimizedProductSearch:', error);
+        throw error;
       }
-
-      // Limit results for performance
-      query = query.limit(50).order('name');
-
-      const { data, error } = await query;
-
-      if (error) {
-        const errorMessage = error?.message || error?.details || JSON.stringify(error);
-        console.error('Error searching products:', errorMessage);
-        throw new Error(`Failed to search products: ${errorMessage}`);
-      }
-
-      // Transform data to include category name and normalize price fields
-      const transformedData: ProductSearchResult[] = (data || []).map(product => ({
-        ...product,
-        // Ensure both price fields are available for compatibility
-        selling_price: product.unit_price,
-        category_name: Array.isArray(product.product_categories)
-          ? product.product_categories[0]?.name
-          : product.product_categories?.name
-      }));
-
-      return transformedData;
     },
     enabled: enabled && !!companyId,
     staleTime: 30000, // Cache for 30 seconds
@@ -102,41 +110,49 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
     queryFn: async () => {
       if (!companyId) return [];
 
-      // Get products ordered by usage frequency or recent activity
-      // For now, we'll order by stock_quantity desc and name asc as a simple heuristic
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          product_code,
-          unit_of_measure,
-          unit_price,
-          stock_quantity,
-          product_categories (
-            name
-          )
-        `)
-        .eq('company_id', companyId)
-        .eq('is_active', true)
-        .order('stock_quantity', { ascending: false })
-        .order('name')
-        .limit(limit);
+      try {
+        // Get products ordered by usage frequency or recent activity
+        // For now, we'll order by stock_quantity desc and name asc as a simple heuristic
+        const { data, error } = await supabase
+          .from('products')
+          .select(`
+            id,
+            name,
+            product_code,
+            unit_of_measure,
+            unit_price,
+            stock_quantity,
+            category_id,
+            product_categories!category_id (
+              name
+            )
+          `)
+          .eq('company_id', companyId)
+          .eq('is_active', true)
+          .order('stock_quantity', { ascending: false })
+          .order('name')
+          .limit(limit);
 
-      if (error) {
-        const errorMessage = error?.message || error?.details || JSON.stringify(error);
-        console.error('Error fetching popular products:', errorMessage);
-        throw new Error(`Failed to fetch popular products: ${errorMessage}`);
+        if (error) {
+          console.error('Error fetching popular products:', error);
+          throw new Error(`Failed to fetch popular products: ${error.message}`);
+        }
+
+        return (data || []).map(product => ({
+          id: product.id,
+          name: product.name,
+          product_code: product.product_code,
+          unit_of_measure: product.unit_of_measure || 'pieces',
+          unit_price: product.unit_price || 0,
+          // Ensure both price fields are available for compatibility
+          selling_price: product.unit_price || 0,
+          stock_quantity: product.stock_quantity || 0,
+          category_name: product.product_categories?.name || 'Uncategorized'
+        })) as ProductSearchResult[];
+      } catch (error) {
+        console.error('Error in usePopularProducts:', error);
+        throw error;
       }
-
-      return (data || []).map(product => ({
-        ...product,
-        // Ensure both price fields are available for compatibility
-        selling_price: product.unit_price,
-        category_name: Array.isArray(product.product_categories)
-          ? product.product_categories[0]?.name
-          : product.product_categories?.name
-      })) as ProductSearchResult[];
     },
     enabled: !!companyId,
     staleTime: 60000, // Cache for 1 minute
@@ -152,36 +168,44 @@ export const useProductById = (productId?: string) => {
     queryFn: async () => {
       if (!productId) return null;
 
-      const { data, error } = await supabase
-        .from('products')
-        .select(`
-          id,
-          name,
-          product_code,
-          unit_of_measure,
-          unit_price,
-          stock_quantity,
-          product_categories (
-            name
-          )
-        `)
-        .eq('id', productId)
-        .single();
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select(`
+            id,
+            name,
+            product_code,
+            unit_of_measure,
+            unit_price,
+            stock_quantity,
+            category_id,
+            product_categories!category_id (
+              name
+            )
+          `)
+          .eq('id', productId)
+          .single();
 
-      if (error) {
-        const errorMessage = error?.message || error?.details || JSON.stringify(error);
-        console.error('Error fetching product:', errorMessage);
-        throw new Error(`Failed to fetch product: ${errorMessage}`);
+        if (error) {
+          console.error('Error fetching product:', error);
+          throw new Error(`Failed to fetch product: ${error.message}`);
+        }
+
+        return {
+          id: data.id,
+          name: data.name,
+          product_code: data.product_code,
+          unit_of_measure: data.unit_of_measure || 'pieces',
+          unit_price: data.unit_price || 0,
+          // Ensure both price fields are available for compatibility
+          selling_price: data.unit_price || 0,
+          stock_quantity: data.stock_quantity || 0,
+          category_name: data.product_categories?.name || 'Uncategorized'
+        } as ProductSearchResult;
+      } catch (error) {
+        console.error('Error in useProductById:', error);
+        throw error;
       }
-
-      return {
-        ...data,
-        // Ensure both price fields are available for compatibility
-        selling_price: data.unit_price,
-        category_name: Array.isArray(data.product_categories)
-          ? data.product_categories[0]?.name
-          : data.product_categories?.name
-      } as ProductSearchResult;
     },
     enabled: !!productId,
     staleTime: 300000, // Cache for 5 minutes since individual products don't change often
@@ -232,19 +256,23 @@ export const useProductCategories = (companyId?: string) => {
     queryFn: async () => {
       if (!companyId) return [];
 
-      const { data, error } = await supabase
-        .from('product_categories')
-        .select('id, name')
-        .eq('company_id', companyId)
-        .order('name');
+      try {
+        const { data, error } = await supabase
+          .from('product_categories')
+          .select('id, name')
+          .eq('company_id', companyId)
+          .order('name');
 
-      if (error) {
-        const errorMessage = error?.message || error?.details || JSON.stringify(error);
-        console.error('Error fetching categories:', errorMessage);
-        throw new Error(`Failed to fetch categories: ${errorMessage}`);
+        if (error) {
+          console.error('Error fetching categories:', error);
+          throw new Error(`Failed to fetch categories: ${error.message}`);
+        }
+
+        return data || [];
+      } catch (error) {
+        console.error('Error in useProductCategories:', error);
+        throw error;
       }
-
-      return data || [];
     },
     enabled: !!companyId,
     staleTime: 300000, // Cache for 5 minutes
@@ -282,37 +310,41 @@ export const useInventoryStats = (companyId?: string) => {
     queryFn: async () => {
       if (!companyId) return null;
 
-      const { data, error } = await supabase
-        .from('products')
-        .select('stock_quantity, minimum_stock_level, unit_price')
-        .eq('company_id', companyId)
-        .eq('is_active', true);
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('stock_quantity, minimum_stock_level, unit_price')
+          .eq('company_id', companyId)
+          .eq('is_active', true);
 
-      if (error) {
-        const errorMessage = error?.message || error?.details || JSON.stringify(error);
-        console.error('Error fetching inventory stats:', errorMessage);
-        throw new Error(`Failed to fetch inventory stats: ${errorMessage}`);
+        if (error) {
+          console.error('Error fetching inventory stats:', error);
+          throw new Error(`Failed to fetch inventory stats: ${error.message}`);
+        }
+
+        const stats = {
+          totalItems: data.length,
+          lowStockItems: 0,
+          outOfStockItems: 0,
+          totalValue: 0
+        };
+
+        data.forEach(product => {
+          const stock = product.stock_quantity || 0;
+          const minStock = product.minimum_stock_level || 0;
+          const price = product.unit_price || 0;
+
+          if (stock <= 0) stats.outOfStockItems++;
+          else if (stock <= minStock) stats.lowStockItems++;
+
+          stats.totalValue += stock * price;
+        });
+
+        return stats;
+      } catch (error) {
+        console.error('Error in useInventoryStats:', error);
+        throw error;
       }
-
-      const stats = {
-        totalItems: data.length,
-        lowStockItems: 0,
-        outOfStockItems: 0,
-        totalValue: 0
-      };
-
-      data.forEach(product => {
-        const stock = product.stock_quantity || 0;
-        const minStock = product.minimum_stock_level || 0;
-        const price = product.unit_price || 0;
-
-        if (stock <= 0) stats.outOfStockItems++;
-        else if (stock <= minStock) stats.lowStockItems++;
-
-        stats.totalValue += stock * price;
-      });
-
-      return stats;
     },
     enabled: !!companyId,
     staleTime: 60000, // Cache for 1 minute
