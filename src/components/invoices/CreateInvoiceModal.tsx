@@ -22,14 +22,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Plus, 
-  Trash2, 
+import {
+  Plus,
+  Trash2,
   Search,
   Calculator,
-  Receipt
+  Receipt,
+  Loader2
 } from 'lucide-react';
-import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
+import { useCustomers, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
+import { useOptimizedProductSearch, usePopularProducts } from '@/hooks/useOptimizedProducts';
 import { useCreateInvoiceWithItems } from '@/hooks/useQuotationItems';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -66,15 +68,26 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const [termsAndConditions, setTermsAndConditions] = useState('Payment due within 30 days of invoice date.');
   
   const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState<{
+    step: string;
+    current: number;
+    total: number;
+  } | null>(null);
 
   // Get current user and company from context
   const { profile, loading: authLoading } = useAuth();
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
-  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const {
+    data: searchedProducts,
+    isLoading: loadingProducts,
+    searchTerm: searchProduct,
+    setSearchTerm: setSearchProduct,
+    isSearching
+  } = useOptimizedProductSearch(currentCompany?.id, open);
+  const { data: popularProducts } = usePopularProducts(currentCompany?.id, 10);
   const { data: taxSettings } = useTaxSettings(currentCompany?.id);
   const createInvoiceWithItems = useCreateInvoiceWithItems();
   const generateDocNumber = useGenerateDocumentNumber();
@@ -90,10 +103,8 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     }
   }, [preSelectedCustomer, open]);
 
-  const filteredProducts = products?.filter(product =>
-    product.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
-    product.product_code.toLowerCase().includes(searchProduct.toLowerCase())
-  ) || [];
+  // Use optimized search results or popular products when no search term
+  const displayProducts = searchProduct.trim() ? searchedProducts : popularProducts;
 
   const addItem = (product: any) => {
     const existingItem = items.find(item => item.product_id === product.id);
@@ -274,14 +285,32 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     }
 
     setIsSubmitting(true);
+    setSubmitProgress({
+      step: 'Preparing invoice data...',
+      current: 1,
+      total: 4
+    });
+
     try {
-      // Generate invoice number
+      // Step 1: Generate invoice number
+      setSubmitProgress({
+        step: 'Generating invoice number...',
+        current: 1,
+        total: 4
+      });
+
       const invoiceNumber = await generateDocNumber.mutateAsync({
         companyId: currentCompany.id,
         type: 'invoice'
       });
 
-      // Create invoice with items
+      // Step 2: Prepare invoice data
+      setSubmitProgress({
+        step: 'Preparing invoice data...',
+        current: 2,
+        total: 4
+      });
+
       const invoiceData = {
         company_id: currentCompany.id,
         customer_id: selectedCustomerId,
@@ -312,9 +341,23 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         line_total: item.line_total
       }));
 
+      // Step 3: Create invoice and items
+      setSubmitProgress({
+        step: `Creating invoice with ${items.length} items...`,
+        current: 3,
+        total: 4
+      });
+
       await createInvoiceWithItems.mutateAsync({
         invoice: invoiceData,
         items: invoiceItems
+      });
+
+      // Step 4: Finalizing
+      setSubmitProgress({
+        step: 'Finalizing invoice creation...',
+        current: 4,
+        total: 4
       });
 
       toast.success(`Invoice ${invoiceNumber} created successfully!`);
@@ -350,6 +393,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       toast.error(`Failed to create invoice: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
+      setSubmitProgress(null);
     }
   };
 
@@ -486,35 +530,44 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                   </div>
 
                   {/* Product List */}
-                  {searchProduct && (
-                    <div className="max-h-64 overflow-y-auto border rounded-lg">
-                      {loadingProducts ? (
-                        <div className="p-4 text-center text-muted-foreground">Loading products...</div>
-                      ) : filteredProducts.length === 0 ? (
-                        <div className="p-4 text-center text-muted-foreground">No products found</div>
-                      ) : (
-                        filteredProducts.map((product) => (
-                          <div
-                            key={product.id}
-                            className="p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 transition-smooth"
-                            onClick={() => addItem(product)}
-                          >
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <div className="font-medium">{product.name}</div>
-                                <div className="text-sm text-muted-foreground">{product.product_code}</div>
-                                {product.description && (
-                                  <div className="text-xs text-muted-foreground mt-1">{product.description}</div>
-                                )}
-                              </div>
-                              <div className="text-right">
-                                <div className="font-semibold">{formatCurrency(product.selling_price)}</div>
-                                <div className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</div>
-                              </div>
+                  <div className="max-h-64 overflow-y-auto border rounded-lg">
+                    {(loadingProducts || isSearching) ? (
+                      <div className="p-4 text-center text-muted-foreground">
+                        {searchProduct ? 'Searching products...' : 'Loading products...'}
+                      </div>
+                    ) : (displayProducts && displayProducts.length === 0) ? (
+                      <div className="p-4 text-center text-muted-foreground">
+                        {searchProduct ? 'No products found' : 'No products available'}
+                      </div>
+                    ) : (
+                      (displayProducts || []).map((product) => (
+                        <div
+                          key={product.id}
+                          className="p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0 transition-smooth"
+                          onClick={() => addItem(product)}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <div className="font-medium">{product.name}</div>
+                              <div className="text-sm text-muted-foreground">{product.product_code}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold">{formatCurrency(product.unit_price)}</div>
+                              <div className="text-xs text-muted-foreground">Stock: {product.current_stock}</div>
+                              {product.category_name && (
+                                <div className="text-xs text-muted-foreground">{product.category_name}</div>
+                              )}
                             </div>
                           </div>
-                        ))
-                      )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Hint when no search term */}
+                  {!searchProduct && (
+                    <div className="text-sm text-muted-foreground text-center py-2">
+                      Start typing to search products, or select from popular items above
                     </div>
                   )}
                 </div>
@@ -649,13 +702,46 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
           </CardContent>
         </Card>
 
+        {/* Progress Indicator */}
+        {submitProgress && (
+          <Card className="bg-blue-50 border-blue-200">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-blue-900">
+                    {submitProgress.step}
+                  </span>
+                  <span className="text-xs text-blue-700">
+                    {submitProgress.current} of {submitProgress.total}
+                  </span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${(submitProgress.current / submitProgress.total) * 100}%` }}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !selectedCustomerId || items.length === 0}>
-            <Calculator className="h-4 w-4 mr-2" />
-            {isSubmitting ? 'Creating...' : 'Create Invoice'}
+          <Button onClick={handleSubmit} disabled={isSubmitting || !selectedCustomerId || items.length === 0} className="min-w-32">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {submitProgress ? 'Processing...' : 'Creating...'}
+              </>
+            ) : (
+              <>
+                <Receipt className="mr-2 h-4 w-4" />
+                Create Invoice
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

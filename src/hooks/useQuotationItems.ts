@@ -240,17 +240,28 @@ export const useConvertQuotationToInvoice = () => {
             cost_per_unit: item.unit_price,
             notes: `Stock reduction for invoice ${invoice.invoice_number} (converted from quotation ${quotation.quotation_number})`
           }));
-        
+
         if (stockMovements.length > 0) {
           await supabase.from('stock_movements').insert(stockMovements);
-          
-          // Update product stock quantities
-          for (const movement of stockMovements) {
-            await supabase.rpc('update_product_stock', {
+
+          // Update product stock quantities in parallel
+          const stockUpdatePromises = stockMovements.map(movement =>
+            supabase.rpc('update_product_stock', {
               product_uuid: movement.product_id,
               quantity_change: movement.quantity
-            });
-          }
+            })
+          );
+
+          const stockUpdateResults = await Promise.allSettled(stockUpdatePromises);
+
+          // Log any failed stock updates
+          stockUpdateResults.forEach((result, index) => {
+            if (result.status === 'rejected') {
+              console.error('Failed to update stock for product:', stockMovements[index].product_id, result.reason);
+            } else if (result.value.error) {
+              console.error('Stock update error for product:', stockMovements[index].product_id, result.value.error);
+            }
+          });
         }
       }
       
@@ -321,16 +332,32 @@ export const useCreateInvoiceWithItems = () => {
 
             if (stockError) throw stockError;
 
-            // Update product stock quantities
-            for (const movement of stockMovements) {
-              const { error: updateError } = await supabase.rpc('update_product_stock', {
+            // Update product stock quantities in parallel for better performance
+            const stockUpdatePromises = stockMovements.map(movement =>
+              supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
                 quantity_change: movement.quantity
-              });
-              
-              if (updateError) {
-                console.warn('Failed to update stock for product:', movement.product_id, updateError);
+              })
+            );
+
+            const stockUpdateResults = await Promise.allSettled(stockUpdatePromises);
+
+            // Check for any failed stock updates
+            const failedUpdates = stockUpdateResults.filter((result, index) => {
+              if (result.status === 'rejected') {
+                console.error('Failed to update stock for product:', stockMovements[index].product_id, result.reason);
+                return true;
               }
+              if (result.status === 'fulfilled' && result.value.error) {
+                console.error('Stock update error for product:', stockMovements[index].product_id, result.value.error);
+                return true;
+              }
+              return false;
+            });
+
+            if (failedUpdates.length > 0) {
+              console.warn(`${failedUpdates.length} out of ${stockMovements.length} stock updates failed`);
+              // Don't throw - invoice was created successfully, stock inconsistencies can be fixed later
             }
           }
         }
@@ -372,13 +399,24 @@ export const useUpdateInvoiceWithItems = () => {
 
         await supabase.from('stock_movements').insert(reverseMovements);
 
-        // Update product stock quantities
-        for (const movement of reverseMovements) {
-          await supabase.rpc('update_product_stock', {
+        // Update product stock quantities in parallel for reverse movements
+        const reverseUpdatePromises = reverseMovements.map(movement =>
+          supabase.rpc('update_product_stock', {
             product_uuid: movement.product_id,
             quantity_change: movement.quantity
-          });
-        }
+          })
+        );
+
+        const reverseUpdateResults = await Promise.allSettled(reverseUpdatePromises);
+
+        // Log any failed reverse stock updates
+        reverseUpdateResults.forEach((result, index) => {
+          if (result.status === 'rejected') {
+            console.error('Failed to reverse stock for product:', reverseMovements[index].product_id, result.reason);
+          } else if (result.value.error) {
+            console.error('Reverse stock update error for product:', reverseMovements[index].product_id, result.value.error);
+          }
+        });
       }
 
       // Update the invoice
@@ -431,12 +469,24 @@ export const useUpdateInvoiceWithItems = () => {
           if (stockMovements.length > 0) {
             await supabase.from('stock_movements').insert(stockMovements);
 
-            for (const movement of stockMovements) {
-              await supabase.rpc('update_product_stock', {
+            // Update product stock quantities in parallel for new movements
+            const newStockUpdatePromises = stockMovements.map(movement =>
+              supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
                 quantity_change: movement.quantity
-              });
-            }
+              })
+            );
+
+            const newStockUpdateResults = await Promise.allSettled(newStockUpdatePromises);
+
+            // Log any failed new stock updates
+            newStockUpdateResults.forEach((result, index) => {
+              if (result.status === 'rejected') {
+                console.error('Failed to update stock for product:', stockMovements[index].product_id, result.reason);
+              } else if (result.value.error) {
+                console.error('Stock update error for product:', stockMovements[index].product_id, result.value.error);
+              }
+            });
           }
         }
       }
