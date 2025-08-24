@@ -33,6 +33,7 @@ import ProductTableFixPage from "./pages/ProductTableFixPage";
 import OptimizedInventory from "./pages/OptimizedInventory";
 import PerformanceOptimizerPage from "./pages/PerformanceOptimizerPage";
 import QuotationsTableFixPage from "./pages/QuotationsTableFixPage";
+import TestQuotationFixes from "./pages/TestQuotationFixes";
 import OptimizedCustomers from "./pages/OptimizedCustomers";
 import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
@@ -293,6 +294,9 @@ const App = () => {
 
           {/* Quotations Table Fix - Fix missing columns in quotations tables */}
           <Route path="/quotations-table-fix" element={<QuotationsTableFixPage />} />
+
+          {/* Test Quotation Fixes - Verify foreign key constraint fixes */}
+          <Route path="/test-quotation-fixes" element={<TestQuotationFixes />} />
 
           {/* Optimized Customers - Performance-optimized customers page */}
           <Route

@@ -30,6 +30,7 @@ import {
 } from 'lucide-react';
 import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { useCreateQuotationWithItems } from '@/hooks/useQuotationItems';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface QuotationItem {
@@ -63,6 +64,8 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Get current user and company from context
+  const { profile, loading: authLoading } = useAuth();
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
@@ -250,10 +253,28 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
       });
       console.log('Generated quotation number:', quotationNumber);
 
+      // Validate required fields
+      if (!currentCompany?.id) {
+        toast.error('No company selected. Please ensure you are associated with a company.');
+        return;
+      }
+
+      // Check if auth is still loading
+      if (authLoading) {
+        toast.info('Please wait, authenticating user...');
+        return;
+      }
+
+      // Check if user is authenticated and has profile
+      if (!profile?.id) {
+        toast.error('User not authenticated. Please sign in and try again.');
+        return;
+      }
+
       // Create quotation with items
       console.log('Preparing quotation data...');
       const quotationData = {
-        company_id: currentCompany?.id || 'default-company-id',
+        company_id: currentCompany.id,
         customer_id: selectedCustomerId,
         quotation_number: quotationNumber,
         quotation_date: quotationDate,
@@ -264,7 +285,7 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
         total_amount: totalAmount,
         terms_and_conditions: termsAndConditions,
         notes: notes,
-        created_by: '660e8400-e29b-41d4-a716-446655440000'
+        created_by: profile.id
       };
       console.log('Quotation data prepared:', quotationData);
 
