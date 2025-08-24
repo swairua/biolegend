@@ -97,10 +97,8 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     }
   }, [preSelectedCustomer, open]);
 
-  const filteredProducts = products?.filter(product =>
-    product.name.toLowerCase().includes(searchProduct.toLowerCase()) ||
-    product.product_code.toLowerCase().includes(searchProduct.toLowerCase())
-  ) || [];
+  // Use optimized search results or popular products when no search term
+  const displayProducts = searchProduct.trim() ? searchedProducts : popularProducts;
 
   const addItem = (product: any) => {
     const existingItem = items.find(item => item.product_id === product.id);
