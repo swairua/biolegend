@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, AlertCircle, Play } from 'lucide-react';
 import { verifyQuotationConstraintFixes, testQuotationCreation } from '@/utils/verifyQuotationConstraintFixes';
+import { UserCompanyFix } from '@/components/debug/UserCompanyFix';
 import { toast } from 'sonner';
 
 interface TestResult {
