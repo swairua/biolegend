@@ -29,6 +29,7 @@ interface FixResult {
 export function UserCompanyFix() {
   const [diagnosis, setDiagnosis] = useState<DiagnosisResult | null>(null);
   const [fixResult, setFixResult] = useState<FixResult | null>(null);
+  const [comprehensiveTest, setComprehensiveTest] = useState<any>(null);
   const [isRunning, setIsRunning] = useState(false);
 
   const runDiagnosis = async () => {
