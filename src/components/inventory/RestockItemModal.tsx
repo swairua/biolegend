@@ -80,26 +80,32 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
       return;
     }
 
+    if (!currentCompany?.id) {
+      toast.error('Company not found. Please refresh and try again.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // TODO: Implement actual restock API call
-      // const restockRecord = {
-      //   item_id: item.id,
-      //   quantity: restockData.quantity,
-      //   cost_per_unit: restockData.cost_per_unit,
-      //   total_cost: totalCost,
-      //   supplier: restockData.supplier,
-      //   restock_date: restockData.restock_date,
-      //   reference_number: restockData.reference_number,
-      //   notes: restockData.notes,
-      //   created_by: 'current-user-id'
-      // };
-      
-      // await restockInventoryItem(restockRecord);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Create stock movement record
+      const stockMovement = {
+        company_id: currentCompany.id,
+        product_id: item.id,
+        movement_type: 'IN',
+        reference_type: 'RESTOCK',
+        quantity: restockData.quantity,
+        cost_per_unit: restockData.cost_per_unit,
+        notes: `Restock from ${restockData.supplier}. ${restockData.notes}`.trim()
+      };
+
+      await createStockMovement.mutateAsync(stockMovement);
+
+      // Update product stock quantity
+      await updateProduct.mutateAsync({
+        id: item.id,
+        stock_quantity: newStockLevel
+      });
+
       toast.success(`${item?.name} restocked with ${restockData.quantity} units successfully!`);
       onSuccess();
       onOpenChange(false);
