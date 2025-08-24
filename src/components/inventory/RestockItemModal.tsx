@@ -94,7 +94,9 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
         movement_type: 'in',
         reference_type: 'purchase',
         quantity: restockData.quantity,
-        cost_per_unit: restockData.cost_per_unit,
+        unit_cost: restockData.cost_per_unit,
+        movement_date: restockData.restock_date,
+        reference_number: restockData.reference_number,
         notes: `Restock from ${restockData.supplier}. ${restockData.notes}`.trim()
       };
 
