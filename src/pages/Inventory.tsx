@@ -90,10 +90,11 @@ export default function Inventory() {
   const [showAdjustmentModal, setShowAdjustmentModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
 
-  // Fetch products from database
+  // Fetch products and categories from database
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: products, isLoading: loadingProducts, error: productsError } = useProducts(currentCompany?.id);
+  const { data: categories } = useProductCategories(currentCompany?.id);
 
   const handleAddItem = () => {
     setShowAddModal(true);
