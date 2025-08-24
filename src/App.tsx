@@ -30,6 +30,7 @@ import DatabaseFixPage from "./pages/DatabaseFixPage";
 import AutoFixPage from "./pages/AutoFixPage";
 import AuditPage from "./pages/AuditPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
+import { CompanyProvider } from "@/contexts/CompanyContext";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
