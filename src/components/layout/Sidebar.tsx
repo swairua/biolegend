@@ -18,7 +18,8 @@ import {
   CreditCard,
   FileSpreadsheet,
   ShoppingCart,
-  RotateCcw
+  RotateCcw,
+  Tag
 } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 
