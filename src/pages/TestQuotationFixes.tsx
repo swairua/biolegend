@@ -97,6 +97,9 @@ export default function TestQuotationFixes() {
       {/* Quick Test & Verification */}
       <QuickTestResult />
 
+      {/* User Profile Fix - Fix missing profiles first */}
+      <UserProfileFix />
+
       {/* User-Company Association Fix */}
       <UserCompanyFix />
 
