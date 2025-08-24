@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { EnhancedLogin } from '@/components/auth/EnhancedLogin';
-import { AuthStateDebug } from '@/components/debug/AuthStateDebug';
+import { AuthStateDebugWithNetwork } from '@/components/debug/AuthStateDebug';
 
 interface LayoutProps {
   children: ReactNode;
@@ -33,7 +33,7 @@ export function Layout({ children }: LayoutProps) {
           <h2 className="text-lg font-semibold mb-2">Loading Debug</h2>
           <p className="text-muted-foreground">App appears to be stuck in loading state...</p>
         </div>
-        <AuthStateDebug />
+        <AuthStateDebugWithNetwork />
       </div>
     );
   }
