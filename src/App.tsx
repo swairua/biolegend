@@ -45,7 +45,7 @@ const App = () => {
     enableResizeObserverErrorSuppression();
 
     // Log successful fix
-    console.log('✅ App loaded without setState during render errors');
+    console.log('�� App loaded without setState during render errors');
   }, []);
 
   return (
@@ -288,6 +288,9 @@ const App = () => {
 
           {/* Performance Optimizer - Database and inventory performance optimization */}
           <Route path="/performance-optimizer" element={<PerformanceOptimizerPage />} />
+
+          {/* Quotations Table Fix - Fix missing columns in quotations tables */}
+          <Route path="/quotations-table-fix" element={<QuotationsTableFixPage />} />
 
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
