@@ -23,14 +23,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { 
+import {
   Package,
   Barcode,
   DollarSign,
   Warehouse,
-  Tag
+  Tag,
+  Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { CreateCategoryModal } from '@/components/categories/CreateCategoryModal';
 
 interface AddInventoryItemModalProps {
   open: boolean;
