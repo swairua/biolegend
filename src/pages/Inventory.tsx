@@ -224,6 +224,36 @@ export default function Inventory() {
         </div>
       </div>
 
+      {/* Categories Suggestion */}
+      {(!categories || categories.length === 0) && (
+        <Card className="border-blue-200 bg-blue-50 shadow-card">
+          <CardContent className="pt-6">
+            <div className="flex items-start space-x-4">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <Tag className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-blue-900 mb-1">Create Categories First</h3>
+                <p className="text-sm text-blue-700 mb-3">
+                  Organize your inventory better by creating product categories before adding items.
+                  This makes it easier to manage and find your products.
+                </p>
+                <Link to="/categories">
+                  <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Tag className="h-4 w-4 mr-2" />
+                    Set Up Categories
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="flex items-center text-blue-600">
+                <Info className="h-4 w-4" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="shadow-card">
