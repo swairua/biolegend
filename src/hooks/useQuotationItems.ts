@@ -240,17 +240,28 @@ export const useConvertQuotationToInvoice = () => {
             cost_per_unit: item.unit_price,
             notes: `Stock reduction for invoice ${invoice.invoice_number} (converted from quotation ${quotation.quotation_number})`
           }));
-        
+
         if (stockMovements.length > 0) {
           await supabase.from('stock_movements').insert(stockMovements);
-          
-          // Update product stock quantities
-          for (const movement of stockMovements) {
-            await supabase.rpc('update_product_stock', {
+
+          // Update product stock quantities in parallel
+          const stockUpdatePromises = stockMovements.map(movement =>
+            supabase.rpc('update_product_stock', {
               product_uuid: movement.product_id,
               quantity_change: movement.quantity
-            });
-          }
+            })
+          );
+
+          const stockUpdateResults = await Promise.allSettled(stockUpdatePromises);
+
+          // Log any failed stock updates
+          stockUpdateResults.forEach((result, index) => {
+            if (result.status === 'rejected') {
+              console.error('Failed to update stock for product:', stockMovements[index].product_id, result.reason);
+            } else if (result.value.error) {
+              console.error('Stock update error for product:', stockMovements[index].product_id, result.value.error);
+            }
+          });
         }
       }
       
