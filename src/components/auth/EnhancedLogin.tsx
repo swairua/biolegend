@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Eye, EyeOff, Mail, Lock, Shield, Settings } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AutoAdminSetup } from './AutoAdminSetup';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
@@ -148,20 +148,7 @@ export function EnhancedLogin() {
             </Button>
           </form>
 
-          <Alert className="bg-blue-50 border-blue-200">
-            <Settings className="h-4 w-4" />
-            <AlertDescription>
-              <strong>First time setup?</strong> If you're getting login errors, you may need to create the admin account first.
-              <Button
-                variant="link"
-                size="sm"
-                onClick={() => navigate('/database-setup')}
-                className="p-0 h-auto font-semibold text-blue-600 hover:text-blue-800"
-              >
-                Go to Setup Page
-              </Button>
-            </AlertDescription>
-          </Alert>
+          <AutoAdminSetup />
 
           <div className="text-center space-y-2">
             <Button
