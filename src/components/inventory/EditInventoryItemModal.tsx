@@ -390,6 +390,12 @@ export function EditInventoryItemModal({ open, onOpenChange, onSuccess, item }: 
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <CreateCategoryModal
+        open={showCreateCategory}
+        onOpenChange={setShowCreateCategory}
+        onSuccess={handleCategoryCreated}
+      />
     </Dialog>
   );
 }
