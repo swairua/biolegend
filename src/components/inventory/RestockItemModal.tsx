@@ -21,6 +21,8 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCreateStockMovement, useUpdateProduct } from '@/hooks/useDatabase';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 
 interface RestockItemModalProps {
   open: boolean;
