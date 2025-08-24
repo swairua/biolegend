@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { createRetryableRequest, analyzeNetworkError } from '@/utils/networkDiagnostics';
 
 export interface UserProfile {
   id: string;
@@ -56,68 +57,54 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const mountedRef = useRef(true);
   const initializingRef = useRef(false);
 
-  // Fetch user profile from database with error handling
+  // Fetch user profile from database with error handling and retry logic
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       console.log('🔍 Fetching profile for user ID:', userId);
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
+      const profileData = await createRetryableRequest(async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
 
-      if (error) {
-        console.error('Error fetching profile:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-
-        // Check if this is a browser extension blocking issue
-        if (error.message?.includes('Failed to fetch')) {
-          console.warn('🚫 Profile fetch blocked - likely by browser extension');
-          setTimeout(() => toast.error(
-            'Network request blocked. Try disabling browser extensions or use an incognito window.'
-          ), 0);
+        if (error) {
+          throw error;
         }
 
-        return null;
-      }
+        return data;
+      }, 2, 1000); // Retry up to 2 times with 1 second delay
 
-      if (!data) {
+      if (!profileData) {
         console.warn('⚠️ No profile found for user ID:', userId);
         return null;
       }
 
       console.log('✅ Profile found:', {
-        id: data.id,
-        email: data.email
+        id: profileData.id,
+        email: profileData.email
       });
 
-      return data;
+      return profileData;
     } catch (error) {
       console.error('Exception fetching profile:', error);
 
       // Analyze the error for better user feedback
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      const errorStack = error instanceof Error ? error.stack : '';
+      const diagnostic = analyzeNetworkError(error);
 
-      if (errorStack?.includes('chrome-extension://') ||
-          errorStack?.includes('moz-extension://')) {
-        console.warn('🚫 Browser extension interference detected');
+      console.warn(`Profile fetch failed: ${diagnostic.type} - ${diagnostic.message}`);
+
+      // Only show toast for certain error types to avoid spam
+      if (diagnostic.type === 'browser_extension') {
         setTimeout(() => toast.error(
-          'Browser extension is blocking the request. Try disabling extensions or use incognito mode.'
+          'Browser extension is blocking the request. Try disabling extensions or use incognito mode.',
+          { duration: 6000 }
         ), 0);
-      } else if (errorMessage.includes('Failed to fetch')) {
-        console.warn('🌐 Network connectivity issue');
+      } else if (diagnostic.type === 'network') {
         setTimeout(() => toast.error(
-          'Network connection failed. Please check your internet connection and try again.'
-        ), 0);
-      } else {
-        setTimeout(() => toast.error(
-          'Unable to load profile. Please try refreshing the page.'
+          'Network connection failed. Please check your internet connection.',
+          { duration: 4000 }
         ), 0);
       }
 
