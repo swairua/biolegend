@@ -60,6 +60,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
     max_stock_level: 100
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
   const createProduct = useCreateProduct();
   const { currentCompany } = useCurrentCompany();
 
@@ -161,6 +162,11 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
     }
   };
 
+  const handleCategoryCreated = (categoryId: string) => {
+    handleInputChange('category_id', categoryId);
+    setShowCreateCategory(false);
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
@@ -233,7 +239,19 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="category">Category</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="category">Category</Label>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setShowCreateCategory(true)}
+                      className="h-auto p-1 text-xs text-primary hover:text-primary/80"
+                    >
+                      <Plus className="h-3 w-3 mr-1" />
+                      Create New
+                    </Button>
+                  </div>
                   <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -396,8 +414,8 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
+          <Button
+            onClick={handleSubmit}
             disabled={isSubmitting || !formData.name.trim() || formData.selling_price <= 0}
           >
             <Package className="h-4 w-4 mr-2" />
@@ -405,6 +423,12 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <CreateCategoryModal
+        open={showCreateCategory}
+        onOpenChange={setShowCreateCategory}
+        onSuccess={handleCategoryCreated}
+      />
     </Dialog>
   );
 }
