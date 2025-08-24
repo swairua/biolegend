@@ -21,6 +21,8 @@ import {
 import { toast } from 'sonner';
 import { TrendingUp, TrendingDown, RotateCcw, Calculator } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCreateStockMovement, useUpdateProduct } from '@/hooks/useDatabase';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 
 interface InventoryItem {
   id?: string;
