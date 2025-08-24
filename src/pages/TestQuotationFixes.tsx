@@ -89,7 +89,7 @@ export default function TestQuotationFixes() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Quotation Fixes Test</h1>
           <p className="text-muted-foreground">
-            Fix "User has no associated company" error and test quotation creation functionality
+            Fix "No associated user profile found" and "User has no associated company" errors
           </p>
         </div>
       </div>
