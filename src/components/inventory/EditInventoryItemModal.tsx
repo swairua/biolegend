@@ -181,6 +181,11 @@ export function EditInventoryItemModal({ open, onOpenChange, onSuccess, item }: 
     }
   };
 
+  const handleCategoryCreated = (categoryId: string) => {
+    handleInputChange('category_id', categoryId);
+    setShowCreateCategory(false);
+  };
+
   const resetForm = () => {
     setFormData({
       name: '',
