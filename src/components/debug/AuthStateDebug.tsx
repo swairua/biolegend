@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
+import { NetworkDiagnostics } from '@/components/debug/NetworkDiagnostics';
 
 export function AuthStateDebug() {
   const { user, profile, session, loading, isAuthenticated, signOut } = useAuth();
@@ -121,5 +122,14 @@ export function AuthStateDebug() {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+export function AuthStateDebugWithNetwork() {
+  return (
+    <div className="space-y-6 max-w-4xl mx-auto p-4">
+      <AuthStateDebug />
+      <NetworkDiagnostics />
+    </div>
   );
 }
