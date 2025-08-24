@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Package, Edit, Plus } from 'lucide-react';
-import { CreateCategoryModal } from '@/components/categories/CreateCategoryModal';
+import { CreateCategoryModalBasic } from '@/components/categories/CreateCategoryModalBasic';
 
 interface InventoryItem {
   id?: string;
@@ -391,7 +391,7 @@ export function EditInventoryItemModal({ open, onOpenChange, onSuccess, item }: 
         </DialogFooter>
       </DialogContent>
 
-      <CreateCategoryModal
+      <CreateCategoryModalBasic
         open={showCreateCategory}
         onOpenChange={setShowCreateCategory}
         onSuccess={handleCategoryCreated}

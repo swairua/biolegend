@@ -32,7 +32,7 @@ import {
   Plus
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { CreateCategoryModal } from '@/components/categories/CreateCategoryModal';
+import { CreateCategoryModalBasic } from '@/components/categories/CreateCategoryModalBasic';
 
 interface AddInventoryItemModalProps {
   open: boolean;
@@ -424,7 +424,7 @@ export function AddInventoryItemModal({ open, onOpenChange, onSuccess }: AddInve
         </DialogFooter>
       </DialogContent>
 
-      <CreateCategoryModal
+      <CreateCategoryModalBasic
         open={showCreateCategory}
         onOpenChange={setShowCreateCategory}
         onSuccess={handleCategoryCreated}
