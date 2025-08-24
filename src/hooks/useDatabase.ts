@@ -38,13 +38,15 @@ export interface StockMovement {
   company_id: string;
   product_id: string;
   movement_type: 'in' | 'out' | 'adjustment';
-  reference_type: 'invoice' | 'delivery_note' | 'adjustment' | 'purchase';
-  reference_id?: string;
   quantity: number;
-  cost_per_unit?: number;
+  unit_cost?: number;
+  reference_type?: 'invoice' | 'delivery_note' | 'adjustment' | 'purchase';
+  reference_id?: string;
+  reference_number?: string;
+  movement_date: string;
   notes?: string;
+  created_by?: string;
   created_at?: string;
-  updated_at?: string;
 }
 
 export interface Customer {
