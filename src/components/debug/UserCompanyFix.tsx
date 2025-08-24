@@ -134,6 +134,15 @@ export function UserCompanyFix() {
     return success ? <CheckCircle className="h-4 w-4 text-green-600" /> : <XCircle className="h-4 w-4 text-red-600" />;
   };
 
+  const getStatusBadge = (success: boolean | undefined, label: string) => {
+    if (success === undefined) return <Badge variant="secondary">{label}</Badge>;
+    return (
+      <Badge variant={success ? "default" : "destructive"}>
+        {success ? "✓" : "✗"} {label}
+      </Badge>
+    );
+  };
+
   const getIssueDescription = (issue?: string) => {
     switch (issue) {
       case 'authentication':
