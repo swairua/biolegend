@@ -242,6 +242,7 @@ export default function TestQuotationFixes() {
           <div className="space-y-2">
             <div className="text-sm font-medium">Next Steps:</div>
             <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+              <li>• Use the "User-Company Association Fix" tool above if you get "no associated company" error</li>
               <li>• Try creating a new quotation using the standard UI</li>
               <li>• Verify that all foreign key relationships work correctly</li>
               <li>• Test quotation-to-invoice conversion functionality</li>
