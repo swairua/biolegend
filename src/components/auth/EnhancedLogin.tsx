@@ -9,6 +9,7 @@ import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { AutoAdminSetup } from './AutoAdminSetup';
+import { handleAuthError, DEFAULT_ADMIN_CREDENTIALS } from '@/utils/authErrorHandler';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
@@ -22,8 +23,8 @@ export function EnhancedLogin() {
 
   const fillAdminCredentials = () => {
     setFormData({
-      email: 'admin@biolegendscientific.co.ke',
-      password: 'Biolegend2024!Admin'
+      email: DEFAULT_ADMIN_CREDENTIALS.email,
+      password: DEFAULT_ADMIN_CREDENTIALS.password
     });
     setFormErrors({});
     toast.info('Admin credentials filled in');
@@ -56,11 +57,13 @@ export function EnhancedLogin() {
     const { error } = await signIn(formData.email, formData.password);
 
     if (error) {
-      console.error('Sign in error:', error);
-      if (error.message.includes('Invalid login credentials')) {
-        toast.error('Invalid credentials. If you need to create an admin account, use the setup above.');
-      } else {
-        toast.error(`Sign in failed: ${error.message}`);
+      const errorInfo = handleAuthError(error);
+
+      // Additional context for invalid credentials
+      if (errorInfo.type === 'invalid_credentials') {
+        setTimeout(() => {
+          toast.info('Tip: Use the "Create Admin User" button above if this is your first time setting up the system.');
+        }, 2000);
       }
     } else {
       toast.success('Welcome to Biolegend Scientific!');
