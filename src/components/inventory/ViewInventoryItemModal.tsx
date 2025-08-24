@@ -23,21 +23,20 @@ import {
 
 interface InventoryItem {
   id: string;
-  sku: string;
+  product_code: string;
   name: string;
-  category?: {
+  product_categories?: {
     name: string;
   } | null;
   category_id?: string;
-  currentStock: number;
-  minStock: number;
-  maxStock?: number;
-  unitPrice: string;
-  costPrice?: string;
-  totalValue: string;
+  stock_quantity: number;
+  minimum_stock_level: number;
+  maximum_stock_level?: number;
+  selling_price: number;
+  cost_price?: number;
   description?: string;
-  unitOfMeasure?: string;
-  lastRestocked?: string;
+  unit_of_measure?: string;
+  created_at?: string;
   status: 'in_stock' | 'low_stock' | 'out_of_stock';
 }
 
