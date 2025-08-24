@@ -88,7 +88,7 @@ export default function TestQuotationFixes() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Quotation Fixes Test</h1>
           <p className="text-muted-foreground">
-            Test and verify that foreign key constraint violations have been resolved
+            Fix "User has no associated company" error and test quotation creation functionality
           </p>
         </div>
       </div>
