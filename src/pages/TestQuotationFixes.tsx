@@ -235,6 +235,7 @@ export default function TestQuotationFixes() {
               <li>• Replaced hardcoded company_id fallbacks with proper validation</li>
               <li>• Added authentication and company validation before quotation creation</li>
               <li>• Fixed CreateQuotationModal.tsx, Quotations.tsx, and CreateInvoiceModal.tsx</li>
+              <li>• Added user-company association diagnostic and fix tools</li>
             </ul>
           </div>
 
