@@ -31,6 +31,7 @@ import AutoFixPage from "./pages/AutoFixPage";
 import AuditPage from "./pages/AuditPage";
 import ProductTableFixPage from "./pages/ProductTableFixPage";
 import OptimizedInventory from "./pages/OptimizedInventory";
+import PerformanceOptimizerPage from "./pages/PerformanceOptimizerPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
 
