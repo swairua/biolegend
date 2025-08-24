@@ -24,6 +24,7 @@ import {
   Send
 } from 'lucide-react';
 import { useQuotations, useCompanies } from '@/hooks/useDatabase';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { CreateQuotationModal } from '@/components/quotations/CreateQuotationModal';
 import { ViewQuotationModal } from '@/components/quotations/ViewQuotationModal';
@@ -76,6 +77,8 @@ export default function Quotations() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   
+  // Get current user and company from context
+  const { profile } = useAuth();
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: quotations, isLoading, error, refetch } = useQuotations(currentCompany?.id);
@@ -186,10 +189,26 @@ Website: www.biolegendscientific.co.ke`;
 
   const handleConvertToInvoice = async (quotation: Quotation) => {
     try {
+      // Validate required fields
+      if (!currentCompany?.id) {
+        toast.error('No company selected. Please ensure you are associated with a company.');
+        return;
+      }
+
+      if (!profile?.id) {
+        toast.error('User not authenticated. Please sign in and try again.');
+        return;
+      }
+
+      if (!quotation.customers?.id) {
+        toast.error('Invalid customer data. Cannot convert quotation to invoice.');
+        return;
+      }
+
       // TODO: In a real app, this would create an invoice from the quotation data
       const invoiceData = {
-      company_id: currentCompany?.id || '550e8400-e29b-41d4-a716-446655440000',
-        customer_id: quotation.customers?.id || 'customer-id',
+        company_id: currentCompany.id,
+        customer_id: quotation.customers.id,
         quotation_id: quotation.id,
         invoice_date: new Date().toISOString().split('T')[0],
         due_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
@@ -201,7 +220,7 @@ Website: www.biolegendscientific.co.ke`;
         balance_due: quotation.total_amount,
         terms_and_conditions: quotation.terms_and_conditions || 'Payment due within 30 days of invoice date.',
         notes: `Converted from quotation ${quotation.quotation_number}`,
-        created_by: '660e8400-e29b-41d4-a716-446655440000'
+        created_by: profile.id
       };
 
       // Simulate conversion
