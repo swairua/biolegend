@@ -66,7 +66,7 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
     }));
   };
 
-  const newStockLevel = (item?.currentStock || 0) + restockData.quantity;
+  const newStockLevel = (item?.stock_quantity || 0) + restockData.quantity;
   const totalCost = restockData.quantity * restockData.cost_per_unit;
 
   const handleSubmit = async () => {
