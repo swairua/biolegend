@@ -60,6 +60,11 @@ const sidebarItems: SidebarItem[] = [
     href: '/inventory'
   },
   {
+    title: 'Categories',
+    icon: Tag,
+    href: '/categories'
+  },
+  {
     title: 'Delivery Notes',
     icon: Truck,
     href: '/delivery-notes'
