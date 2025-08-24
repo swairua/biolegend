@@ -33,6 +33,8 @@ import ProductTableFixPage from "./pages/ProductTableFixPage";
 import OptimizedInventory from "./pages/OptimizedInventory";
 import PerformanceOptimizerPage from "./pages/PerformanceOptimizerPage";
 import QuotationsTableFixPage from "./pages/QuotationsTableFixPage";
+import OptimizedCustomers from "./pages/OptimizedCustomers";
+import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
 
@@ -45,7 +47,7 @@ const App = () => {
     enableResizeObserverErrorSuppression();
 
     // Log successful fix
-    console.log('�� App loaded without setState during render errors');
+    console.log('✅ App loaded without setState during render errors');
   }, []);
 
   return (
