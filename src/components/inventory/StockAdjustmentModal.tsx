@@ -105,7 +105,8 @@ export function StockAdjustmentModal({ open, onOpenChange, onSuccess, item }: St
         movement_type: 'adjustment',
         reference_type: 'adjustment',
         quantity: adjustmentType === 'set' ? Math.abs(newQuantity - item.stock_quantity) : quantity,
-        cost_per_unit: item.cost_price || 0,
+        unit_cost: item.cost_price || 0,
+        movement_date: new Date().toISOString().split('T')[0],
         notes: `${adjustmentType.toUpperCase()}: ${reason}. ${notes}`.trim()
       };
 
