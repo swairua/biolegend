@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, XCircle, AlertCircle, Play } from 'lucide-react';
 import { verifyQuotationConstraintFixes, testQuotationCreation } from '@/utils/verifyQuotationConstraintFixes';
 import { UserCompanyFix } from '@/components/debug/UserCompanyFix';
+import { QuickTestResult } from '@/components/debug/QuickTestResult';
 import { toast } from 'sonner';
 
 interface TestResult {
