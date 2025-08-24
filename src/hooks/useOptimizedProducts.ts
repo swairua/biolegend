@@ -43,7 +43,7 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
           unit_of_measure,
           unit_price,
           current_stock,
-          categories (
+          product_categories (
             name
           )
         `)
@@ -62,14 +62,15 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error searching products:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error searching products:', errorMessage);
+        throw new Error(`Failed to search products: ${errorMessage}`);
       }
 
       // Transform data to include category name
       const transformedData: ProductSearchResult[] = (data || []).map(product => ({
         ...product,
-        category_name: product.categories?.name
+        category_name: product.product_categories?.name
       }));
 
       return transformedData;
