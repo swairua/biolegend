@@ -68,6 +68,11 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   
   const [items, setItems] = useState<InvoiceItem[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState<{
+    step: string;
+    current: number;
+    total: number;
+  } | null>(null);
 
   // Get current user and company from context
   const { profile, loading: authLoading } = useAuth();
