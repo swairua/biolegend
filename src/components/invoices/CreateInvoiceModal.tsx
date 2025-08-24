@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { useCreateInvoiceWithItems } from '@/hooks/useQuotationItems';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 
 interface InvoiceItem {
@@ -68,6 +69,8 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Get current user and company from context
+  const { profile, loading: authLoading } = useAuth();
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
@@ -252,17 +255,35 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       return;
     }
 
+    // Validate required fields
+    if (!currentCompany?.id) {
+      toast.error('No company selected. Please ensure you are associated with a company.');
+      return;
+    }
+
+    // Check if auth is still loading
+    if (authLoading) {
+      toast.info('Please wait, authenticating user...');
+      return;
+    }
+
+    // Check if user is authenticated and has profile
+    if (!profile?.id) {
+      toast.error('User not authenticated. Please sign in and try again.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Generate invoice number
       const invoiceNumber = await generateDocNumber.mutateAsync({
-        companyId: currentCompany?.id || 'default-company-id',
+        companyId: currentCompany.id,
         type: 'invoice'
       });
 
       // Create invoice with items
       const invoiceData = {
-        company_id: currentCompany?.id || 'default-company-id',
+        company_id: currentCompany.id,
         customer_id: selectedCustomerId,
         invoice_number: invoiceNumber,
         invoice_date: invoiceDate,
@@ -276,7 +297,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         balance_due: balanceDue,
         terms_and_conditions: termsAndConditions,
         notes: notes,
-        created_by: '660e8400-e29b-41d4-a716-446655440000'
+        created_by: profile?.id
       };
 
       const invoiceItems = items.map(item => ({
