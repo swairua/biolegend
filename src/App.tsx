@@ -274,6 +274,16 @@ const App = () => {
           {/* Product Table Fix - Audit and fix product table schema */}
           <Route path="/product-table-fix" element={<ProductTableFixPage />} />
 
+          {/* Optimized Inventory - Performance-optimized inventory page */}
+          <Route
+            path="/optimized-inventory"
+            element={
+              <ProtectedRoute>
+                <OptimizedInventory />
+              </ProtectedRoute>
+            }
+          />
+
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
 
