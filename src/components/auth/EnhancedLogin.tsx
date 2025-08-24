@@ -45,10 +45,14 @@ export function EnhancedLogin() {
     }
 
     const { error } = await signIn(formData.email, formData.password);
-    
+
     if (error) {
       console.error('Sign in error:', error);
-      toast.error(`Sign in failed: ${error.message}`);
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid credentials. If you need to create an admin account, use the setup above.');
+      } else {
+        toast.error(`Sign in failed: ${error.message}`);
+      }
     } else {
       toast.success('Welcome to Biolegend Scientific!');
     }
