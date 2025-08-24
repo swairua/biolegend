@@ -153,12 +153,12 @@ export function QuickTestResult() {
                 <>
                   <div><strong>✅ You're all set!</strong></div>
                   <div>• Try creating a quotation using the main app</div>
-                  <div>• The "User has no associated company" error should be resolved</div>
+                  <div>• Both "No associated user profile" and "User has no associated company" errors should be resolved</div>
                 </>
               ) : (
                 <>
                   <div><strong>⚠️ Manual intervention may be needed:</strong></div>
-                  <div>• Use the "User-Company Association Fix" tool above</div>
+                  <div>• Use the "User Profile Fix" and "User-Company Association Fix" tools above</div>
                   <div>• Contact support if issues persist</div>
                 </>
               )}
