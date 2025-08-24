@@ -251,10 +251,11 @@ export default function TestQuotationFixes() {
           <div className="space-y-2">
             <div className="text-sm font-medium">Next Steps:</div>
             <ul className="text-sm text-muted-foreground space-y-1 ml-4">
-              <li>• Use the "User-Company Association Fix" tool above if you get "no associated company" error</li>
+              <li>• Use the "User Profile Fix" tool if you get "No associated user profile found" error</li>
+              <li>• Use the "User-Company Association Fix" tool if you get "no associated company" error</li>
+              <li>• Use the "Quick Test & Verification" tool to run all fixes automatically</li>
               <li>• Try creating a new quotation using the standard UI</li>
               <li>• Verify that all foreign key relationships work correctly</li>
-              <li>• Test quotation-to-invoice conversion functionality</li>
               <li>• Monitor for any remaining constraint violations</li>
             </ul>
           </div>
