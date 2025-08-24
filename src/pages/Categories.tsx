@@ -25,6 +25,7 @@ import {
 import { CreateCategoryModal } from '@/components/categories/CreateCategoryModal';
 import { EditCategoryModal } from '@/components/categories/EditCategoryModal';
 import { DeleteCategoryModal } from '@/components/categories/DeleteCategoryModal';
+import { DefaultCategoriesButton } from '@/components/categories/DefaultCategoriesButton';
 
 interface Category {
   id: string;
