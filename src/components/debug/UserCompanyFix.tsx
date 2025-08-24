@@ -59,11 +59,11 @@ export function UserCompanyFix() {
 
   const runFix = async () => {
     setIsRunning(true);
-    
+
     try {
       const result = await fixUserCompanyAssociation();
       setFixResult(result);
-      
+
       if (result.success) {
         toast.success('User-company association fixed!');
         // Re-run diagnosis to show updated state
@@ -79,7 +79,53 @@ export function UserCompanyFix() {
         error: error.message
       });
     }
-    
+
+    setIsRunning(false);
+  };
+
+  const runComprehensiveTest = async () => {
+    setIsRunning(true);
+    setComprehensiveTest(null);
+
+    try {
+      const result = await testUserCompanyFixProcess();
+      setComprehensiveTest(result);
+
+      if (result.success) {
+        toast.success('Comprehensive test completed successfully!');
+      } else {
+        toast.error('Comprehensive test found issues - check results below');
+      }
+    } catch (error: any) {
+      toast.error(`Comprehensive test failed: ${error.message}`);
+      setComprehensiveTest({
+        success: false,
+        errors: [error.message]
+      });
+    }
+
+    setIsRunning(false);
+  };
+
+  const runQuickFix = async () => {
+    setIsRunning(true);
+
+    try {
+      const result = await quickFixUserCompany();
+
+      if (result.success) {
+        toast.success(result.message);
+        // Re-run diagnosis to show updated state
+        await runDiagnosis();
+      } else {
+        toast.error(result.message);
+      }
+
+      setFixResult(result);
+    } catch (error: any) {
+      toast.error(`Quick fix failed: ${error.message}`);
+    }
+
     setIsRunning(false);
   };
 
