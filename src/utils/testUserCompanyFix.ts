@@ -9,6 +9,8 @@ export async function testUserCompanyFixProcess() {
   console.log('🧪 Starting comprehensive user-company fix test...');
   
   const results = {
+    profileDiagnosis: null as any,
+    profileFix: null as any,
     initialDiagnosis: null as any,
     fixAttempt: null as any,
     finalDiagnosis: null as any,
