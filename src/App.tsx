@@ -294,6 +294,19 @@ const App = () => {
           {/* Quotations Table Fix - Fix missing columns in quotations tables */}
           <Route path="/quotations-table-fix" element={<QuotationsTableFixPage />} />
 
+          {/* Optimized Customers - Performance-optimized customers page */}
+          <Route
+            path="/optimized-customers"
+            element={
+              <ProtectedRoute>
+                <OptimizedCustomers />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Customer Performance Optimizer - Database and customer performance optimization */}
+          <Route path="/customer-performance-optimizer" element={<CustomerPerformanceOptimizerPage />} />
+
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
 
