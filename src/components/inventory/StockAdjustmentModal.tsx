@@ -74,8 +74,13 @@ export function StockAdjustmentModal({ open, onOpenChange, onSuccess, item }: St
       return;
     }
 
+    if (!currentCompany?.id) {
+      toast.error('Company not found. Please refresh and try again.');
+      return;
+    }
+
     setIsSubmitting(true);
-    
+
     try {
       // Calculate new stock quantity
       let newQuantity: number;
@@ -93,31 +98,29 @@ export function StockAdjustmentModal({ open, onOpenChange, onSuccess, item }: St
           newQuantity = item.stock_quantity;
       }
 
-      // TODO: Implement actual stock adjustment API call
-      // For now, simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const adjustmentData = {
-        item_id: item.id,
-        product_code: item.product_code,
-        adjustment_type: adjustmentType,
-        old_quantity: item.stock_quantity,
-        adjustment_quantity: adjustmentType === 'set' ? quantity : quantity,
-        new_quantity: newQuantity,
-        reason,
-        notes,
-        cost_impact: adjustmentType === 'increase' ? quantity * item.cost_price : 
-                    adjustmentType === 'decrease' ? -quantity * item.cost_price :
-                    (quantity - item.stock_quantity) * item.cost_price,
-        adjustment_date: new Date().toISOString(),
+      // Create stock movement record
+      const stockMovement = {
+        company_id: currentCompany.id,
+        product_id: item.id,
+        movement_type: adjustmentType === 'increase' ? 'IN' : 'OUT',
+        reference_type: 'ADJUSTMENT',
+        quantity: adjustmentType === 'set' ? Math.abs(newQuantity - item.stock_quantity) : quantity,
+        cost_per_unit: item.cost_price || 0,
+        notes: `${reason}. ${notes}`.trim()
       };
 
-      console.log('Stock adjustment data:', adjustmentData);
-      
-      const actionText = adjustmentType === 'increase' ? 'increased by' : 
-                        adjustmentType === 'decrease' ? 'decreased by' : 
+      await createStockMovement.mutateAsync(stockMovement);
+
+      // Update product stock quantity
+      await updateProduct.mutateAsync({
+        id: item.id,
+        stock_quantity: newQuantity
+      });
+
+      const actionText = adjustmentType === 'increase' ? 'increased by' :
+                        adjustmentType === 'decrease' ? 'decreased by' :
                         'set to';
-      
+
       toast.success(`Stock for ${item.name} ${actionText} ${quantity} ${item.unit_of_measure}`);
       onSuccess();
       handleClose();
