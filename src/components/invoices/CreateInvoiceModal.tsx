@@ -261,6 +261,13 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       return;
     }
 
+    // Check if auth is still loading
+    if (authLoading) {
+      toast.info('Please wait, authenticating user...');
+      return;
+    }
+
+    // Check if user is authenticated and has profile
     if (!profile?.id) {
       toast.error('User not authenticated. Please sign in and try again.');
       return;
