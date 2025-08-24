@@ -42,7 +42,7 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
           product_code,
           unit_of_measure,
           unit_price,
-          current_stock,
+          stock_quantity,
           product_categories (
             name
           )
@@ -151,7 +151,7 @@ export const useProductById = (productId?: string) => {
           product_code,
           unit_of_measure,
           unit_price,
-          current_stock,
+          stock_quantity,
           product_categories (
             name
           )
@@ -182,10 +182,9 @@ export interface OptimizedProduct {
   product_code: string;
   unit_of_measure: string;
   unit_price: number;
-  current_stock: number;
+  stock_quantity: number;
   minimum_stock_level?: number;
   selling_price?: number;
-  stock_quantity?: number;
   category_name?: string;
   product_categories?: {
     name: string;
