@@ -102,11 +102,11 @@ export function StockAdjustmentModal({ open, onOpenChange, onSuccess, item }: St
       const stockMovement = {
         company_id: currentCompany.id,
         product_id: item.id,
-        movement_type: adjustmentType === 'increase' ? 'IN' : 'OUT',
-        reference_type: 'ADJUSTMENT',
+        movement_type: 'adjustment',
+        reference_type: 'adjustment',
         quantity: adjustmentType === 'set' ? Math.abs(newQuantity - item.stock_quantity) : quantity,
         cost_per_unit: item.cost_price || 0,
-        notes: `${reason}. ${notes}`.trim()
+        notes: `${adjustmentType.toUpperCase()}: ${reason}. ${notes}`.trim()
       };
 
       await createStockMovement.mutateAsync(stockMovement);
