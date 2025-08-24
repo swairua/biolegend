@@ -105,11 +105,37 @@ export async function fixUserCompanyAssociation() {
   }
 
   try {
-    // Use the new associateUserWithCompany utility
-    const associationResult = await associateUserWithCompany();
+    // First fix profile issues if they exist
+    if (diagnosis.issue === 'profile_missing' || diagnosis.issue === 'profile_incomplete') {
+      console.log('🔧 Fixing user profile first...');
+      const profileFix = await fixUserProfile();
 
-    if (!associationResult.success) {
-      throw new Error(associationResult.message);
+      if (!profileFix.success) {
+        throw new Error(`Profile fix failed: ${profileFix.message}`);
+      }
+
+      console.log('✅ Profile fixed, now checking company association...');
+
+      // Re-diagnose after profile fix
+      const newDiagnosis = await diagnoseUserCompanyIssue();
+      if (newDiagnosis.success) {
+        return {
+          success: true,
+          message: 'Profile fixed and association is now valid',
+          diagnosis: newDiagnosis,
+          action: 'profile_fixed'
+        };
+      }
+    }
+
+    // Handle company association issues
+    if (diagnosis.issue === 'no_company_association') {
+      console.log('🔧 Fixing company association...');
+      const associationResult = await associateUserWithCompany();
+
+      if (!associationResult.success) {
+        throw new Error(associationResult.message);
+      }
     }
 
     // Verify the fix
@@ -120,7 +146,6 @@ export async function fixUserCompanyAssociation() {
       message: verifyDiagnosis.success
         ? 'User-company association fixed successfully'
         : 'Fix attempted but verification failed',
-      companyId: associationResult.companyId,
       diagnosis: verifyDiagnosis
     };
 
