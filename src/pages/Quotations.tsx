@@ -78,7 +78,7 @@ export default function Quotations() {
   const [selectedQuotation, setSelectedQuotation] = useState<Quotation | null>(null);
   
   // Get current user and company from context
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: quotations, isLoading, error, refetch } = useQuotations(currentCompany?.id);
