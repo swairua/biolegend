@@ -87,24 +87,36 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
 
   const createCategoryMutation = useMutation({
     mutationFn: async (categoryData: CategoryData) => {
+      console.log('🚀 Starting category creation with data:', categoryData);
+
       if (!currentCompany?.id) {
         throw new Error('Company not found. Please refresh and try again.');
       }
 
-      // Get next sort order
-      const { data: maxSortData } = await supabase
-        .from('product_categories')
-        .select('sort_order')
-        .eq('company_id', currentCompany.id)
-        .order('sort_order', { ascending: false })
-        .limit(1)
-        .single();
+      if (!user?.id) {
+        throw new Error('User not authenticated. Please sign in again.');
+      }
 
-      const nextSortOrder = (maxSortData?.sort_order || 0) + 10;
+      try {
+        // Get next sort order
+        console.log('📊 Getting next sort order for company:', currentCompany.id);
+        const { data: maxSortData, error: sortError } = await supabase
+          .from('product_categories')
+          .select('sort_order')
+          .eq('company_id', currentCompany.id)
+          .order('sort_order', { ascending: false })
+          .limit(1)
+          .maybeSingle(); // Use maybeSingle to avoid error if no records exist
 
-      const { data, error } = await supabase
-        .from('product_categories')
-        .insert({
+        if (sortError) {
+          console.error('❌ Error getting sort order:', sortError);
+          throw sortError;
+        }
+
+        const nextSortOrder = (maxSortData?.sort_order || 0) + 10;
+        console.log('📈 Next sort order:', nextSortOrder);
+
+        const insertData = {
           company_id: currentCompany.id,
           name: categoryData.name.trim(),
           description: categoryData.description.trim() || null,
@@ -112,15 +124,30 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
           category_code: categoryData.category_code.trim() || null,
           color: categoryData.color || null,
           sort_order: categoryData.sort_order || nextSortOrder,
-          created_by: user?.id,
-          updated_by: user?.id,
+          created_by: user.id,
+          updated_by: user.id,
           is_active: true
-        })
-        .select('id, name, description, category_code, color')
-        .single();
+        };
 
-      if (error) throw error;
-      return data;
+        console.log('💾 Inserting category data:', insertData);
+
+        const { data, error } = await supabase
+          .from('product_categories')
+          .insert(insertData)
+          .select('id, name, description, category_code, color')
+          .single();
+
+        if (error) {
+          console.error('❌ Supabase insert error:', error);
+          throw error;
+        }
+
+        console.log('✅ Category created successfully:', data);
+        return data;
+      } catch (error) {
+        console.error('❌ Mutation function error:', error);
+        throw error;
+      }
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['product_categories'] });
@@ -131,22 +158,55 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
     },
     onError: (error) => {
       console.error('Error creating category:', error);
-      
+      console.error('Error details:', JSON.stringify(error, null, 2));
+
       let errorMessage = 'Failed to create category. Please try again.';
-      if (error instanceof Error) {
-        errorMessage = error.message;
-      } else if (error && typeof error === 'object') {
-        const supabaseError = error as any;
-        if (supabaseError.message) {
-          errorMessage = supabaseError.message;
-        } else if (supabaseError.details) {
-          errorMessage = supabaseError.details;
-        } else if (supabaseError.code === '23505') {
-          errorMessage = 'A category with this name already exists.';
+
+      try {
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (error && typeof error === 'object') {
+          const supabaseError = error as any;
+
+          // Check for specific Supabase error patterns
+          if (supabaseError.message) {
+            errorMessage = supabaseError.message;
+          } else if (supabaseError.details) {
+            errorMessage = supabaseError.details;
+          } else if (supabaseError.hint) {
+            errorMessage = supabaseError.hint;
+          } else if (supabaseError.code) {
+            // Handle specific error codes
+            switch (supabaseError.code) {
+              case '23505':
+                errorMessage = 'A category with this name or code already exists.';
+                break;
+              case '23503':
+                errorMessage = 'Invalid parent category selected.';
+                break;
+              case '42703':
+                errorMessage = 'Database column is missing. Please apply the category migration first.';
+                break;
+              case '42P01':
+                errorMessage = 'Category table not found. Please check your database setup.';
+                break;
+              default:
+                errorMessage = `Database error (${supabaseError.code}): ${supabaseError.message || 'Unknown error'}`;
+            }
+          } else {
+            // Fallback for other object types
+            errorMessage = error.toString() !== '[object Object]' ? error.toString() : 'Unknown error occurred';
+          }
         }
+      } catch (parseError) {
+        console.error('Error parsing error message:', parseError);
+        errorMessage = 'Failed to create category. Please check the console for details.';
       }
-      
-      toast.error(`Error creating category: ${errorMessage}`);
+
+      toast.error(errorMessage, {
+        duration: 6000,
+        description: 'Check the console for technical details'
+      });
     }
   });
 
@@ -158,6 +218,7 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
   };
 
   const handleSubmit = async () => {
+    // Validation
     if (!formData.name.trim()) {
       toast.error('Category name is required');
       return;
@@ -168,9 +229,29 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
       return;
     }
 
+    if (!currentCompany?.id) {
+      toast.error('No company found. Please refresh the page and try again.');
+      return;
+    }
+
+    if (!user?.id) {
+      toast.error('You must be logged in to create categories.');
+      return;
+    }
+
+    // Validate color format if provided
+    if (formData.color && !/^#[0-9A-F]{6}$/i.test(formData.color)) {
+      toast.error('Color must be a valid hex code (e.g., #FF0000)');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
+      console.log('Submitting category data:', formData);
       await createCategoryMutation.mutateAsync(formData);
+    } catch (error) {
+      console.error('Submit error:', error);
+      // Error is already handled by the mutation's onError
     } finally {
       setIsSubmitting(false);
     }
