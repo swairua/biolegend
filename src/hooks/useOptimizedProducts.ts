@@ -98,7 +98,7 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
       if (!companyId) return [];
 
       // Get products ordered by usage frequency or recent activity
-      // For now, we'll order by current_stock desc and name asc as a simple heuristic
+      // For now, we'll order by stock_quantity desc and name asc as a simple heuristic
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -271,7 +271,7 @@ export const useInventoryStats = (companyId?: string) => {
 
       const { data, error } = await supabase
         .from('products')
-        .select('current_stock, minimum_stock_level, unit_price')
+        .select('stock_quantity, minimum_stock_level, unit_price')
         .eq('company_id', companyId)
         .eq('is_active', true);
 
@@ -289,7 +289,7 @@ export const useInventoryStats = (companyId?: string) => {
       };
 
       data.forEach(product => {
-        const stock = product.current_stock || 0;
+        const stock = product.stock_quantity || 0;
         const minStock = product.minimum_stock_level || 0;
         const price = product.unit_price || 0;
 
