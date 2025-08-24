@@ -22,12 +22,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Plus, 
-  Trash2, 
+import {
+  Plus,
+  Trash2,
   Search,
   Calculator,
-  Receipt
+  Receipt,
+  Loader2
 } from 'lucide-react';
 import { useCustomers, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
 import { useOptimizedProductSearch, usePopularProducts } from '@/hooks/useOptimizedProducts';
@@ -729,9 +730,18 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting || !selectedCustomerId || items.length === 0}>
-            <Calculator className="h-4 w-4 mr-2" />
-            {isSubmitting ? 'Creating...' : 'Create Invoice'}
+          <Button onClick={handleSubmit} disabled={isSubmitting || !selectedCustomerId || items.length === 0} className="min-w-32">
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {submitProgress ? 'Processing...' : 'Creating...'}
+              </>
+            ) : (
+              <>
+                <Receipt className="mr-2 h-4 w-4" />
+                Create Invoice
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
