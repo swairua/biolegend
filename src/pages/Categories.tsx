@@ -221,16 +221,24 @@ export default function Categories() {
               {filteredCategories.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-8">
-                    <div className="flex flex-col items-center space-y-2">
-                      <Tag className="h-12 w-12 text-muted-foreground" />
-                      <p className="text-muted-foreground">
-                        {searchTerm ? 'No categories found matching your search.' : 'No categories created yet.'}
-                      </p>
+                    <div className="flex flex-col items-center space-y-6 max-w-md mx-auto">
+                      <div className="text-center space-y-2">
+                        <Tag className="h-12 w-12 text-muted-foreground mx-auto" />
+                        <p className="text-muted-foreground">
+                          {searchTerm ? 'No categories found matching your search.' : 'No categories created yet.'}
+                        </p>
+                      </div>
                       {!searchTerm && (
-                        <Button onClick={handleCreateCategory} className="mt-2">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Create Your First Category
-                        </Button>
+                        <div className="w-full space-y-4">
+                          <DefaultCategoriesButton onSuccess={handleModalSuccess} />
+                          <div className="text-center">
+                            <p className="text-xs text-muted-foreground mb-2">or</p>
+                            <Button onClick={handleCreateCategory} variant="outline">
+                              <Plus className="h-4 w-4 mr-2" />
+                              Create Custom Category
+                            </Button>
+                          </div>
+                        </div>
                       )}
                     </div>
                   </TableCell>
