@@ -93,6 +93,9 @@ export default function TestQuotationFixes() {
         </div>
       </div>
 
+      {/* Quick Test & Verification */}
+      <QuickTestResult />
+
       {/* User-Company Association Fix */}
       <UserCompanyFix />
 
