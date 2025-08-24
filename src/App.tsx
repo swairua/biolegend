@@ -294,6 +294,9 @@ const App = () => {
           {/* Quotations Table Fix - Fix missing columns in quotations tables */}
           <Route path="/quotations-table-fix" element={<QuotationsTableFixPage />} />
 
+          {/* Test Quotation Fixes - Verify foreign key constraint fixes */}
+          <Route path="/test-quotation-fixes" element={<TestQuotationFixes />} />
+
           {/* Optimized Customers - Performance-optimized customers page */}
           <Route
             path="/optimized-customers"
