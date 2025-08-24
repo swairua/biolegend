@@ -148,6 +148,21 @@ export function EnhancedLogin() {
             </Button>
           </form>
 
+          <Alert className="bg-blue-50 border-blue-200">
+            <Settings className="h-4 w-4" />
+            <AlertDescription>
+              <strong>First time setup?</strong> If you're getting login errors, you may need to create the admin account first.
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => navigate('/database-setup')}
+                className="p-0 h-auto font-semibold text-blue-600 hover:text-blue-800"
+              >
+                Go to Setup Page
+              </Button>
+            </AlertDescription>
+          </Alert>
+
           <div className="text-center space-y-2">
             <Button
               variant="outline"
