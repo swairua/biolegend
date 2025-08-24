@@ -107,9 +107,9 @@ export async function diagnoseUserCompanyIssue() {
  */
 export async function fixUserCompanyAssociation() {
   console.log('🔧 Starting user-company association fix...');
-  
+
   const diagnosis = await diagnoseUserCompanyIssue();
-  
+
   if (diagnosis.success) {
     return {
       success: true,
@@ -119,70 +119,22 @@ export async function fixUserCompanyAssociation() {
   }
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      throw new Error('User not authenticated');
+    // Use the new associateUserWithCompany utility
+    const associationResult = await associateUserWithCompany();
+
+    if (!associationResult.success) {
+      throw new Error(associationResult.message);
     }
-
-    let companyId: string;
-
-    // Check if there are existing companies
-    const { data: existingCompanies } = await supabase
-      .from('companies')
-      .select('*');
-
-    if (existingCompanies && existingCompanies.length > 0) {
-      // Use the first available company
-      companyId = existingCompanies[0].id;
-      console.log('🏢 Using existing company:', existingCompanies[0].name, companyId);
-    } else {
-      // Create a new company
-      const defaultCompanyData = {
-        name: 'Default Company',
-        email: user.email || 'admin@company.com',
-        phone: '+254700000000',
-        address: 'Nairobi, Kenya',
-        registration_number: 'REG001',
-        tax_number: 'TAX001',
-        currency: 'KES',
-        logo_url: null
-      };
-
-      const { data: newCompany, error: createError } = await supabase
-        .from('companies')
-        .insert([defaultCompanyData])
-        .select()
-        .single();
-
-      if (createError || !newCompany) {
-        throw new Error(`Failed to create company: ${createError?.message}`);
-      }
-
-      companyId = newCompany.id;
-      console.log('🏢 Created new company:', newCompany.name, companyId);
-    }
-
-    // Update user profile with company_id
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ company_id: companyId })
-      .eq('id', user.id);
-
-    if (updateError) {
-      throw new Error(`Failed to update profile: ${updateError.message}`);
-    }
-
-    console.log('✅ Profile updated with company_id:', companyId);
 
     // Verify the fix
     const verifyDiagnosis = await diagnoseUserCompanyIssue();
-    
+
     return {
       success: verifyDiagnosis.success,
-      message: verifyDiagnosis.success 
+      message: verifyDiagnosis.success
         ? 'User-company association fixed successfully'
         : 'Fix attempted but verification failed',
-      companyId,
+      companyId: associationResult.companyId,
       diagnosis: verifyDiagnosis
     };
 
