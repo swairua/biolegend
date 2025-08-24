@@ -256,7 +256,19 @@ export function EditInventoryItemModal({ open, onOpenChange, onSuccess, item }: 
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="category">Category</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowCreateCategory(true)}
+                  className="h-auto p-1 text-xs text-primary hover:text-primary/80"
+                >
+                  <Plus className="h-3 w-3 mr-1" />
+                  Create New
+                </Button>
+              </div>
               <Select value={formData.category_id} onValueChange={(value) => handleInputChange('category_id', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select category" />
