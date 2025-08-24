@@ -188,6 +188,14 @@ const App = () => {
               }
             />
             <Route
+              path="/categories"
+              element={
+                <ProtectedRoute>
+                  <Categories />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/delivery-notes"
               element={
                 <ProtectedRoute>
