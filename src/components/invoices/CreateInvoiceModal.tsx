@@ -29,7 +29,8 @@ import {
   Calculator,
   Receipt
 } from 'lucide-react';
-import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
+import { useCustomers, useGenerateDocumentNumber, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
+import { useOptimizedProductSearch, usePopularProducts } from '@/hooks/useOptimizedProducts';
 import { useCreateInvoiceWithItems } from '@/hooks/useQuotationItems';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
