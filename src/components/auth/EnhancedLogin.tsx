@@ -20,6 +20,15 @@ export function EnhancedLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
+  const fillAdminCredentials = () => {
+    setFormData({
+      email: 'admin@biolegendscientific.co.ke',
+      password: 'Biolegend2024!Admin'
+    });
+    setFormErrors({});
+    toast.info('Admin credentials filled in');
+  };
+
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
@@ -136,20 +145,33 @@ export function EnhancedLogin() {
               )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={fillAdminCredentials}
+                className="w-full text-xs"
+                disabled={loading}
+              >
+                Use Admin Credentials
+              </Button>
+            </div>
           </form>
 
           <AutoAdminSetup />
