@@ -321,16 +321,32 @@ export const useCreateInvoiceWithItems = () => {
 
             if (stockError) throw stockError;
 
-            // Update product stock quantities
-            for (const movement of stockMovements) {
-              const { error: updateError } = await supabase.rpc('update_product_stock', {
+            // Update product stock quantities in parallel for better performance
+            const stockUpdatePromises = stockMovements.map(movement =>
+              supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
                 quantity_change: movement.quantity
-              });
-              
-              if (updateError) {
-                console.warn('Failed to update stock for product:', movement.product_id, updateError);
+              })
+            );
+
+            const stockUpdateResults = await Promise.allSettled(stockUpdatePromises);
+
+            // Check for any failed stock updates
+            const failedUpdates = stockUpdateResults.filter((result, index) => {
+              if (result.status === 'rejected') {
+                console.error('Failed to update stock for product:', stockMovements[index].product_id, result.reason);
+                return true;
               }
+              if (result.status === 'fulfilled' && result.value.error) {
+                console.error('Stock update error for product:', stockMovements[index].product_id, result.value.error);
+                return true;
+              }
+              return false;
+            });
+
+            if (failedUpdates.length > 0) {
+              console.warn(`${failedUpdates.length} out of ${stockMovements.length} stock updates failed`);
+              // Don't throw - invoice was created successfully, stock inconsistencies can be fixed later
             }
           }
         }
