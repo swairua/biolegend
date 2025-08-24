@@ -68,13 +68,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
 
       if (error) {
-        console.error('Error fetching profile:', JSON.stringify(error, null, 2));
-        console.error('Profile fetch error details:', {
+        console.error('Error fetching profile:', {
           message: error.message,
           details: error.details,
           hint: error.hint,
           code: error.code
         });
+
+        // Check if this is a browser extension blocking issue
+        if (error.message?.includes('Failed to fetch')) {
+          console.warn('🚫 Profile fetch blocked - likely by browser extension');
+          setTimeout(() => toast.error(
+            'Network request blocked. Try disabling browser extensions or use an incognito window.'
+          ), 0);
+        }
+
         return null;
       }
 
@@ -91,6 +99,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return data;
     } catch (error) {
       console.error('Exception fetching profile:', error);
+
+      // Analyze the error for better user feedback
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : '';
+
+      if (errorStack?.includes('chrome-extension://') ||
+          errorStack?.includes('moz-extension://')) {
+        console.warn('🚫 Browser extension interference detected');
+        setTimeout(() => toast.error(
+          'Browser extension is blocking the request. Try disabling extensions or use incognito mode.'
+        ), 0);
+      } else if (errorMessage.includes('Failed to fetch')) {
+        console.warn('🌐 Network connectivity issue');
+        setTimeout(() => toast.error(
+          'Network connection failed. Please check your internet connection and try again.'
+        ), 0);
+      } else {
+        setTimeout(() => toast.error(
+          'Unable to load profile. Please try refreshing the page.'
+        ), 0);
+      }
+
       return null;
     }
   }, []);
