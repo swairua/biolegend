@@ -30,6 +30,7 @@ import DatabaseFixPage from "./pages/DatabaseFixPage";
 import AutoFixPage from "./pages/AutoFixPage";
 import AuditPage from "./pages/AuditPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
+import { SystemFixTest } from "./pages/SystemFixTest";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -267,6 +268,9 @@ const App = () => {
 
           {/* Database Fixes - No protection needed for setup */}
           <Route path="/database-fix-page" element={<DatabaseFixPage />} />
+
+          {/* System Fix Test - Comprehensive audit and fix */}
+          <Route path="/system-fix-test" element={<SystemFixTest />} />
 
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
