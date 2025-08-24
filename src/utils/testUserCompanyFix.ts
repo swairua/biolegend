@@ -20,8 +20,26 @@ export async function testUserCompanyFixProcess() {
   };
 
   try {
-    // Step 1: Initial diagnosis
-    console.log('📋 Step 1: Running initial diagnosis...');
+    // Step 1: Check user profile first
+    console.log('👤 Step 1: Checking user profile...');
+    results.profileDiagnosis = await diagnoseUserProfile();
+
+    if (!results.profileDiagnosis.success || results.profileDiagnosis.issue === 'profile_incomplete') {
+      console.log('🔧 Step 1b: Fixing user profile...');
+      results.profileFix = await fixUserProfile();
+
+      if (!results.profileFix.success) {
+        results.errors.push(`Profile fix failed: ${results.profileFix.message}`);
+        return results;
+      }
+
+      console.log('✅ Profile fixed successfully');
+    } else {
+      console.log('✅ User profile is valid');
+    }
+
+    // Step 2: Check user-company association
+    console.log('📋 Step 2: Running company association diagnosis...');
     results.initialDiagnosis = await diagnoseUserCompanyIssue();
     
     if (results.initialDiagnosis.success) {
