@@ -7,40 +7,26 @@ import { diagnoseUserProfile, fixUserProfile } from './userProfileDiagnostic';
  */
 export async function diagnoseUserCompanyIssue() {
   console.log('🔍 Diagnosing user-company association...');
-  
+
   try {
-    // 1. Check current user authentication
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
-    if (userError || !user) {
+    // 1. First check user profile using the dedicated profile diagnostic
+    const profileDiagnosis = await diagnoseUserProfile();
+
+    if (!profileDiagnosis.success) {
       return {
         success: false,
-        issue: 'authentication',
-        message: 'User not authenticated',
-        details: userError?.message
+        issue: profileDiagnosis.issue,
+        message: profileDiagnosis.message,
+        details: profileDiagnosis.details,
+        user: profileDiagnosis.user,
+        profileDiagnosis: profileDiagnosis
       };
     }
 
-    console.log('✅ User authenticated:', user.id, user.email);
+    const user = profileDiagnosis.user;
+    const profile = profileDiagnosis.profile;
 
-    // 2. Check user's profile
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError) {
-      return {
-        success: false,
-        issue: 'profile_missing',
-        message: 'User profile not found',
-        details: profileError.message,
-        user: user
-      };
-    }
-
-    console.log('✅ User profile found:', profile);
+    console.log('✅ User authenticated and profile found:', user.id, user.email);
 
     // 3. Check if profile has company_id
     if (!profile.company_id) {
