@@ -285,6 +285,9 @@ const App = () => {
             }
           />
 
+          {/* Performance Optimizer - Database and inventory performance optimization */}
+          <Route path="/performance-optimizer" element={<PerformanceOptimizerPage />} />
+
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
 
