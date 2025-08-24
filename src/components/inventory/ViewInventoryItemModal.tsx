@@ -74,7 +74,7 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
     }).format(num);
   };
 
-  const stockPercentage = item.maxStock ? (item.currentStock / item.maxStock) * 100 : 0;
+  const stockPercentage = item.maximum_stock_level ? (item.stock_quantity / item.maximum_stock_level) * 100 : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,7 +91,7 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
                   </Badge>
                 </div>
                 <div className="text-sm text-muted-foreground font-normal">
-                  {item.sku} • {item.category?.name || 'No category'}
+                  {item.product_code} • {item.product_categories?.name || 'No category'}
                 </div>
               </div>
             </div>
@@ -129,16 +129,16 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
                   <span className="text-muted-foreground">Product Code:</span>
                   <div className="font-medium flex items-center space-x-2">
                     <Barcode className="h-4 w-4" />
-                    <span>{item.sku}</span>
+                    <span>{item.product_code}</span>
                   </div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Category:</span>
-                  <div className="font-medium">{item.category?.name || 'No category'}</div>
+                  <div className="font-medium">{item.product_categories?.name || 'No category'}</div>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Unit of Measure:</span>
-                  <div className="font-medium">{item.unitOfMeasure || 'pieces'}</div>
+                  <div className="font-medium">{item.unit_of_measure || 'pieces'}</div>
                 </div>
               </div>
 
@@ -186,7 +186,7 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Current Stock:</span>
-                  <span className="font-bold text-2xl">{item.currentStock}</span>
+                  <span className="font-bold text-2xl">{item.stock_quantity}</span>
                 </div>
                 
                 <div className="w-full bg-muted rounded-full h-2">
@@ -202,17 +202,17 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-muted-foreground">Min Level:</span>
-                    <div className="font-medium">{item.minStock}</div>
+                    <div className="font-medium">{item.minimum_stock_level}</div>
                   </div>
-                  {item.maxStock && (
+                  {item.maximum_stock_level && (
                     <div>
                       <span className="text-muted-foreground">Max Level:</span>
-                      <div className="font-medium">{item.maxStock}</div>
+                      <div className="font-medium">{item.maximum_stock_level}</div>
                     </div>
                   )}
                 </div>
 
-                {item.currentStock <= item.minStock && (
+                {item.stock_quantity <= item.minimum_stock_level && (
                   <div className="flex items-center space-x-2 p-3 bg-warning-light rounded-lg">
                     <AlertTriangle className="h-4 w-4 text-warning" />
                     <span className="text-warning text-sm font-medium">
@@ -225,15 +225,15 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
               {/* Pricing */}
               <div className="border-t pt-4 space-y-3">
                 <div className="grid grid-cols-2 gap-4">
-                  {item.costPrice && (
+                  {item.cost_price && (
                     <div>
                       <span className="text-muted-foreground text-sm">Cost Price:</span>
-                      <div className="font-medium">{formatCurrency(item.costPrice)}</div>
+                      <div className="font-medium">{formatCurrency(item.cost_price)}</div>
                     </div>
                   )}
                   <div>
                     <span className="text-muted-foreground text-sm">Selling Price:</span>
-                    <div className="font-medium">{formatCurrency(item.unitPrice)}</div>
+                    <div className="font-medium">{formatCurrency(item.selling_price)}</div>
                   </div>
                 </div>
 
@@ -241,28 +241,23 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
                   <span className="text-muted-foreground text-sm">Total Value:</span>
                   <div className="font-bold text-xl text-primary flex items-center space-x-2">
                     <TrendingUp className="h-5 w-5" />
-                    <span>{formatCurrency(item.totalValue)}</span>
+                    <span>{formatCurrency(item.stock_quantity * item.selling_price)}</span>
                   </div>
                 </div>
 
-                {item.costPrice && (
+                {item.cost_price && (
                   <div className="p-3 bg-muted/50 rounded-lg">
                     <div className="text-sm space-y-1">
                       <div className="flex justify-between">
                         <span>Margin per unit:</span>
                         <span className="font-medium">
-                          {formatCurrency(
-                            parseFloat(item.unitPrice.replace(/[^0-9.-]+/g, '')) - 
-                            parseFloat(item.costPrice.replace(/[^0-9.-]+/g, ''))
-                          )}
+                          {formatCurrency(item.selling_price - item.cost_price)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Markup:</span>
                         <span className="font-medium">
-                          {(((parseFloat(item.unitPrice.replace(/[^0-9.-]+/g, '')) - 
-                             parseFloat(item.costPrice.replace(/[^0-9.-]+/g, ''))) / 
-                             parseFloat(item.costPrice.replace(/[^0-9.-]+/g, ''))) * 100).toFixed(1)}%
+                          {(((item.selling_price - item.cost_price) / item.cost_price) * 100).toFixed(1)}%
                         </span>
                       </div>
                     </div>
@@ -284,11 +279,11 @@ export function ViewInventoryItemModal({ open, onOpenChange, item, onEdit, onRes
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <div className="text-2xl font-bold text-primary">{item.currentStock}</div>
+                <div className="text-2xl font-bold text-primary">{item.stock_quantity}</div>
                 <div className="text-sm text-muted-foreground">Current Stock</div>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
-                <div className="text-2xl font-bold text-success">{formatCurrency(item.totalValue)}</div>
+                <div className="text-2xl font-bold text-success">{formatCurrency(item.stock_quantity * item.selling_price)}</div>
                 <div className="text-sm text-muted-foreground">Total Value</div>
               </div>
               <div className="text-center p-4 bg-muted/50 rounded-lg">
