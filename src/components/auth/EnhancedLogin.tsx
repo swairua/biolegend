@@ -8,6 +8,8 @@ import { Loader2, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { AutoAdminSetup } from './AutoAdminSetup';
+import { handleAuthError, DEFAULT_ADMIN_CREDENTIALS } from '@/utils/authErrorHandler';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
@@ -18,6 +20,15 @@ export function EnhancedLogin() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
+  const fillAdminCredentials = () => {
+    setFormData({
+      email: DEFAULT_ADMIN_CREDENTIALS.email,
+      password: DEFAULT_ADMIN_CREDENTIALS.password
+    });
+    setFormErrors({});
+    toast.info('Admin credentials filled in');
+  };
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -44,10 +55,16 @@ export function EnhancedLogin() {
     }
 
     const { error } = await signIn(formData.email, formData.password);
-    
+
     if (error) {
-      console.error('Sign in error:', error);
-      toast.error(`Sign in failed: ${error.message}`);
+      const errorInfo = handleAuthError(error);
+
+      // Additional context for invalid credentials
+      if (errorInfo.type === 'invalid_credentials') {
+        setTimeout(() => {
+          toast.info('Tip: Use the "Create Admin User" button above if this is your first time setting up the system.');
+        }, 2000);
+      }
     } else {
       toast.success('Welcome to Biolegend Scientific!');
     }
@@ -131,21 +148,36 @@ export function EnhancedLogin() {
               )}
             </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                'Sign In'
-              )}
-            </Button>
+            <div className="space-y-2">
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={fillAdminCredentials}
+                className="w-full text-xs"
+                disabled={loading}
+              >
+                Use Admin Credentials
+              </Button>
+            </div>
           </form>
+
+          <AutoAdminSetup />
 
           <div className="text-center space-y-2">
             <Button
