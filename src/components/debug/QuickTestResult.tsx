@@ -66,8 +66,8 @@ export function QuickTestResult() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="text-sm text-muted-foreground">
-          This will run a comprehensive test that diagnoses your user-company association, 
-          attempts to fix any issues, and verifies that quotation creation works.
+          This will run a comprehensive test that checks your user profile, diagnoses
+          user-company association, attempts to fix any issues, and verifies quotation creation works.
         </div>
 
         <Button 
