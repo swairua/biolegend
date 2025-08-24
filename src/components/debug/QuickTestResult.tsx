@@ -127,7 +127,7 @@ export function QuickTestResult() {
                   <span className="font-medium">Ready to Create Quotations!</span>
                 </div>
                 <div className="text-sm text-green-700 mt-1">
-                  Your user-company association is properly configured. You can now create quotations without foreign key constraint violations.
+                  Your user profile and company association are properly configured. You can now create quotations without errors.
                 </div>
               </div>
             )}
