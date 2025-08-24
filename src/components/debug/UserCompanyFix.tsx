@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AlertCircle, CheckCircle, XCircle, RefreshCw, User, Building } from 'lucide-react';
 import { diagnoseUserCompanyIssue, fixUserCompanyAssociation } from '@/utils/userCompanyDiagnostic';
+import { testUserCompanyFixProcess, quickFixUserCompany } from '@/utils/testUserCompanyFix';
 import { toast } from 'sonner';
 
 interface DiagnosisResult {
