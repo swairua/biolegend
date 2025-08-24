@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { examineCompaniesTable, associateUserWithCompany } from './examineCompaniesTable';
 
 /**
  * Diagnose user-company association issues
