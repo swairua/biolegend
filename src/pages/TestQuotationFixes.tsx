@@ -92,6 +92,9 @@ export default function TestQuotationFixes() {
         </div>
       </div>
 
+      {/* User-Company Association Fix */}
+      <UserCompanyFix />
+
       {/* Test Controls */}
       <Card>
         <CardHeader>
