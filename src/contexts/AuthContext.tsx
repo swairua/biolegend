@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { createRetryableRequest, analyzeNetworkError } from '@/utils/networkDiagnostics';
 
 export interface UserProfile {
   id: string;
@@ -56,41 +57,57 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const mountedRef = useRef(true);
   const initializingRef = useRef(false);
 
-  // Fetch user profile from database with error handling
+  // Fetch user profile from database with error handling and retry logic
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
       console.log('🔍 Fetching profile for user ID:', userId);
 
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
+      const profileData = await createRetryableRequest(async () => {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
 
-      if (error) {
-        console.error('Error fetching profile:', JSON.stringify(error, null, 2));
-        console.error('Profile fetch error details:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
-        return null;
-      }
+        if (error) {
+          throw error;
+        }
 
-      if (!data) {
+        return data;
+      }, 2, 1000); // Retry up to 2 times with 1 second delay
+
+      if (!profileData) {
         console.warn('⚠️ No profile found for user ID:', userId);
         return null;
       }
 
       console.log('✅ Profile found:', {
-        id: data.id,
-        email: data.email
+        id: profileData.id,
+        email: profileData.email
       });
 
-      return data;
+      return profileData;
     } catch (error) {
       console.error('Exception fetching profile:', error);
+
+      // Analyze the error for better user feedback
+      const diagnostic = analyzeNetworkError(error);
+
+      console.warn(`Profile fetch failed: ${diagnostic.type} - ${diagnostic.message}`);
+
+      // Only show toast for certain error types to avoid spam
+      if (diagnostic.type === 'browser_extension') {
+        setTimeout(() => toast.error(
+          'Browser extension is blocking the request. Try disabling extensions or use incognito mode.',
+          { duration: 6000 }
+        ), 0);
+      } else if (diagnostic.type === 'network') {
+        setTimeout(() => toast.error(
+          'Network connection failed. Please check your internet connection.',
+          { duration: 4000 }
+        ), 0);
+      }
+
       return null;
     }
   }, []);
