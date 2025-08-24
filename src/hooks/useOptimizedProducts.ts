@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 
 export interface ProductSearchResult {
   id: string;
@@ -169,5 +169,135 @@ export const useProductById = (productId?: string) => {
     },
     enabled: !!productId,
     staleTime: 300000, // Cache for 5 minutes since individual products don't change often
+  });
+};
+
+// Additional exports needed by OptimizedInventory component
+export interface OptimizedProduct {
+  id: string;
+  name: string;
+  product_code: string;
+  unit_of_measure: string;
+  unit_price: number;
+  current_stock: number;
+  minimum_stock_level?: number;
+  selling_price?: number;
+  stock_quantity?: number;
+  category_name?: string;
+  product_categories?: {
+    name: string;
+  };
+}
+
+// Currency formatter hook
+export const useCurrencyFormatter = () => {
+  return useMemo(() => {
+    return new Intl.NumberFormat('en-KE', {
+      style: 'currency',
+      currency: 'KES',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    });
+  }, []);
+};
+
+// Stock status utility hook
+export const useStockStatus = (stockQuantity: number, minimumStock: number) => {
+  return useMemo(() => {
+    if (stockQuantity <= 0) return 'out_of_stock';
+    if (stockQuantity <= minimumStock) return 'low_stock';
+    return 'in_stock';
+  }, [stockQuantity, minimumStock]);
+};
+
+// Product categories hook
+export const useProductCategories = (companyId?: string) => {
+  return useQuery({
+    queryKey: ['product_categories', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+
+      const { data, error } = await supabase
+        .from('categories')
+        .select('id, name')
+        .eq('company_id', companyId)
+        .order('name');
+
+      if (error) {
+        console.error('Error fetching categories:', error);
+        throw error;
+      }
+
+      return data || [];
+    },
+    enabled: !!companyId,
+    staleTime: 300000, // Cache for 5 minutes
+  });
+};
+
+// Optimized products hook (alias for useOptimizedProductSearch)
+export const useOptimizedProducts = (companyId?: string, options?: any) => {
+  const { data: searchResults } = useOptimizedProductSearch(companyId, true);
+  const { data: popularProducts } = usePopularProducts(companyId, 50);
+
+  // Return all products (search + popular) for the inventory page
+  const allProducts = useMemo(() => {
+    const products = searchResults || popularProducts || [];
+    return {
+      data: products,
+      total: products.length,
+      page: options?.page || 1,
+      pageSize: options?.pageSize || 20
+    };
+  }, [searchResults, popularProducts, options]);
+
+  return {
+    data: allProducts,
+    isLoading: false,
+    error: null,
+    refetch: () => {}
+  };
+};
+
+// Inventory stats hook
+export const useInventoryStats = (companyId?: string) => {
+  return useQuery({
+    queryKey: ['inventory_stats', companyId],
+    queryFn: async () => {
+      if (!companyId) return null;
+
+      const { data, error } = await supabase
+        .from('products')
+        .select('current_stock, minimum_stock_level, unit_price')
+        .eq('company_id', companyId)
+        .eq('is_active', true);
+
+      if (error) {
+        console.error('Error fetching inventory stats:', error);
+        throw error;
+      }
+
+      const stats = {
+        totalItems: data.length,
+        lowStockItems: 0,
+        outOfStockItems: 0,
+        totalValue: 0
+      };
+
+      data.forEach(product => {
+        const stock = product.current_stock || 0;
+        const minStock = product.minimum_stock_level || 0;
+        const price = product.unit_price || 0;
+
+        if (stock <= 0) stats.outOfStockItems++;
+        else if (stock <= minStock) stats.lowStockItems++;
+
+        stats.totalValue += stock * price;
+      });
+
+      return stats;
+    },
+    enabled: !!companyId,
+    staleTime: 60000, // Cache for 1 minute
   });
 };
