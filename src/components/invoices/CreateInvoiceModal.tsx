@@ -284,14 +284,32 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
     }
 
     setIsSubmitting(true);
+    setSubmitProgress({
+      step: 'Preparing invoice data...',
+      current: 1,
+      total: 4
+    });
+
     try {
-      // Generate invoice number
+      // Step 1: Generate invoice number
+      setSubmitProgress({
+        step: 'Generating invoice number...',
+        current: 1,
+        total: 4
+      });
+
       const invoiceNumber = await generateDocNumber.mutateAsync({
         companyId: currentCompany.id,
         type: 'invoice'
       });
 
-      // Create invoice with items
+      // Step 2: Prepare invoice data
+      setSubmitProgress({
+        step: 'Preparing invoice data...',
+        current: 2,
+        total: 4
+      });
+
       const invoiceData = {
         company_id: currentCompany.id,
         customer_id: selectedCustomerId,
@@ -322,9 +340,23 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         line_total: item.line_total
       }));
 
+      // Step 3: Create invoice and items
+      setSubmitProgress({
+        step: `Creating invoice with ${items.length} items...`,
+        current: 3,
+        total: 4
+      });
+
       await createInvoiceWithItems.mutateAsync({
         invoice: invoiceData,
         items: invoiceItems
+      });
+
+      // Step 4: Finalizing
+      setSubmitProgress({
+        step: 'Finalizing invoice creation...',
+        current: 4,
+        total: 4
       });
 
       toast.success(`Invoice ${invoiceNumber} created successfully!`);
@@ -360,6 +392,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       toast.error(`Failed to create invoice: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
+      setSubmitProgress(null);
     }
   };
 
