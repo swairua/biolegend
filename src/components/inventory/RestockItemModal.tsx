@@ -120,9 +120,9 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
 
   const resetForm = () => {
     setRestockData({
-      quantity: item?.minStock * 2 || 50,
-      cost_per_unit: 0,
-      supplier: item?.supplier || '',
+      quantity: item?.minimum_stock_level * 2 || 50,
+      cost_per_unit: item?.cost_price || 0,
+      supplier: '',
       restock_date: new Date().toISOString().split('T')[0],
       reference_number: '',
       notes: ''
