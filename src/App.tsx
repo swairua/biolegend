@@ -48,234 +48,236 @@ const App = () => {
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <Layout>
-        <Routes>
-          {/* Dashboard */}
-          <Route 
-            path="/" 
-            element={
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            } 
-          />
+      <CompanyProvider>
+        <Layout>
+          <Routes>
+            {/* Dashboard */}
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Sales & Customer Management */}
-          <Route 
-            path="/quotations" 
-            element={
-              <ProtectedRoute>
-                <Quotations />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/quotations/new" 
-            element={
-              <ProtectedRoute>
-                <Quotations />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/customers" 
-            element={
-              <ProtectedRoute>
-                <Customers />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/customers/new" 
-            element={
-              <ProtectedRoute>
-                <Customers />
-              </ProtectedRoute>
-            } 
-          />
+            {/* Sales & Customer Management */}
+            <Route
+              path="/quotations"
+              element={
+                <ProtectedRoute>
+                  <Quotations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/quotations/new"
+              element={
+                <ProtectedRoute>
+                  <Quotations />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers"
+              element={
+                <ProtectedRoute>
+                  <Customers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/customers/new"
+              element={
+                <ProtectedRoute>
+                  <Customers />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Financial Management */}
-          <Route 
-            path="/invoices" 
-            element={
-              <ProtectedRoute>
-                <Invoices />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/invoices/new" 
-            element={
-              <ProtectedRoute>
-                <Invoices />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/payments" 
-            element={
-              <ProtectedRoute>
-                <Payments />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/payments/new" 
-            element={
-              <ProtectedRoute>
-                <Payments />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/credit-notes" 
-            element={
-              <ProtectedRoute>
-                <CreditNotes />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/credit-notes/new" 
-            element={
-              <ProtectedRoute>
-                <CreditNotes />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/proforma" 
-            element={
-              <ProtectedRoute>
-                <Proforma />
-              </ProtectedRoute>
-            } 
-          />
+            {/* Financial Management */}
+            <Route
+              path="/invoices"
+              element={
+                <ProtectedRoute>
+                  <Invoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invoices/new"
+              element={
+                <ProtectedRoute>
+                  <Invoices />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payments"
+              element={
+                <ProtectedRoute>
+                  <Payments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/payments/new"
+              element={
+                <ProtectedRoute>
+                  <Payments />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/credit-notes"
+              element={
+                <ProtectedRoute>
+                  <CreditNotes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/credit-notes/new"
+              element={
+                <ProtectedRoute>
+                  <CreditNotes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/proforma"
+              element={
+                <ProtectedRoute>
+                  <Proforma />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Procurement & Inventory */}
-          <Route 
-            path="/lpos" 
-            element={
-              <ProtectedRoute>
-                <LPOs />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/lpos/new" 
-            element={
-              <ProtectedRoute>
-                <LPOs />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/inventory" 
-            element={
-              <ProtectedRoute>
-                <Inventory />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/inventory/new" 
-            element={
-              <ProtectedRoute>
-                <Inventory />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/delivery-notes" 
-            element={
-              <ProtectedRoute>
-                <DeliveryNotes />
-              </ProtectedRoute>
-            } 
-          />
+            {/* Procurement & Inventory */}
+            <Route
+              path="/lpos"
+              element={
+                <ProtectedRoute>
+                  <LPOs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/lpos/new"
+              element={
+                <ProtectedRoute>
+                  <LPOs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory"
+              element={
+                <ProtectedRoute>
+                  <Inventory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory/new"
+              element={
+                <ProtectedRoute>
+                  <Inventory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/delivery-notes"
+              element={
+                <ProtectedRoute>
+                  <DeliveryNotes />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Additional Features */}
-          <Route 
-            path="/remittance" 
-            element={
-              <ProtectedRoute>
-                <RemittanceAdvice />
-              </ProtectedRoute>
-            } 
-          />
+            {/* Additional Features */}
+            <Route
+              path="/remittance"
+              element={
+                <ProtectedRoute>
+                  <RemittanceAdvice />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Reports */}
-          <Route 
-            path="/reports/sales" 
-            element={
-              <ProtectedRoute>
-                <SalesReports />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reports/inventory" 
-            element={
-              <ProtectedRoute>
-                <InventoryReports />
-              </ProtectedRoute>
-            } 
-          />
-          <Route 
-            path="/reports/statements" 
-            element={
-              <ProtectedRoute>
-                <StatementOfAccounts />
-              </ProtectedRoute>
-            } 
-          />
+            {/* Reports */}
+            <Route
+              path="/reports/sales"
+              element={
+                <ProtectedRoute>
+                  <SalesReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports/inventory"
+              element={
+                <ProtectedRoute>
+                  <InventoryReports />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports/statements"
+              element={
+                <ProtectedRoute>
+                  <StatementOfAccounts />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Settings */}
-          <Route
-            path="/settings/company"
-            element={
-              <ProtectedRoute>
-                <CompanySettings />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings/users"
-            element={
-              <ProtectedRoute>
-                <UserManagement />
-              </ProtectedRoute>
-            }
-          />
+            {/* Settings */}
+            <Route
+              path="/settings/company"
+              element={
+                <ProtectedRoute>
+                  <CompanySettings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/users"
+              element={
+                <ProtectedRoute>
+                  <UserManagement />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/setup-test"
-            element={
-              <ProtectedRoute>
-                <SetupAndTest />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/setup-test"
+              element={
+                <ProtectedRoute>
+                  <SetupAndTest />
+                </ProtectedRoute>
+              }
+            />
 
-          {/* Authentication Test - No protection needed */}
-          <Route path="/auth-test" element={<AuthTest />} />
+            {/* Authentication Test - No protection needed */}
+            <Route path="/auth-test" element={<AuthTest />} />
 
-          {/* Database and Forms Audit */}
-          <Route path="/audit" element={<AuditPage />} />
+            {/* Database and Forms Audit */}
+            <Route path="/audit" element={<AuditPage />} />
 
-          {/* Auto-execute Database Fixes and RLS removal */}
-          <Route path="/auto-fix" element={<AutoFixPage />} />
+            {/* Auto-execute Database Fixes and RLS removal */}
+            <Route path="/auto-fix" element={<AutoFixPage />} />
 
-          {/* Database Fixes - No protection needed for setup */}
-          <Route path="/database-fix-page" element={<DatabaseFixPage />} />
+            {/* Database Fixes - No protection needed for setup */}
+            <Route path="/database-fix-page" element={<DatabaseFixPage />} />
 
-          {/* Manual Database Setup - No protection needed */}
-          <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
+            {/* Manual Database Setup - No protection needed */}
+            <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
 
-          {/* 404 Page */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+            {/* 404 Page */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Layout>
+      </CompanyProvider>
     </TooltipProvider>
   );
 };
