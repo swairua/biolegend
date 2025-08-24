@@ -24,11 +24,25 @@ import { toast } from 'sonner';
 import { useCreateStockMovement, useUpdateProduct } from '@/hooks/useDatabase';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
 
+interface InventoryItem {
+  id: string;
+  product_code: string;
+  name: string;
+  stock_quantity: number;
+  minimum_stock_level: number;
+  unit_of_measure: string;
+  cost_price?: number;
+  selling_price: number;
+  product_categories?: {
+    name: string;
+  } | null;
+}
+
 interface RestockItemModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
-  item: any;
+  item: InventoryItem | null;
 }
 
 export function RestockItemModal({ open, onOpenChange, onSuccess, item }: RestockItemModalProps) {
