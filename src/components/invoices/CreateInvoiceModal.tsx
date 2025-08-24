@@ -66,7 +66,6 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const [termsAndConditions, setTermsAndConditions] = useState('Payment due within 30 days of invoice date.');
   
   const [items, setItems] = useState<InvoiceItem[]>([]);
-  const [searchProduct, setSearchProduct] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get current user and company from context
