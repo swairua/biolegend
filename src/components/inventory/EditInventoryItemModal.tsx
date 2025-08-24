@@ -66,6 +66,7 @@ export function EditInventoryItemModal({ open, onOpenChange, onSuccess, item }: 
     max_stock_level: 100
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCreateCategory, setShowCreateCategory] = useState(false);
   const updateProduct = useUpdateProduct();
 
   // Fetch product categories
