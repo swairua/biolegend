@@ -1,7 +1,8 @@
-import { useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +15,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Tag, Plus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tag, Plus, Palette, Hash, ArrowUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface CreateCategoryModalProps {
@@ -43,7 +52,38 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { currentCompany } = useCurrentCompany();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Fetch existing categories for parent selection
+  const { data: categories } = useQuery({
+    queryKey: ['product_categories', currentCompany?.id],
+    queryFn: async () => {
+      if (!currentCompany?.id) return [];
+
+      const { data, error } = await supabase
+        .from('product_categories')
+        .select('id, name, parent_id')
+        .eq('company_id', currentCompany.id)
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!currentCompany?.id && open,
+  });
+
+  // Auto-generate category code when name changes
+  useEffect(() => {
+    if (formData.name && !formData.category_code) {
+      const code = formData.name
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .substring(0, 6) + '-' + Date.now().toString().slice(-4);
+      setFormData(prev => ({ ...prev, category_code: code }));
+    }
+  }, [formData.name, formData.category_code]);
 
   const createCategoryMutation = useMutation({
     mutationFn: async (categoryData: CategoryData) => {
@@ -51,15 +91,32 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
         throw new Error('Company not found. Please refresh and try again.');
       }
 
+      // Get next sort order
+      const { data: maxSortData } = await supabase
+        .from('product_categories')
+        .select('sort_order')
+        .eq('company_id', currentCompany.id)
+        .order('sort_order', { ascending: false })
+        .limit(1)
+        .single();
+
+      const nextSortOrder = (maxSortData?.sort_order || 0) + 10;
+
       const { data, error } = await supabase
         .from('product_categories')
         .insert({
           company_id: currentCompany.id,
           name: categoryData.name.trim(),
           description: categoryData.description.trim() || null,
+          parent_id: categoryData.parent_id || null,
+          category_code: categoryData.category_code.trim() || null,
+          color: categoryData.color || null,
+          sort_order: categoryData.sort_order || nextSortOrder,
+          created_by: user?.id,
+          updated_by: user?.id,
           is_active: true
         })
-        .select('id, name, description')
+        .select('id, name, description, category_code, color')
         .single();
 
       if (error) throw error;
@@ -122,7 +179,11 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
   const resetForm = () => {
     setFormData({
       name: '',
-      description: ''
+      description: '',
+      parent_id: '',
+      category_code: '',
+      color: '#3B82F6',
+      sort_order: 0
     });
   };
 
