@@ -8,7 +8,8 @@ export interface ProductSearchResult {
   product_code: string;
   unit_of_measure: string;
   unit_price: number;
-  current_stock: number;
+  selling_price?: number; // For compatibility with invoice creation
+  stock_quantity: number;
   category_name?: string;
 }
 
@@ -42,8 +43,8 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
           product_code,
           unit_of_measure,
           unit_price,
-          current_stock,
-          categories (
+          stock_quantity,
+          product_categories (
             name
           )
         `)
@@ -62,14 +63,19 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error searching products:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error searching products:', errorMessage);
+        throw new Error(`Failed to search products: ${errorMessage}`);
       }
 
-      // Transform data to include category name
+      // Transform data to include category name and normalize price fields
       const transformedData: ProductSearchResult[] = (data || []).map(product => ({
         ...product,
-        category_name: product.categories?.name
+        // Ensure both price fields are available for compatibility
+        selling_price: product.unit_price,
+        category_name: Array.isArray(product.product_categories)
+          ? product.product_categories[0]?.name
+          : product.product_categories?.name
       }));
 
       return transformedData;
@@ -97,7 +103,7 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
       if (!companyId) return [];
 
       // Get products ordered by usage frequency or recent activity
-      // For now, we'll order by current_stock desc and name asc as a simple heuristic
+      // For now, we'll order by stock_quantity desc and name asc as a simple heuristic
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -106,25 +112,30 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
           product_code,
           unit_of_measure,
           unit_price,
-          current_stock,
-          categories (
+          stock_quantity,
+          product_categories (
             name
           )
         `)
         .eq('company_id', companyId)
         .eq('is_active', true)
-        .order('current_stock', { ascending: false })
+        .order('stock_quantity', { ascending: false })
         .order('name')
         .limit(limit);
 
       if (error) {
-        console.error('Error fetching popular products:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching popular products:', errorMessage);
+        throw new Error(`Failed to fetch popular products: ${errorMessage}`);
       }
 
       return (data || []).map(product => ({
         ...product,
-        category_name: product.categories?.name
+        // Ensure both price fields are available for compatibility
+        selling_price: product.unit_price,
+        category_name: Array.isArray(product.product_categories)
+          ? product.product_categories[0]?.name
+          : product.product_categories?.name
       })) as ProductSearchResult[];
     },
     enabled: !!companyId,
@@ -149,8 +160,8 @@ export const useProductById = (productId?: string) => {
           product_code,
           unit_of_measure,
           unit_price,
-          current_stock,
-          categories (
+          stock_quantity,
+          product_categories (
             name
           )
         `)
@@ -158,13 +169,18 @@ export const useProductById = (productId?: string) => {
         .single();
 
       if (error) {
-        console.error('Error fetching product:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching product:', errorMessage);
+        throw new Error(`Failed to fetch product: ${errorMessage}`);
       }
 
       return {
         ...data,
-        category_name: data.categories?.name
+        // Ensure both price fields are available for compatibility
+        selling_price: data.unit_price,
+        category_name: Array.isArray(data.product_categories)
+          ? data.product_categories[0]?.name
+          : data.product_categories?.name
       } as ProductSearchResult;
     },
     enabled: !!productId,
@@ -179,10 +195,9 @@ export interface OptimizedProduct {
   product_code: string;
   unit_of_measure: string;
   unit_price: number;
-  current_stock: number;
+  stock_quantity: number;
   minimum_stock_level?: number;
   selling_price?: number;
-  stock_quantity?: number;
   category_name?: string;
   product_categories?: {
     name: string;
@@ -218,14 +233,15 @@ export const useProductCategories = (companyId?: string) => {
       if (!companyId) return [];
 
       const { data, error } = await supabase
-        .from('categories')
+        .from('product_categories')
         .select('id, name')
         .eq('company_id', companyId)
         .order('name');
 
       if (error) {
-        console.error('Error fetching categories:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching categories:', errorMessage);
+        throw new Error(`Failed to fetch categories: ${errorMessage}`);
       }
 
       return data || [];
@@ -268,13 +284,14 @@ export const useInventoryStats = (companyId?: string) => {
 
       const { data, error } = await supabase
         .from('products')
-        .select('current_stock, minimum_stock_level, unit_price')
+        .select('stock_quantity, minimum_stock_level, unit_price')
         .eq('company_id', companyId)
         .eq('is_active', true);
 
       if (error) {
-        console.error('Error fetching inventory stats:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching inventory stats:', errorMessage);
+        throw new Error(`Failed to fetch inventory stats: ${errorMessage}`);
       }
 
       const stats = {
@@ -285,7 +302,7 @@ export const useInventoryStats = (companyId?: string) => {
       };
 
       data.forEach(product => {
-        const stock = product.current_stock || 0;
+        const stock = product.stock_quantity || 0;
         const minStock = product.minimum_stock_level || 0;
         const price = product.unit_price || 0;
 

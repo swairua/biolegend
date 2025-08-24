@@ -108,56 +108,72 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
 
   const addItem = (product: any) => {
     const existingItem = items.find(item => item.product_id === product.id);
-    
+
     if (existingItem) {
       updateItemQuantity(existingItem.id, existingItem.quantity + 1);
       return;
     }
 
+    // Use defensive price fallback - try selling_price first, then unit_price
+    const price = Number(product.selling_price || product.unit_price || 0);
+    if (isNaN(price) || price === 0) {
+      console.warn('Product price missing or invalid for product:', product);
+      toast.warning(`Product "${product.name}" has no price set`);
+    }
+
+    // Auto-populate with product details and smart defaults
     const newItem: InvoiceItem = {
       id: `temp-${Date.now()}`,
       product_id: product.id,
-      product_name: product.name,
+      product_name: product.name, // Store product name for historical record
       description: product.description || product.name,
       quantity: 1,
-      unit_price: product.selling_price,
+      unit_price: price,
       discount_before_vat: 0,
-      tax_percentage: 0, // Default no VAT, user can add if applicable
+      tax_percentage: defaultTaxRate, // Auto-apply default tax rate
       tax_amount: 0,
-      tax_inclusive: false,
-      line_total: product.selling_price
+      tax_inclusive: true, // Default to tax inclusive for easier pricing
+      line_total: price
     };
 
-    // Calculate initial tax and line total
+    // Calculate initial tax and line total with default tax
     const { lineTotal, taxAmount } = calculateLineTotal(newItem);
     newItem.line_total = lineTotal;
     newItem.tax_amount = taxAmount;
 
     setItems([...items, newItem]);
     setSearchProduct('');
+
+    // Show success message with calculated totals
+    toast.success(`Added "${product.name}" - ${formatCurrency(lineTotal)} (incl. tax)`);
   };
 
   const calculateLineTotal = (item: InvoiceItem, quantity?: number, unitPrice?: number, discountPercentage?: number, taxPercentage?: number, taxInclusive?: boolean) => {
     const qty = quantity ?? item.quantity;
     const price = unitPrice ?? item.unit_price;
+    const discount = discountPercentage ?? item.discount_before_vat ?? 0;
     const tax = taxPercentage ?? item.tax_percentage;
     const inclusive = taxInclusive ?? item.tax_inclusive;
 
+    // Calculate base amount after discount
     const baseAmount = qty * price;
+    const discountAmount = baseAmount * (discount / 100);
+    const afterDiscountAmount = baseAmount - discountAmount;
+
     let taxAmount = 0;
     let lineTotal = 0;
 
     if (tax === 0 || !inclusive) {
       // No tax or tax checkbox unchecked
-      lineTotal = baseAmount;
+      lineTotal = afterDiscountAmount;
       taxAmount = 0;
     } else {
-      // Tax checkbox checked: add tax to the base amount
-      taxAmount = baseAmount * (tax / 100);
-      lineTotal = baseAmount + taxAmount;
+      // Tax checkbox checked: add tax to the discounted amount
+      taxAmount = afterDiscountAmount * (tax / 100);
+      lineTotal = afterDiscountAmount + taxAmount;
     }
 
-    return { lineTotal, taxAmount };
+    return { lineTotal, taxAmount, discountAmount };
   };
 
   const updateItemQuantity = (itemId: string, quantity: number) => {
@@ -208,7 +224,8 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const updateItemDiscountBeforeVat = (itemId: string, discountBeforeVat: number) => {
     setItems(items.map(item => {
       if (item.id === itemId) {
-        return { ...item, discount_before_vat: discountBeforeVat };
+        const { lineTotal, taxAmount } = calculateLineTotal(item, undefined, undefined, discountBeforeVat);
+        return { ...item, discount_before_vat: discountBeforeVat, line_total: lineTotal, tax_amount: taxAmount };
       }
       return item;
     }));
@@ -248,8 +265,14 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   };
 
   const subtotal = items.reduce((sum, item) => {
-    // Unit prices are always tax-exclusive, so subtotal is always the base amount
-    return sum + (item.quantity * item.unit_price);
+    // Calculate subtotal as base amount minus discounts
+    const baseAmount = item.quantity * item.unit_price;
+    const discountAmount = baseAmount * ((item.discount_before_vat || 0) / 100);
+    return sum + (baseAmount - discountAmount);
+  }, 0);
+  const totalDiscountAmount = items.reduce((sum, item) => {
+    const baseAmount = item.quantity * item.unit_price;
+    return sum + (baseAmount * ((item.discount_before_vat || 0) / 100));
   }, 0);
   const taxAmount = items.reduce((sum, item) => sum + (item.tax_amount || 0), 0);
   const totalAmount = items.reduce((sum, item) => sum + item.line_total, 0);
@@ -553,7 +576,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                             </div>
                             <div className="text-right">
                               <div className="font-semibold">{formatCurrency(product.unit_price)}</div>
-                              <div className="text-xs text-muted-foreground">Stock: {product.current_stock}</div>
+                              <div className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</div>
                               {product.category_name && (
                                 <div className="text-xs text-muted-foreground">{product.category_name}</div>
                               )}
@@ -685,6 +708,16 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                   <div className="w-80 space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal:</span>
+                      <span className="font-semibold">{formatCurrency(items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0))}</span>
+                    </div>
+                    {totalDiscountAmount > 0 && (
+                      <div className="flex justify-between text-destructive">
+                        <span>Discount:</span>
+                        <span className="font-semibold">-{formatCurrency(totalDiscountAmount)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span>After Discount:</span>
                       <span className="font-semibold">{formatCurrency(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
@@ -694,6 +727,10 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                     <div className="flex justify-between text-lg border-t pt-2">
                       <span className="font-bold">Total:</span>
                       <span className="font-bold text-primary">{formatCurrency(totalAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>Items: {items.length}</span>
+                      <span>Balance Due: {formatCurrency(balanceDue)}</span>
                     </div>
                   </div>
                 </div>

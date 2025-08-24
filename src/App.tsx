@@ -38,6 +38,7 @@ import OptimizedCustomers from "./pages/OptimizedCustomers";
 import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
+import FixQuotationIssues from "./pages/FixQuotationIssues";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -297,6 +298,9 @@ const App = () => {
 
           {/* Test Quotation Fixes - Verify foreign key constraint fixes */}
           <Route path="/test-quotation-fixes" element={<TestQuotationFixes />} />
+
+          {/* Fix Quotation Issues - Resolve foreign key failures and database issues */}
+          <Route path="/fix-quotation-issues" element={<FixQuotationIssues />} />
 
           {/* Optimized Customers - Performance-optimized customers page */}
           <Route
