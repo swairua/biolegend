@@ -29,6 +29,12 @@ import NotFound from "./pages/NotFound";
 import DatabaseFixPage from "./pages/DatabaseFixPage";
 import AutoFixPage from "./pages/AutoFixPage";
 import AuditPage from "./pages/AuditPage";
+import ProductTableFixPage from "./pages/ProductTableFixPage";
+import OptimizedInventory from "./pages/OptimizedInventory";
+import PerformanceOptimizerPage from "./pages/PerformanceOptimizerPage";
+import QuotationsTableFixPage from "./pages/QuotationsTableFixPage";
+import OptimizedCustomers from "./pages/OptimizedCustomers";
+import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
 
@@ -268,6 +274,38 @@ const App = () => {
 
           {/* Database Fixes - No protection needed for setup */}
           <Route path="/database-fix-page" element={<DatabaseFixPage />} />
+
+          {/* Product Table Fix - Audit and fix product table schema */}
+          <Route path="/product-table-fix" element={<ProductTableFixPage />} />
+
+          {/* Optimized Inventory - Performance-optimized inventory page */}
+          <Route
+            path="/optimized-inventory"
+            element={
+              <ProtectedRoute>
+                <OptimizedInventory />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Performance Optimizer - Database and inventory performance optimization */}
+          <Route path="/performance-optimizer" element={<PerformanceOptimizerPage />} />
+
+          {/* Quotations Table Fix - Fix missing columns in quotations tables */}
+          <Route path="/quotations-table-fix" element={<QuotationsTableFixPage />} />
+
+          {/* Optimized Customers - Performance-optimized customers page */}
+          <Route
+            path="/optimized-customers"
+            element={
+              <ProtectedRoute>
+                <OptimizedCustomers />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Customer Performance Optimizer - Database and customer performance optimization */}
+          <Route path="/customer-performance-optimizer" element={<CustomerPerformanceOptimizerPage />} />
 
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
