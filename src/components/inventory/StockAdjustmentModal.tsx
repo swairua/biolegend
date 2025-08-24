@@ -25,12 +25,13 @@ import { useCreateStockMovement, useUpdateProduct } from '@/hooks/useDatabase';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
 
 interface InventoryItem {
-  id?: string;
+  id: string;
   name: string;
   product_code: string;
   stock_quantity: number;
   unit_of_measure: string;
-  cost_price: number;
+  cost_price?: number;
+  selling_price: number;
 }
 
 interface StockAdjustmentModalProps {
@@ -46,6 +47,9 @@ export function StockAdjustmentModal({ open, onOpenChange, onSuccess, item }: St
   const [reason, setReason] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const createStockMovement = useCreateStockMovement();
+  const updateProduct = useUpdateProduct();
+  const { currentCompany } = useCurrentCompany();
 
   const handleSubmit = async () => {
     if (!item) return;
