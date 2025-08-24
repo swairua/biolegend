@@ -194,7 +194,7 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Tag className="h-5 w-5 text-primary" />
@@ -205,32 +205,128 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="category-name">Category Name *</Label>
-            <Input
-              id="category-name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder="e.g., Medical Equipment"
-              maxLength={100}
-            />
-          </div>
+        <div className="space-y-6">
+          {/* Basic Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Tag className="h-4 w-4" />
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="category-name">Category Name *</Label>
+                <Input
+                  id="category-name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="e.g., Medical Equipment"
+                  maxLength={100}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="category-description">Description</Label>
-            <Textarea
-              id="category-description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Optional description for this category"
-              rows={3}
-              maxLength={500}
-            />
-            <div className="text-xs text-muted-foreground text-right">
-              {formData.description.length}/500
-            </div>
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="category-description">Description</Label>
+                <Textarea
+                  id="category-description"
+                  value={formData.description}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  placeholder="Optional description for this category"
+                  rows={3}
+                  maxLength={500}
+                />
+                <div className="text-xs text-muted-foreground text-right">
+                  {formData.description.length}/500
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="parent-category">Parent Category</Label>
+                <Select value={formData.parent_id} onValueChange={(value) => handleInputChange('parent_id', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select parent category (optional)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">None (Top Level)</SelectItem>
+                    {categories?.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Advanced Options */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Hash className="h-4 w-4" />
+                Advanced Options
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="category-code">Category Code</Label>
+                  <Input
+                    id="category-code"
+                    value={formData.category_code}
+                    onChange={(e) => handleInputChange('category_code', e.target.value)}
+                    placeholder="Auto-generated"
+                    maxLength={50}
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Unique code for this category
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="sort-order">Sort Order</Label>
+                  <Input
+                    id="sort-order"
+                    type="number"
+                    value={formData.sort_order}
+                    onChange={(e) => handleInputChange('sort_order', parseInt(e.target.value) || 0)}
+                    placeholder="0"
+                    min="0"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    Lower numbers appear first
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="category-color" className="flex items-center gap-2">
+                  <Palette className="h-4 w-4" />
+                  Category Color
+                </Label>
+                <div className="flex items-center gap-3">
+                  <Input
+                    id="category-color"
+                    type="color"
+                    value={formData.color}
+                    onChange={(e) => handleInputChange('color', e.target.value)}
+                    className="w-20 h-10 p-1 border rounded"
+                  />
+                  <Input
+                    value={formData.color}
+                    onChange={(e) => handleInputChange('color', e.target.value)}
+                    placeholder="#3B82F6"
+                    maxLength={7}
+                    className="flex-1"
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Color for visual categorization in reports and displays
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <DialogFooter>
