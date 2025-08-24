@@ -159,16 +159,24 @@ export function UserCompanyFix() {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Controls */}
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <Button onClick={runDiagnosis} disabled={isRunning} variant="outline">
             <RefreshCw className={`h-4 w-4 mr-2 ${isRunning ? 'animate-spin' : ''}`} />
             Run Diagnosis
           </Button>
           {diagnosis && !diagnosis.success && (
-            <Button onClick={runFix} disabled={isRunning} variant="default">
-              Fix Association
-            </Button>
+            <>
+              <Button onClick={runFix} disabled={isRunning} variant="default">
+                Fix Association
+              </Button>
+              <Button onClick={runQuickFix} disabled={isRunning} variant="secondary">
+                Quick Fix
+              </Button>
+            </>
           )}
+          <Button onClick={runComprehensiveTest} disabled={isRunning} variant="outline">
+            Full Test
+          </Button>
         </div>
 
         {/* Diagnosis Results */}
