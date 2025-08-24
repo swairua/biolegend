@@ -18,17 +18,21 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { 
-  Plus, 
-  Search, 
+import {
+  Plus,
+  Search,
   Filter,
   Eye,
   Edit,
   Package,
   AlertTriangle,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Tag,
+  ArrowRight,
+  Info
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface InventoryItem {
   id: string;
