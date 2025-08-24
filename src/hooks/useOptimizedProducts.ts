@@ -8,7 +8,7 @@ export interface ProductSearchResult {
   product_code: string;
   unit_of_measure: string;
   unit_price: number;
-  current_stock: number;
+  stock_quantity: number;
   category_name?: string;
 }
 
@@ -107,14 +107,14 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
           product_code,
           unit_of_measure,
           unit_price,
-          current_stock,
+          stock_quantity,
           product_categories (
             name
           )
         `)
         .eq('company_id', companyId)
         .eq('is_active', true)
-        .order('current_stock', { ascending: false })
+        .order('stock_quantity', { ascending: false })
         .order('name')
         .limit(limit);
 
