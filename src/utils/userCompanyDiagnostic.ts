@@ -44,11 +44,9 @@ export async function diagnoseUserCompanyIssue() {
     // 3. Check if profile has company_id
     if (!profile.company_id) {
       console.log('❌ Profile missing company_id');
-      
-      // Check available companies
-      const { data: companies, error: companiesError } = await supabase
-        .from('companies')
-        .select('*');
+
+      // Use the comprehensive companies examination
+      const companiesResult = await examineCompaniesTable();
 
       return {
         success: false,
@@ -56,8 +54,9 @@ export async function diagnoseUserCompanyIssue() {
         message: 'User profile has no company_id',
         user: user,
         profile: profile,
-        availableCompanies: companies || [],
-        companiesError: companiesError?.message
+        availableCompanies: companiesResult.companies || [],
+        companiesError: companiesResult.success ? null : companiesResult.message,
+        companiesAnalysis: companiesResult.analysis
       };
     }
 
