@@ -33,6 +33,7 @@ import ProductTableFixPage from "./pages/ProductTableFixPage";
 import OptimizedInventory from "./pages/OptimizedInventory";
 import PerformanceOptimizerPage from "./pages/PerformanceOptimizerPage";
 import QuotationsTableFixPage from "./pages/QuotationsTableFixPage";
+import TestQuotationFixes from "./pages/TestQuotationFixes";
 import OptimizedCustomers from "./pages/OptimizedCustomers";
 import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
