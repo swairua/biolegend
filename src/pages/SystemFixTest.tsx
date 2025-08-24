@@ -165,6 +165,24 @@ export function SystemFixTest() {
         </CardContent>
       </Card>
 
+      {/* Product Table Specific Fix */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Package className="h-5 w-5 text-blue-500" />
+            Product Table Audit & Fix
+          </CardTitle>
+          <CardDescription>
+            Fix missing columns in the products table identified from form audit
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ProductTableFix />
+        </CardContent>
+      </Card>
+
+      <Separator />
+
       {/* Interactive Audit & Fix Component */}
       <SystemAuditAndFix />
     </div>
