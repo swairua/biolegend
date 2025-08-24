@@ -553,7 +553,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
                             </div>
                             <div className="text-right">
                               <div className="font-semibold">{formatCurrency(product.unit_price)}</div>
-                              <div className="text-xs text-muted-foreground">Stock: {product.current_stock}</div>
+                              <div className="text-xs text-muted-foreground">Stock: {product.stock_quantity}</div>
                               {product.category_name && (
                                 <div className="text-xs text-muted-foreground">{product.category_name}</div>
                               )}
