@@ -65,7 +65,7 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get current user and company from context
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
