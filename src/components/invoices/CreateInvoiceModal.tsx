@@ -108,10 +108,16 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
 
   const addItem = (product: any) => {
     const existingItem = items.find(item => item.product_id === product.id);
-    
+
     if (existingItem) {
       updateItemQuantity(existingItem.id, existingItem.quantity + 1);
       return;
+    }
+
+    // Use defensive price fallback - try selling_price first, then unit_price
+    const price = Number(product.selling_price || product.unit_price || 0);
+    if (isNaN(price) || price === 0) {
+      console.warn('Product price missing or invalid for product:', product);
     }
 
     const newItem: InvoiceItem = {
@@ -120,12 +126,12 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
       product_name: product.name,
       description: product.description || product.name,
       quantity: 1,
-      unit_price: product.selling_price,
+      unit_price: price,
       discount_before_vat: 0,
       tax_percentage: 0, // Default no VAT, user can add if applicable
       tax_amount: 0,
       tax_inclusive: false,
-      line_total: product.selling_price
+      line_total: price
     };
 
     // Calculate initial tax and line total

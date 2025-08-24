@@ -8,6 +8,7 @@ export interface ProductSearchResult {
   product_code: string;
   unit_of_measure: string;
   unit_price: number;
+  selling_price?: number; // For compatibility with invoice creation
   stock_quantity: number;
   category_name?: string;
 }
@@ -67,10 +68,14 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
         throw new Error(`Failed to search products: ${errorMessage}`);
       }
 
-      // Transform data to include category name
+      // Transform data to include category name and normalize price fields
       const transformedData: ProductSearchResult[] = (data || []).map(product => ({
         ...product,
-        category_name: product.product_categories?.name
+        // Ensure both price fields are available for compatibility
+        selling_price: product.unit_price,
+        category_name: Array.isArray(product.product_categories)
+          ? product.product_categories[0]?.name
+          : product.product_categories?.name
       }));
 
       return transformedData;
@@ -126,7 +131,11 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
 
       return (data || []).map(product => ({
         ...product,
-        category_name: product.product_categories?.name
+        // Ensure both price fields are available for compatibility
+        selling_price: product.unit_price,
+        category_name: Array.isArray(product.product_categories)
+          ? product.product_categories[0]?.name
+          : product.product_categories?.name
       })) as ProductSearchResult[];
     },
     enabled: !!companyId,
@@ -167,7 +176,11 @@ export const useProductById = (productId?: string) => {
 
       return {
         ...data,
-        category_name: data.product_categories?.name
+        // Ensure both price fields are available for compatibility
+        selling_price: data.unit_price,
+        category_name: Array.isArray(data.product_categories)
+          ? data.product_categories[0]?.name
+          : data.product_categories?.name
       } as ProductSearchResult;
     },
     enabled: !!productId,
