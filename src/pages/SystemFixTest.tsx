@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { SystemAuditAndFix } from '@/components/SystemAuditAndFix';
+import { ProductTableFix } from '@/components/ProductTableFix';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import { executeSystemFixes, auditAndFixSystem } from '@/utils/systemAuditAndFix';
 import { supabase } from '@/integrations/supabase/client';
-import { AlertTriangle, CheckCircle, XCircle, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle, XCircle, Zap, Package } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function SystemFixTest() {
