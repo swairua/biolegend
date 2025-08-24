@@ -108,7 +108,7 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
           company_id: currentCompany.id,
           name: categoryData.name.trim(),
           description: categoryData.description.trim() || null,
-          parent_id: categoryData.parent_id || null,
+          parent_id: (categoryData.parent_id && categoryData.parent_id !== 'none') ? categoryData.parent_id : null,
           category_code: categoryData.category_code.trim() || null,
           color: categoryData.color || null,
           sort_order: categoryData.sort_order || nextSortOrder,
@@ -243,12 +243,12 @@ export function CreateCategoryModal({ open, onOpenChange, onSuccess }: CreateCat
 
               <div className="space-y-2">
                 <Label htmlFor="parent-category">Parent Category</Label>
-                <Select value={formData.parent_id} onValueChange={(value) => handleInputChange('parent_id', value)}>
+                <Select value={formData.parent_id || 'none'} onValueChange={(value) => handleInputChange('parent_id', value === 'none' ? '' : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select parent category (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None (Top Level)</SelectItem>
+                    <SelectItem value="none">None (Top Level)</SelectItem>
                     {categories?.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
