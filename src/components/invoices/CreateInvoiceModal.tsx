@@ -74,7 +74,14 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: customers, isLoading: loadingCustomers } = useCustomers(currentCompany?.id);
-  const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
+  const {
+    data: searchedProducts,
+    isLoading: loadingProducts,
+    searchTerm: searchProduct,
+    setSearchTerm: setSearchProduct,
+    isSearching
+  } = useOptimizedProductSearch(currentCompany?.id, open);
+  const { data: popularProducts } = usePopularProducts(currentCompany?.id, 10);
   const { data: taxSettings } = useTaxSettings(currentCompany?.id);
   const createInvoiceWithItems = useCreateInvoiceWithItems();
   const generateDocNumber = useGenerateDocumentNumber();
