@@ -66,6 +66,17 @@ export interface Customer {
   updated_at?: string;
 }
 
+export interface ProductCategory {
+  id: string;
+  company_id: string;
+  name: string;
+  description?: string;
+  parent_id?: string;
+  is_active?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Product {
   id: string;
   company_id: string;
