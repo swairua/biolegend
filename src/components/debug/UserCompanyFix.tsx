@@ -268,7 +268,7 @@ export function UserCompanyFix() {
             </div>
 
             <div className={`p-3 rounded border ${
-              fixResult.success 
+              fixResult.success
                 ? 'bg-green-50 border-green-200 text-green-800'
                 : 'bg-red-50 border-red-200 text-red-800'
             }`}>
@@ -286,6 +286,54 @@ export function UserCompanyFix() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* Comprehensive Test Results */}
+        {comprehensiveTest && (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              {getStatusIcon(comprehensiveTest.success)}
+              <span className="font-medium">Comprehensive Test Results</span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+              <div className="space-y-1">
+                <div className="font-medium">Initial State</div>
+                {getStatusBadge(comprehensiveTest.initialDiagnosis?.success, "Initial")}
+              </div>
+              <div className="space-y-1">
+                <div className="font-medium">Fix Attempt</div>
+                {getStatusBadge(comprehensiveTest.fixAttempt?.success, "Fix")}
+              </div>
+              <div className="space-y-1">
+                <div className="font-medium">Final State</div>
+                {getStatusBadge(comprehensiveTest.finalDiagnosis?.success, "Final")}
+              </div>
+              <div className="space-y-1">
+                <div className="font-medium">Quotation Test</div>
+                {getStatusBadge(comprehensiveTest.quotationTest?.success, "Quote")}
+              </div>
+            </div>
+
+            {comprehensiveTest.errors && comprehensiveTest.errors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded p-3">
+                <div className="text-sm font-medium text-red-800">Test Errors:</div>
+                <ul className="text-sm text-red-700 mt-1 space-y-1">
+                  {comprehensiveTest.errors.map((error: string, index: number) => (
+                    <li key={index}>• {error}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {comprehensiveTest.success && (
+              <div className="bg-green-50 border border-green-200 rounded p-3">
+                <div className="text-sm text-green-800 font-medium">
+                  ✅ All tests passed! User-company association is working correctly.
+                </div>
+              </div>
+            )}
           </div>
         )}
 
