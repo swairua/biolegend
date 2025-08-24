@@ -270,6 +270,9 @@ const App = () => {
           {/* Database Fixes - No protection needed for setup */}
           <Route path="/database-fix-page" element={<DatabaseFixPage />} />
 
+          {/* Product Table Fix - Audit and fix product table schema */}
+          <Route path="/product-table-fix" element={<ProductTableFixPage />} />
+
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
 
