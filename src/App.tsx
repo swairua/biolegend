@@ -29,6 +29,7 @@ import NotFound from "./pages/NotFound";
 import DatabaseFixPage from "./pages/DatabaseFixPage";
 import AutoFixPage from "./pages/AutoFixPage";
 import AuditPage from "./pages/AuditPage";
+import ProductTableFixPage from "./pages/ProductTableFixPage";
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
 
