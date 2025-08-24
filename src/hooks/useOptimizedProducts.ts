@@ -108,7 +108,7 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
           unit_of_measure,
           unit_price,
           current_stock,
-          categories (
+          product_categories (
             name
           )
         `)
@@ -119,13 +119,14 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
         .limit(limit);
 
       if (error) {
-        console.error('Error fetching popular products:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching popular products:', errorMessage);
+        throw new Error(`Failed to fetch popular products: ${errorMessage}`);
       }
 
       return (data || []).map(product => ({
         ...product,
-        category_name: product.categories?.name
+        category_name: product.product_categories?.name
       })) as ProductSearchResult[];
     },
     enabled: !!companyId,
@@ -151,7 +152,7 @@ export const useProductById = (productId?: string) => {
           unit_of_measure,
           unit_price,
           current_stock,
-          categories (
+          product_categories (
             name
           )
         `)
