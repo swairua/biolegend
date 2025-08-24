@@ -91,8 +91,8 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
       const stockMovement = {
         company_id: currentCompany.id,
         product_id: item.id,
-        movement_type: 'IN',
-        reference_type: 'RESTOCK',
+        movement_type: 'in',
+        reference_type: 'purchase',
         quantity: restockData.quantity,
         cost_per_unit: restockData.cost_per_unit,
         notes: `Restock from ${restockData.supplier}. ${restockData.notes}`.trim()
