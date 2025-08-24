@@ -520,6 +520,89 @@ export const useDeleteTaxSetting = () => {
   });
 };
 
+// Product Categories hooks
+export const useProductCategories = (companyId?: string) => {
+  return useQuery({
+    queryKey: ['product_categories', companyId],
+    queryFn: async () => {
+      let query = supabase
+        .from('product_categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      return data as ProductCategory[];
+    },
+  });
+};
+
+export const useCreateProductCategory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (category: Omit<ProductCategory, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .insert([category])
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product_categories'] });
+    },
+  });
+};
+
+export const useUpdateProductCategory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...category }: Partial<ProductCategory> & { id: string }) => {
+      const { data, error } = await supabase
+        .from('product_categories')
+        .update(category)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product_categories'] });
+    },
+  });
+};
+
+export const useDeleteProductCategory = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      // Soft delete by setting is_active to false
+      const { error } = await supabase
+        .from('product_categories')
+        .update({ is_active: false })
+        .eq('id', id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['product_categories'] });
+    },
+  });
+};
+
 // Invoices hooks
 export const useInvoices = (companyId?: string) => {
   return useQuery({
