@@ -15,7 +15,7 @@ export interface ProductSearchResult {
 
 /**
  * Optimized hook for searching products with server-side filtering
- * Only loads products that match the search term, reducing client-side overhead
+ * Uses separate queries to avoid relationship issues
  */
 export const useOptimizedProductSearch = (companyId?: string, enabled: boolean = true) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +36,8 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
       if (!companyId) return [];
 
       try {
-        let query = supabase
+        // First get products without embedded relationships
+        let productsQuery = supabase
           .from('products')
           .select(`
             id,
@@ -45,10 +46,7 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
             unit_of_measure,
             unit_price,
             stock_quantity,
-            category_id,
-            product_categories!category_id (
-              name
-            )
+            category_id
           `)
           .eq('company_id', companyId)
           .eq('is_active', true);
@@ -56,21 +54,38 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
         // Add search filter if search term exists
         if (debouncedSearchTerm.trim()) {
           const searchPattern = `%${debouncedSearchTerm.trim()}%`;
-          query = query.or(`name.ilike.${searchPattern},product_code.ilike.${searchPattern}`);
+          productsQuery = productsQuery.or(`name.ilike.${searchPattern},product_code.ilike.${searchPattern}`);
         }
 
         // Limit results for performance
-        query = query.limit(50).order('name');
+        productsQuery = productsQuery.limit(50).order('name');
 
-        const { data, error } = await query;
+        const { data: products, error: productsError } = await productsQuery;
 
-        if (error) {
-          console.error('Error searching products:', error);
-          throw new Error(`Failed to search products: ${error.message}`);
+        if (productsError) {
+          console.error('Error searching products:', productsError);
+          throw new Error(`Failed to search products: ${productsError.message}`);
         }
 
+        // Get categories separately to avoid relationship issues
+        const { data: categories, error: categoriesError } = await supabase
+          .from('product_categories')
+          .select('id, name')
+          .eq('company_id', companyId);
+
+        if (categoriesError) {
+          console.error('Error fetching categories:', categoriesError);
+          // Don't throw here, just log and continue without categories
+        }
+
+        // Create category lookup map
+        const categoryMap = new Map();
+        (categories || []).forEach(cat => {
+          categoryMap.set(cat.id, cat.name);
+        });
+
         // Transform data to include category name and normalize price fields
-        const transformedData: ProductSearchResult[] = (data || []).map(product => ({
+        const transformedData: ProductSearchResult[] = (products || []).map(product => ({
           id: product.id,
           name: product.name,
           product_code: product.product_code,
@@ -79,7 +94,7 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
           // Ensure both price fields are available for compatibility
           selling_price: product.unit_price || 0,
           stock_quantity: product.stock_quantity || 0,
-          category_name: product.product_categories?.name || 'Uncategorized'
+          category_name: categoryMap.get(product.category_id) || 'Uncategorized'
         }));
 
         return transformedData;
@@ -102,7 +117,7 @@ export const useOptimizedProductSearch = (companyId?: string, enabled: boolean =
 
 /**
  * Optimized hook for loading popular/recent products without search
- * Loads a small set of frequently used products for quick access
+ * Uses separate queries to avoid relationship issues
  */
 export const usePopularProducts = (companyId?: string, limit: number = 20) => {
   return useQuery({
@@ -111,9 +126,10 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
       if (!companyId) return [];
 
       try {
-        // Get products ordered by usage frequency or recent activity
-        // For now, we'll order by stock_quantity desc and name asc as a simple heuristic
-        const { data, error } = await supabase
+        console.log('Fetching popular products for company:', companyId);
+
+        // Get products without embedded relationships first
+        const { data: products, error: productsError } = await supabase
           .from('products')
           .select(`
             id,
@@ -122,10 +138,7 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
             unit_of_measure,
             unit_price,
             stock_quantity,
-            category_id,
-            product_categories!category_id (
-              name
-            )
+            category_id
           `)
           .eq('company_id', companyId)
           .eq('is_active', true)
@@ -133,12 +146,34 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
           .order('name')
           .limit(limit);
 
-        if (error) {
-          console.error('Error fetching popular products:', error);
-          throw new Error(`Failed to fetch popular products: ${error.message}`);
+        if (productsError) {
+          console.error('Error fetching products:', productsError);
+          throw new Error(`Failed to fetch products: ${productsError.message}`);
         }
 
-        return (data || []).map(product => ({
+        console.log('Products fetched successfully:', products?.length || 0);
+
+        // Get categories separately
+        const { data: categories, error: categoriesError } = await supabase
+          .from('product_categories')
+          .select('id, name')
+          .eq('company_id', companyId);
+
+        if (categoriesError) {
+          console.error('Error fetching categories (non-fatal):', categoriesError);
+          // Don't throw here, just continue without categories
+        }
+
+        console.log('Categories fetched:', categories?.length || 0);
+
+        // Create category lookup map
+        const categoryMap = new Map();
+        (categories || []).forEach(cat => {
+          categoryMap.set(cat.id, cat.name);
+        });
+
+        // Transform data
+        const transformedData: ProductSearchResult[] = (products || []).map(product => ({
           id: product.id,
           name: product.name,
           product_code: product.product_code,
@@ -147,8 +182,11 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
           // Ensure both price fields are available for compatibility
           selling_price: product.unit_price || 0,
           stock_quantity: product.stock_quantity || 0,
-          category_name: product.product_categories?.name || 'Uncategorized'
-        })) as ProductSearchResult[];
+          category_name: categoryMap.get(product.category_id) || 'Uncategorized'
+        }));
+
+        console.log('Popular products transformed successfully:', transformedData.length);
+        return transformedData;
       } catch (error) {
         console.error('Error in usePopularProducts:', error);
         throw error;
@@ -156,6 +194,8 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
     },
     enabled: !!companyId,
     staleTime: 60000, // Cache for 1 minute
+    retry: 3,
+    retryDelay: 1000,
   });
 };
 
@@ -169,7 +209,8 @@ export const useProductById = (productId?: string) => {
       if (!productId) return null;
 
       try {
-        const { data, error } = await supabase
+        // Get product without embedded relationship
+        const { data: product, error: productError } = await supabase
           .from('products')
           .select(`
             id,
@@ -179,28 +220,40 @@ export const useProductById = (productId?: string) => {
             unit_price,
             stock_quantity,
             category_id,
-            product_categories!category_id (
-              name
-            )
+            company_id
           `)
           .eq('id', productId)
           .single();
 
-        if (error) {
-          console.error('Error fetching product:', error);
-          throw new Error(`Failed to fetch product: ${error.message}`);
+        if (productError) {
+          console.error('Error fetching product:', productError);
+          throw new Error(`Failed to fetch product: ${productError.message}`);
+        }
+
+        // Get category separately if needed
+        let categoryName = 'Uncategorized';
+        if (product.category_id) {
+          const { data: category } = await supabase
+            .from('product_categories')
+            .select('name')
+            .eq('id', product.category_id)
+            .single();
+          
+          if (category) {
+            categoryName = category.name;
+          }
         }
 
         return {
-          id: data.id,
-          name: data.name,
-          product_code: data.product_code,
-          unit_of_measure: data.unit_of_measure || 'pieces',
-          unit_price: data.unit_price || 0,
+          id: product.id,
+          name: product.name,
+          product_code: product.product_code,
+          unit_of_measure: product.unit_of_measure || 'pieces',
+          unit_price: product.unit_price || 0,
           // Ensure both price fields are available for compatibility
-          selling_price: data.unit_price || 0,
-          stock_quantity: data.stock_quantity || 0,
-          category_name: data.product_categories?.name || 'Uncategorized'
+          selling_price: product.unit_price || 0,
+          stock_quantity: product.stock_quantity || 0,
+          category_name: categoryName
         } as ProductSearchResult;
       } catch (error) {
         console.error('Error in useProductById:', error);
@@ -249,7 +302,7 @@ export const useStockStatus = (stockQuantity: number, minimumStock: number) => {
   }, [stockQuantity, minimumStock]);
 };
 
-// Product categories hook
+// Product categories hook (separate, simple query)
 export const useProductCategories = (companyId?: string) => {
   return useQuery({
     queryKey: ['product_categories', companyId],
