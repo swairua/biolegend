@@ -160,13 +160,14 @@ export const useProductById = (productId?: string) => {
         .single();
 
       if (error) {
-        console.error('Error fetching product:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching product:', errorMessage);
+        throw new Error(`Failed to fetch product: ${errorMessage}`);
       }
 
       return {
         ...data,
-        category_name: data.categories?.name
+        category_name: data.product_categories?.name
       } as ProductSearchResult;
     },
     enabled: !!productId,
@@ -220,14 +221,15 @@ export const useProductCategories = (companyId?: string) => {
       if (!companyId) return [];
 
       const { data, error } = await supabase
-        .from('categories')
+        .from('product_categories')
         .select('id, name')
         .eq('company_id', companyId)
         .order('name');
 
       if (error) {
-        console.error('Error fetching categories:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching categories:', errorMessage);
+        throw new Error(`Failed to fetch categories: ${errorMessage}`);
       }
 
       return data || [];
@@ -275,8 +277,9 @@ export const useInventoryStats = (companyId?: string) => {
         .eq('is_active', true);
 
       if (error) {
-        console.error('Error fetching inventory stats:', error);
-        throw error;
+        const errorMessage = error?.message || error?.details || JSON.stringify(error);
+        console.error('Error fetching inventory stats:', errorMessage);
+        throw new Error(`Failed to fetch inventory stats: ${errorMessage}`);
       }
 
       const stats = {
