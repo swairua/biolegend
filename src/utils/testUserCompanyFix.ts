@@ -91,9 +91,10 @@ export async function testUserCompanyFixProcess() {
 
   // Summary
   console.log('\n📊 Test Summary:');
-  console.log(`Initial State: ${results.initialDiagnosis?.success ? 'Valid' : 'Invalid'}`);
+  console.log(`Profile State: ${results.profileDiagnosis?.success && results.profileDiagnosis.issue !== 'profile_incomplete' ? 'Valid' : 'Fixed'}`);
+  console.log(`Initial Association: ${results.initialDiagnosis?.success ? 'Valid' : 'Invalid'}`);
   if (results.fixAttempt) {
-    console.log(`Fix Attempt: ${results.fixAttempt.success ? 'Success' : 'Failed'}`);
+    console.log(`Association Fix: ${results.fixAttempt.success ? 'Success' : 'Failed'}`);
   }
   if (results.finalDiagnosis) {
     console.log(`Final State: ${results.finalDiagnosis.success ? 'Valid' : 'Invalid'}`);
