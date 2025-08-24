@@ -4,7 +4,7 @@ import { EditInventoryItemModal } from '@/components/inventory/EditInventoryItem
 import { ViewInventoryItemModal } from '@/components/inventory/ViewInventoryItemModal';
 import { RestockItemModal } from '@/components/inventory/RestockItemModal';
 import { StockAdjustmentModal } from '@/components/inventory/StockAdjustmentModal';
-import { useProducts, useCompanies } from '@/hooks/useDatabase';
+import { useProducts, useCompanies, useProductCategories } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
