@@ -41,6 +41,7 @@ import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimiz
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
 import FixQuotationIssues from "./pages/FixQuotationIssues";
+import ProformaNumberDiagnosticPage from "./pages/ProformaNumberDiagnostic";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
