@@ -204,7 +204,6 @@ export const useConvertQuotationToInvoice = () => {
           tax_setting_id: item.tax_setting_id,
           tax_percentage: item.tax_percentage,
           tax_amount: item.tax_amount,
-          tax_inclusive: item.tax_inclusive,
           line_total: item.line_total,
           sort_order: item.sort_order
         }));
