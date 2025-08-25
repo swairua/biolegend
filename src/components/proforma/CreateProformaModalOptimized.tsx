@@ -25,7 +25,8 @@ import {
   Trash2,
   Search,
   Calculator,
-  Receipt
+  Receipt,
+  Loader2
 } from 'lucide-react';
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
