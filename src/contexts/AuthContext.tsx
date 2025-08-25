@@ -3,6 +3,7 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { createRetryableRequest, analyzeNetworkError } from '@/utils/networkDiagnostics';
+import { initializeAuth, clearAuthTokens, safeAuthOperation } from '@/utils/authHelpers';
 
 export interface UserProfile {
   id: string;
@@ -30,6 +31,7 @@ export interface AuthContextType {
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   isAuthenticated: boolean;
   refreshProfile: () => Promise<void>;
+  clearTokens: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -124,52 +126,69 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, []);
 
-  // Handle auth state changes
+  // Handle auth state changes with improved error handling
   const handleAuthStateChange = useCallback(async (event: string, newSession: Session | null) => {
     if (!mountedRef.current || initializingRef.current) return;
 
     console.log('Auth state changed:', event, newSession?.user?.email);
     
-    // Batch state updates to prevent multiple renders
-    if (newSession?.user) {
-      const userProfile = await fetchProfile(newSession.user.id);
-      
-      if (mountedRef.current) {
-        setSession(newSession);
-        setUser(newSession.user);
-        setProfile(userProfile);
+    try {
+      // Batch state updates to prevent multiple renders
+      if (newSession?.user) {
+        const userProfile = await fetchProfile(newSession.user.id);
         
-        // Update last login for sign-in events, but don't await to prevent blocking
-        if (event === 'SIGNED_IN' && userProfile) {
-          updateLastLogin(newSession.user.id).catch(console.error);
+        if (mountedRef.current) {
+          setSession(newSession);
+          setUser(newSession.user);
+          setProfile(userProfile);
+          
+          // Update last login for sign-in events, but don't await to prevent blocking
+          if (event === 'SIGNED_IN' && userProfile) {
+            updateLastLogin(newSession.user.id).catch(console.error);
+          }
+        }
+      } else {
+        if (mountedRef.current) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
         }
       }
-    } else {
+    } catch (error) {
+      console.error('Error in auth state change:', error);
+      
+      // If we get invalid token errors, clear tokens
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as any).message;
+        if (errorMessage?.includes('Invalid Refresh Token') || 
+            errorMessage?.includes('Refresh Token Not Found')) {
+          console.warn('Clearing invalid tokens due to auth state error');
+          clearAuthTokens();
+        }
+      }
+    } finally {
       if (mountedRef.current) {
-        setSession(null);
-        setUser(null);
-        setProfile(null);
+        setLoading(false);
       }
     }
+  }, [fetchProfile, updateLastLogin]);
 
-    if (mountedRef.current) {
-      setLoading(false);
-    }
-  }, [fetchProfile, updateLastLogin, loading]);
-
-  // Initialize auth state
+  // Initialize auth state with improved error handling
   useEffect(() => {
     if (initializingRef.current) return;
     
     initializingRef.current = true;
     mountedRef.current = true;
 
-    const initializeAuth = async () => {
+    const initializeAuthState = async () => {
       try {
-        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        console.log('Initializing auth state...');
+        
+        // Use the helper function for initialization
+        const { session: initialSession, error } = await initializeAuth();
         
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('Error during auth initialization:', error);
           if (mountedRef.current) {
             setLoading(false);
             setInitialized(true);
@@ -178,6 +197,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         if (initialSession?.user && mountedRef.current) {
+          console.log('Found valid session, fetching profile...');
           const userProfile = await fetchProfile(initialSession.user.id);
           
           if (mountedRef.current) {
@@ -190,9 +210,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               updateLastLogin(initialSession.user.id).catch(console.error);
             }
           }
+        } else {
+          console.log('No valid session found');
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+        
+        // Handle invalid token errors during initialization
+        if (error && typeof error === 'object' && 'message' in error) {
+          const errorMessage = (error as any).message;
+          if (errorMessage?.includes('Invalid Refresh Token') || 
+              errorMessage?.includes('Refresh Token Not Found')) {
+            console.warn('Clearing invalid tokens during initialization');
+            clearAuthTokens();
+            toast.info('Authentication tokens were cleared. Please sign in again.');
+          }
+        }
       } finally {
         if (mountedRef.current) {
           setLoading(false);
@@ -202,7 +235,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     };
 
-    initializeAuth();
+    initializeAuthState();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
@@ -214,36 +247,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [fetchProfile, updateLastLogin, handleAuthStateChange]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    try {
+    const { data, error } = await safeAuthOperation(async () => {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithPassword({
+      return await supabase.auth.signInWithPassword({
         email,
         password,
       });
+    }, 'signIn');
 
-      if (error) {
-        // Use setTimeout to defer toast to avoid setState during render
-        setTimeout(() => toast.error(error.message), 0);
-        setLoading(false); // Clear loading on error
-        return { error };
-      }
-
-      // Use setTimeout to defer toast to avoid setState during render
-      setTimeout(() => toast.success('Signed in successfully'), 0);
-      return { error: null };
-    } catch (error) {
-      const authError = error as AuthError;
-      setTimeout(() => toast.error('Sign in failed'), 0);
-      setLoading(false); // Clear loading on error
-      return { error: authError };
+    if (error) {
+      setTimeout(() => toast.error(error.message), 0);
+      setLoading(false);
+      return { error: error as AuthError };
     }
-    // Don't set loading to false in finally - auth state change will handle it for success cases
+
+    if (data?.error) {
+      setTimeout(() => toast.error(data.error.message), 0);
+      setLoading(false);
+      return { error: data.error };
+    }
+
+    setTimeout(() => toast.success('Signed in successfully'), 0);
+    return { error: null };
   }, []);
 
   const signUp = useCallback(async (email: string, password: string, fullName?: string) => {
-    try {
+    const { data, error } = await safeAuthOperation(async () => {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
+      return await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -252,23 +283,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           },
         },
       });
+    }, 'signUp');
 
-      if (error) {
-        setTimeout(() => toast.error(error.message), 0);
-        return { error };
-      }
-
-      setTimeout(() => toast.success('Account created successfully'), 0);
-      return { error: null };
-    } catch (error) {
-      const authError = error as AuthError;
-      setTimeout(() => toast.error('Sign up failed'), 0);
-      return { error: authError };
-    } finally {
-      if (mountedRef.current) {
-        setLoading(false);
-      }
+    if (error) {
+      setTimeout(() => toast.error(error.message), 0);
+      setLoading(false);
+      return { error: error as AuthError };
     }
+
+    if (data?.error) {
+      setTimeout(() => toast.error(data.error.message), 0);
+      setLoading(false);
+      return { error: data.error };
+    }
+
+    setTimeout(() => toast.success('Account created successfully'), 0);
+    setLoading(false);
+    return { error: null };
   }, []);
 
   const signOut = useCallback(async () => {
@@ -290,12 +321,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setSession(null);
 
         // Clear local storage
-        try {
-          localStorage.removeItem('sb-' + supabase.supabaseUrl.split('//')[1].split('.')[0] + '-auth-token');
-          console.log('✅ Local storage cleared');
-        } catch (storageError) {
-          console.error('⚠️ Error clearing localStorage:', storageError);
-        }
+        clearAuthTokens();
 
         setTimeout(() => toast.success('Signed out successfully'), 0);
         console.log('🎉 Sign out complete!');
@@ -311,21 +337,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const resetPassword = useCallback(async (email: string) => {
-    try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email);
-      
-      if (error) {
-        setTimeout(() => toast.error(error.message), 0);
-        return { error };
-      }
+    const { data, error } = await safeAuthOperation(async () => {
+      return await supabase.auth.resetPasswordForEmail(email);
+    }, 'resetPassword');
 
-      setTimeout(() => toast.success('Password reset email sent'), 0);
-      return { error: null };
-    } catch (error) {
-      const authError = error as AuthError;
-      setTimeout(() => toast.error('Password reset failed'), 0);
-      return { error: authError };
+    if (error) {
+      setTimeout(() => toast.error(error.message), 0);
+      return { error: error as AuthError };
     }
+
+    if (data?.error) {
+      setTimeout(() => toast.error(data.error.message), 0);
+      return { error: data.error };
+    }
+
+    setTimeout(() => toast.success('Password reset email sent'), 0);
+    return { error: null };
   }, []);
 
   const updateProfile = useCallback(async (updates: Partial<UserProfile>) => {
@@ -365,6 +392,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [user, fetchProfile]);
 
+  // Add function to manually clear tokens
+  const clearTokens = useCallback(() => {
+    clearAuthTokens();
+    setUser(null);
+    setProfile(null);
+    setSession(null);
+    toast.info('Authentication tokens cleared. Please sign in again.');
+  }, []);
+
   // Compute derived state - only require user since we removed role-based system
   const isAuthenticated = !!user;
 
@@ -380,6 +416,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateProfile,
     isAuthenticated,
     refreshProfile,
+    clearTokens,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

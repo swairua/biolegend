@@ -116,12 +116,10 @@ export function ViewInvoiceModal({
                   Send
                 </Button>
               )}
-              {(invoice.balance_due || 0) > 0 && (
-                <Button size="sm" onClick={onRecordPayment}>
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Record Payment
-                </Button>
-              )}
+              <Button size="sm" onClick={onRecordPayment}>
+                <DollarSign className="h-4 w-4 mr-2" />
+                {(invoice.balance_due || 0) > 0 ? 'Record Payment' : 'Payment Adjustment'}
+              </Button>
             </div>
           </DialogTitle>
           <DialogDescription>

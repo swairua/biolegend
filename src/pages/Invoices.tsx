@@ -96,6 +96,8 @@ export default function Invoices() {
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
+  
+  // Use the fixed invoices hook
   const { data: invoices, isLoading, error, refetch } = useInvoices(currentCompany?.id);
 
   // Filter and search logic
@@ -256,7 +258,7 @@ Website: www.biolegendscientific.co.ke`;
               <p className="text-destructive">Error loading invoices: {error.message}</p>
               <Button 
                 variant="outline" 
-                onClick={() => window.location.reload()}
+                onClick={() => refetch()}
                 className="mt-4"
               >
                 Retry
@@ -530,17 +532,15 @@ Website: www.biolegendscientific.co.ke`;
                                 Send
                               </Button>
                             )}
-                            {(invoice.balance_due || 0) > 0 && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleRecordPayment(invoice)}
-                                className="bg-success-light text-success border-success/20 hover:bg-success hover:text-success-foreground"
-                              >
-                                <DollarSign className="h-4 w-4 mr-1" />
-                                Record Payment
-                              </Button>
-                            )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleRecordPayment(invoice)}
+                              className="bg-success-light text-success border-success/20 hover:bg-success hover:text-success-foreground"
+                            >
+                              <DollarSign className="h-4 w-4 mr-1" />
+                              {(invoice.balance_due || 0) > 0 ? 'Record Payment' : 'Payment Adjustment'}
+                            </Button>
                           </>
                         )}
                       </div>

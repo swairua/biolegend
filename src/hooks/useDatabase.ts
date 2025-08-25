@@ -507,28 +507,99 @@ export const useDeleteTaxSetting = () => {
   });
 };
 
-// Invoices hooks
+// Invoices hooks - Fixed to avoid relationship ambiguity
 export const useInvoices = (companyId?: string) => {
   return useQuery({
     queryKey: ['invoices', companyId],
     queryFn: async () => {
-      let query = supabase
-        .from('invoices')
-        .select(`
-          *,
-          customers(name, email, phone),
-          invoice_items(*, products(name, unit_of_measure))
-        `)
-        .order('created_at', { ascending: false });
+      if (!companyId) return [];
 
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+      try {
+        // Step 1: Get invoices without embedded relationships
+        let query = supabase
+          .from('invoices')
+          .select(`
+            id,
+            company_id,
+            customer_id,
+            invoice_number,
+            invoice_date,
+            due_date,
+            status,
+            subtotal,
+            tax_amount,
+            total_amount,
+            paid_amount,
+            balance_due,
+            notes,
+            terms_and_conditions,
+            lpo_number,
+            created_at,
+            updated_at
+          `)
+          .eq('company_id', companyId)
+          .order('created_at', { ascending: false });
+
+        const { data: invoices, error: invoicesError } = await query;
+
+        if (invoicesError) throw invoicesError;
+        if (!invoices || invoices.length === 0) return [];
+
+        // Step 2: Get customers separately
+        const customerIds = [...new Set(invoices.map(invoice => invoice.customer_id))];
+        const { data: customers } = await supabase
+          .from('customers')
+          .select('id, name, email, phone, address, city, country')
+          .in('id', customerIds);
+
+        // Step 3: Get invoice items separately
+        const { data: invoiceItems } = await supabase
+          .from('invoice_items')
+          .select(`
+            id,
+            invoice_id,
+            product_id,
+            description,
+            quantity,
+            unit_price,
+            discount_before_vat,
+            tax_percentage,
+            tax_amount,
+            tax_inclusive,
+            line_total,
+            sort_order
+          `)
+          .in('invoice_id', invoices.map(inv => inv.id));
+
+        // Step 4: Create lookup maps
+        const customerMap = new Map();
+        (customers || []).forEach(customer => {
+          customerMap.set(customer.id, customer);
+        });
+
+        const itemsMap = new Map();
+        (invoiceItems || []).forEach(item => {
+          if (!itemsMap.has(item.invoice_id)) {
+            itemsMap.set(item.invoice_id, []);
+          }
+          itemsMap.get(item.invoice_id).push(item);
+        });
+
+        // Step 5: Combine data
+        return invoices.map(invoice => ({
+          ...invoice,
+          customers: customerMap.get(invoice.customer_id) || {
+            name: 'Unknown Customer',
+            email: null,
+            phone: null
+          },
+          invoice_items: itemsMap.get(invoice.id) || []
+        }));
+
+      } catch (error) {
+        console.error('Error in useInvoices:', error);
+        throw error;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
     },
   });
 };
@@ -539,23 +610,79 @@ export const useCustomerInvoices = (customerId?: string, companyId?: string) => 
     queryFn: async () => {
       if (!customerId) return [];
 
-      let query = supabase
-        .from('invoices')
-        .select(`
-          *,
-          invoice_items(*, products(name, unit_of_measure))
-        `)
-        .eq('customer_id', customerId)
-        .order('created_at', { ascending: false });
+      try {
+        // Get invoices without embedded relationships
+        let query = supabase
+          .from('invoices')
+          .select(`
+            id,
+            company_id,
+            customer_id,
+            invoice_number,
+            invoice_date,
+            due_date,
+            status,
+            subtotal,
+            tax_amount,
+            total_amount,
+            paid_amount,
+            balance_due,
+            notes,
+            terms_and_conditions,
+            lpo_number,
+            created_at,
+            updated_at
+          `)
+          .eq('customer_id', customerId)
+          .order('created_at', { ascending: false });
 
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+        if (companyId) {
+          query = query.eq('company_id', companyId);
+        }
+
+        const { data: invoices, error: invoicesError } = await query;
+
+        if (invoicesError) throw invoicesError;
+        if (!invoices || invoices.length === 0) return [];
+
+        // Get invoice items separately
+        const { data: invoiceItems } = await supabase
+          .from('invoice_items')
+          .select(`
+            id,
+            invoice_id,
+            product_id,
+            description,
+            quantity,
+            unit_price,
+            discount_before_vat,
+            tax_percentage,
+            tax_amount,
+            tax_inclusive,
+            line_total,
+            sort_order
+          `)
+          .in('invoice_id', invoices.map(inv => inv.id));
+
+        // Group items by invoice
+        const itemsMap = new Map();
+        (invoiceItems || []).forEach(item => {
+          if (!itemsMap.has(item.invoice_id)) {
+            itemsMap.set(item.invoice_id, []);
+          }
+          itemsMap.get(item.invoice_id).push(item);
+        });
+
+        // Combine data
+        return invoices.map(invoice => ({
+          ...invoice,
+          invoice_items: itemsMap.get(invoice.id) || []
+        }));
+
+      } catch (error) {
+        console.error('Error in useCustomerInvoices:', error);
+        throw error;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
     },
     enabled: !!customerId,
   });
