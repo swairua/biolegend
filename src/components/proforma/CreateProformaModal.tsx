@@ -29,9 +29,10 @@ import {
   Calculator,
   Receipt
 } from 'lucide-react';
-import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProformaWithItems } from '@/hooks/useQuotationItems';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
+import { generateInstantProformaNumber } from '@/utils/lightweightProformaNumber';
 import { toast } from 'sonner';
 
 interface ProformaItem {
@@ -73,37 +74,18 @@ export const CreateProformaModal = ({
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
 
-  const { data: customers } = useCustomers(companyId);
-  const { data: products } = useProducts(companyId);
-  const { data: taxSettings } = useTaxSettings(companyId);
-  const generateDocumentNumber = useGenerateDocumentNumber();
+  const { data: customers } = useCustomers(open ? companyId : undefined);
+  const { data: products } = useProducts(open ? companyId : undefined);
+  const { data: taxSettings } = useTaxSettings(open ? companyId : undefined);
   const createProformaWithItems = useCreateProformaWithItems();
 
   const defaultTaxRate = taxSettings?.find(t => t.is_default)?.rate || 0;
 
   useEffect(() => {
     if (open) {
-      // Generate proforma number
-      generateDocumentNumber.mutate(
-        { companyId, type: 'proforma' },
-        {
-          onSuccess: (number) => {
-            setProformaNumber(`PF-${number}`);
-          },
-          onError: (error) => {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.warn('Proforma number generation failed, using fallback:', errorMessage);
-
-            // Generate a fallback number using timestamp and random number
-            const timestamp = Date.now().toString().slice(-6);
-            const year = new Date().getFullYear();
-            const fallbackNumber = `PF-${year}-${timestamp}`;
-            setProformaNumber(fallbackNumber);
-
-            console.info('Using fallback proforma number:', fallbackNumber);
-          }
-        }
-      );
+      // Generate proforma number instantly (fast approach)
+      const quickNumber = generateInstantProformaNumber();
+      setProformaNumber(quickNumber);
 
       // Set default valid until date (30 days from today)
       const validUntil = new Date();
@@ -113,7 +95,7 @@ export const CreateProformaModal = ({
         valid_until: validUntil.toISOString().split('T')[0]
       }));
     }
-  }, [open, generateDocumentNumber, companyId]);
+  }, [open]);
 
   const filteredProducts = products?.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
