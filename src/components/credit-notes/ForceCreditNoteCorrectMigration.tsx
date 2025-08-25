@@ -455,11 +455,13 @@ export function ForceCreditNoteCorrectMigration() {
           <Alert>
             <FileCode className="h-4 w-4" />
             <AlertDescription>
-              <strong>This will deploy the CORRECT credit note schema</strong><br />
-              Removes any incomplete schemas and applies the complete version with all required fields:
-              <code className="text-xs bg-muted px-1 rounded">tax_percentage</code>, 
-              <code className="text-xs bg-muted px-1 rounded ml-1">tax_inclusive</code>, 
-              <code className="text-xs bg-muted px-1 rounded ml-1">tax_setting_id</code>
+              <strong>This will deploy the CORRECT credit note schema (Schema A)</strong><br />
+              • Removes any incomplete schemas (Schema B from comprehensiveMigration.ts)<br />
+              • Applies the complete version with all required fields:<br />
+              • <code className="text-xs bg-muted px-1 rounded">tax_percentage</code> (not tax_rate),
+              <code className="text-xs bg-muted px-1 rounded ml-1">tax_inclusive</code>,
+              <code className="text-xs bg-muted px-1 rounded ml-1">tax_setting_id</code><br />
+              • Makes my credit note fixes compatible and functional
             </AlertDescription>
           </Alert>
 
