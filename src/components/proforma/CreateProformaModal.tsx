@@ -90,11 +90,16 @@ export const CreateProformaModal = ({
             setProformaNumber(`PF-${number}`);
           },
           onError: (error) => {
-            console.warn('Proforma number generation failed, using fallback:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.warn('Proforma number generation failed, using fallback:', errorMessage);
+
             // Generate a fallback number using timestamp and random number
             const timestamp = Date.now().toString().slice(-6);
             const year = new Date().getFullYear();
-            setProformaNumber(`PF-${year}-${timestamp}`);
+            const fallbackNumber = `PF-${year}-${timestamp}`;
+            setProformaNumber(fallbackNumber);
+
+            console.info('Using fallback proforma number:', fallbackNumber);
           }
         }
       );
@@ -320,6 +325,15 @@ export const CreateProformaModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Error Notification */}
+          {createError && (
+            <ProformaErrorSolution
+              error={createError}
+              onResolved={() => setCreateError('')}
+              compact={true}
+            />
+          )}
+
           {/* Header Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
@@ -572,8 +586,11 @@ export const CreateProformaModal = ({
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!formData.customer_id || items.length === 0}>
-              Create Proforma
+            <Button
+              type="submit"
+              disabled={!formData.customer_id || items.length === 0 || createProformaWithItems.isPending}
+            >
+              {createProformaWithItems.isPending ? 'Creating...' : 'Create Proforma'}
             </Button>
           </DialogFooter>
         </form>

@@ -35,6 +35,8 @@ import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, useGenerateProformaNumber, type ProformaItem } from '@/hooks/useProforma';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
 import { setupProformaTables, checkProformaTables } from '@/utils/proformaDatabaseSetup';
+import { ProformaErrorNotification } from '@/components/fixes/ProformaErrorNotification';
+import { autoFixProformaFunction } from '@/utils/immediateProformaFix';
 import { toast } from 'sonner';
 
 interface CreateProformaModalProps {
@@ -63,6 +65,7 @@ export const CreateProformaModalFixed = ({
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
   const [tablesStatus, setTablesStatus] = useState<'checking' | 'ready' | 'missing' | 'error'>('checking');
+  const [functionError, setFunctionError] = useState<string>('');
 
   const { data: customers } = useCustomers(companyId);
   const { data: products } = useProducts(companyId);
@@ -116,16 +119,50 @@ export const CreateProformaModalFixed = ({
 
   useEffect(() => {
     if (open && tablesStatus === 'ready') {
-      // Generate proforma number
+      // Generate proforma number with auto-fix
       generateProformaNumber.mutate(companyId, {
         onSuccess: (number) => {
           setProformaNumber(number);
+          setFunctionError(''); // Clear any previous errors
+          console.log('Proforma number generated successfully:', number);
         },
-        onError: (error) => {
-          console.warn('Proforma number generation failed, using fallback:', error);
+        onError: async (error) => {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          console.warn('Proforma number generation failed, attempting auto-fix:', errorMessage);
+
+          // Check if this is a function not found error
+          if (errorMessage.includes('generate_proforma_number') ||
+              errorMessage.includes('schema cache') ||
+              errorMessage.includes('function') ||
+              errorMessage.includes('does not exist')) {
+
+            console.log('🔧 Attempting automatic function fix...');
+            toast.info('Database function missing. Attempting automatic fix...');
+
+            try {
+              // Try automatic fix
+              const fixedNumber = await autoFixProformaFunction();
+              setProformaNumber(fixedNumber);
+              setFunctionError(''); // Clear error since we fixed it
+              toast.success(`Function fixed! Generated number: ${fixedNumber}`);
+              console.log('✅ Auto-fix successful, generated:', fixedNumber);
+              return;
+            } catch (fixError) {
+              console.error('❌ Auto-fix failed:', fixError);
+              // Fall through to manual error handling
+            }
+          }
+
+          // Set error for notification (if auto-fix failed or different error)
+          setFunctionError(errorMessage);
+
           const timestamp = Date.now().toString().slice(-6);
           const year = new Date().getFullYear();
-          setProformaNumber(`PF-${year}-${timestamp}`);
+          const fallbackNumber = `PF-${year}-${timestamp}`;
+          setProformaNumber(fallbackNumber);
+
+          console.info('Using fallback proforma number:', fallbackNumber);
+          toast.warning(`Using fallback number: ${fallbackNumber}`);
         }
       });
 
@@ -344,6 +381,19 @@ export const CreateProformaModalFixed = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Error Notification */}
+          {functionError && (
+            <ProformaErrorNotification
+              error={functionError}
+              onDismiss={() => setFunctionError('')}
+              onFixSuccess={(number) => {
+                setProformaNumber(number);
+                setFunctionError('');
+                toast.success(`Proforma function fixed! Number: ${number}`);
+              }}
+            />
+          )}
+
           {/* Header Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">

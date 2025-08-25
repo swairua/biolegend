@@ -41,6 +41,10 @@ import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimiz
 import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
 import FixQuotationIssues from "./pages/FixQuotationIssues";
+import ProformaNumberDiagnosticPage from "./pages/ProformaNumberDiagnostic";
+import ProformaFunctionFixPage from "./pages/ProformaFunctionFix";
+import ProformaErrorDiagnosticPage from "./pages/ProformaErrorDiagnostic";
+import ProformaCreationTestPage from "./pages/ProformaCreationTest";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -325,6 +329,18 @@ const App = () => {
 
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
+
+          {/* Proforma Number Diagnostic - Debug proforma number generation */}
+          <Route path="/proforma-number-diagnostic" element={<ProformaNumberDiagnosticPage />} />
+
+          {/* Proforma Function Fix - Fix generate_proforma_number function */}
+          <Route path="/proforma-function-fix" element={<ProformaFunctionFixPage />} />
+
+          {/* Proforma Error Diagnostic - Debug "[object Object]" errors */}
+          <Route path="/proforma-error-diagnostic" element={<ProformaErrorDiagnosticPage />} />
+
+          {/* Proforma Creation Test - Test complete proforma creation flow */}
+          <Route path="/proforma-creation-test" element={<ProformaCreationTestPage />} />
 
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
