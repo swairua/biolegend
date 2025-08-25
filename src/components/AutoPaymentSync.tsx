@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, AlertTriangle, Loader2, Zap, DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 import { setupPaymentSync, testPaymentSync } from '@/utils/setupPaymentSync';
+import { ManualPaymentSyncSetup } from './ManualPaymentSyncSetup';
 
 interface AutoPaymentSyncProps {
   autoStart?: boolean;
@@ -179,6 +180,11 @@ export function AutoPaymentSync({ autoStart = true }: AutoPaymentSyncProps) {
   }
 
   if (error) {
+    // Check if error is specifically about function not found
+    if (error.includes('function') && error.includes('not found')) {
+      return <ManualPaymentSyncSetup />;
+    }
+
     return (
       <Card className="border-destructive/50 bg-destructive/5">
         <CardHeader>

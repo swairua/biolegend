@@ -821,27 +821,38 @@ export const useCreatePayment = () => {
           // Continue anyway - payment was recorded
         }
 
-        // 3. Update invoice balances
-        const { error: invoiceError } = await supabase.rpc('sql', {
-          query: `
-            UPDATE invoices
-            SET
-              paid_amount = COALESCE(paid_amount, 0) + $1,
-              balance_due = total_amount - (COALESCE(paid_amount, 0) + $1),
-              status = CASE
-                WHEN (total_amount - (COALESCE(paid_amount, 0) + $1)) <= 0 THEN 'paid'
-                WHEN (COALESCE(paid_amount, 0) + $1) > 0 THEN 'partial'
-                ELSE status
-              END,
-              updated_at = NOW()
-            WHERE id = $2
-          `,
-          args: [paymentData.amount, invoice_id]
-        });
+        // 3. Get current invoice data and update balances
+        const { data: invoice, error: fetchError } = await supabase
+          .from('invoices')
+          .select('id, total_amount, paid_amount, balance_due')
+          .eq('id', invoice_id)
+          .single();
 
-        if (invoiceError) {
-          console.error('Failed to update invoice balance:', invoiceError);
-          // Continue anyway - payment and allocation were recorded
+        if (!fetchError && invoice) {
+          const newPaidAmount = (invoice.paid_amount || 0) + paymentData.amount;
+          const newBalanceDue = invoice.total_amount - newPaidAmount;
+          let newStatus = invoice.status;
+
+          if (newBalanceDue <= 0) {
+            newStatus = 'paid';
+          } else if (newPaidAmount > 0) {
+            newStatus = 'partial';
+          }
+
+          const { error: invoiceError } = await supabase
+            .from('invoices')
+            .update({
+              paid_amount: newPaidAmount,
+              balance_due: newBalanceDue,
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', invoice_id);
+
+          if (invoiceError) {
+            console.error('Failed to update invoice balance:', invoiceError);
+            // Continue anyway - payment and allocation were recorded
+          }
         }
 
         return {
