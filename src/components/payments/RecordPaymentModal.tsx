@@ -56,10 +56,9 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
   const createPaymentMutation = useCreatePayment();
   const { currentCompany } = useCurrentCompany();
   
-  // Filter invoices that have outstanding balance
-  const availableInvoices = invoices.filter(inv => 
-    (inv.balance_due && inv.balance_due > 0) || 
-    (inv.total_amount && inv.total_amount > (inv.paid_amount || 0))
+  // Include all invoices for manual payment adjustments (including fully paid ones)
+  const availableInvoices = invoices.filter(inv =>
+    inv.total_amount !== null && inv.total_amount !== undefined
   );
 
   const formatCurrency = (amount: number) => {
@@ -85,17 +84,17 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       return;
     }
 
-    if (!paymentData.amount || paymentData.amount <= 0) {
-      toast.error('Please enter a valid payment amount');
+    if (!paymentData.amount || paymentData.amount === 0) {
+      toast.error('Please enter a valid payment amount (can be negative for refunds/adjustments)');
       return;
     }
 
     const selectedInvoice = availableInvoices.find(inv => inv.id === paymentData.invoice_id);
-    const maxPayment = selectedInvoice?.balance_due || selectedInvoice?.total_amount || 0;
-    
-    if (paymentData.amount > maxPayment) {
-      toast.error('Payment amount cannot exceed the outstanding balance');
-      return;
+    const currentBalance = selectedInvoice?.balance_due || (selectedInvoice?.total_amount || 0) - (selectedInvoice?.paid_amount || 0);
+
+    // Allow manual adjustments: warn about overpayments but don't prevent them
+    if (paymentData.amount > currentBalance && currentBalance > 0) {
+      console.warn(`Payment amount (${paymentData.amount}) exceeds outstanding balance (${currentBalance}) - this will create an overpayment`);
     }
 
     if (!paymentData.payment_method) {
@@ -229,7 +228,7 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
                   </Select>
                   {availableInvoices.length === 0 && (
                     <p className="text-sm text-muted-foreground">
-                      No invoices with outstanding balances found.
+                      No invoices found.
                     </p>
                   )}
                 </div>
@@ -302,20 +301,17 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
                   value={paymentData.amount}
                   onChange={(e) => handleInputChange('amount', parseFloat(e.target.value) || 0)}
                   min="0"
-                  max={(() => {
-                    const selectedInv = invoice || availableInvoices.find(inv => inv.id === paymentData.invoice_id);
-                    return selectedInv?.balance_due || selectedInv?.total_amount || 0;
-                  })()}
+                  max={undefined}
                   step="0.01"
                   placeholder="0.00"
                   disabled={!paymentData.invoice_id}
                 />
                 <div className="text-xs text-muted-foreground">
                   {paymentData.invoice_id ? (
-                    <>Maximum: {formatCurrency((() => {
+                    <>Outstanding: {formatCurrency((() => {
                       const selectedInv = invoice || availableInvoices.find(inv => inv.id === paymentData.invoice_id);
-                      return selectedInv?.balance_due || selectedInv?.total_amount || 0;
-                    })())}</>
+                      return selectedInv?.balance_due || (selectedInv?.total_amount || 0) - (selectedInv?.paid_amount || 0);
+                    })())} • Use negative amounts for refunds/adjustments</>
                   ) : (
                     'Select an invoice first'
                   )}
@@ -431,13 +427,13 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={isSubmitting || !paymentData.amount || paymentData.amount <= 0 || !paymentData.invoice_id}
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !paymentData.amount || paymentData.amount === 0 || !paymentData.invoice_id}
             className="bg-success hover:bg-success/90"
           >
             <DollarSign className="h-4 w-4 mr-2" />
-            {isSubmitting ? 'Recording...' : !paymentData.invoice_id ? 'Select Invoice First' : 'Record Payment'}
+            {isSubmitting ? 'Recording...' : !paymentData.invoice_id ? 'Select Invoice First' : paymentData.amount < 0 ? 'Record Adjustment/Refund' : 'Record Payment'}
           </Button>
         </DialogFooter>
       </DialogContent>
