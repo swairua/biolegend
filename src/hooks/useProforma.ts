@@ -410,9 +410,11 @@ export const useGenerateProformaNumber = () => {
           if (errorMessage.includes('function generate_proforma_number') ||
               errorMessage.includes('does not exist') ||
               errorMessage.includes('is not defined') ||
-              errorMessage.includes('cannot find')) {
+              errorMessage.includes('cannot find') ||
+              errorMessage.includes('schema cache')) {
             console.warn('generate_proforma_number function not found, using fallback');
-            throw new Error('Database function not found. Using fallback number generation.');
+            console.info('💡 To fix this permanently, visit: /proforma-function-fix');
+            throw new Error('Database function not found. Visit /proforma-function-fix to create it.');
           }
 
           // Check for permission errors

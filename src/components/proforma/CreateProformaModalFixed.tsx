@@ -35,6 +35,7 @@ import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, useGenerateProformaNumber, type ProformaItem } from '@/hooks/useProforma';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
 import { setupProformaTables, checkProformaTables } from '@/utils/proformaDatabaseSetup';
+import { ProformaErrorNotification } from '@/components/fixes/ProformaErrorNotification';
 import { toast } from 'sonner';
 
 interface CreateProformaModalProps {
@@ -63,6 +64,7 @@ export const CreateProformaModalFixed = ({
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
   const [tablesStatus, setTablesStatus] = useState<'checking' | 'ready' | 'missing' | 'error'>('checking');
+  const [functionError, setFunctionError] = useState<string>('');
 
   const { data: customers } = useCustomers(companyId);
   const { data: products } = useProducts(companyId);
@@ -125,6 +127,9 @@ export const CreateProformaModalFixed = ({
         onError: (error) => {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           console.warn('Proforma number generation failed, using fallback:', errorMessage);
+
+          // Set error for notification
+          setFunctionError(errorMessage);
 
           const timestamp = Date.now().toString().slice(-6);
           const year = new Date().getFullYear();
@@ -350,6 +355,14 @@ export const CreateProformaModalFixed = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Error Notification */}
+          {functionError && (
+            <ProformaErrorNotification
+              error={functionError}
+              onDismiss={() => setFunctionError('')}
+            />
+          )}
+
           {/* Header Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
