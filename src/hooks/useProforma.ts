@@ -324,7 +324,6 @@ export const useUpdateProforma = () => {
             discount_amount: item.discount_amount || 0,
             tax_percentage: item.tax_percentage,
             tax_amount: item.tax_amount,
-            tax_inclusive: item.tax_inclusive,
             line_total: item.line_total,
           }));
 
