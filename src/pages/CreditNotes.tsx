@@ -46,6 +46,7 @@ import { ViewCreditNoteModal } from '@/components/credit-notes/ViewCreditNoteMod
 import { EditCreditNoteModal } from '@/components/credit-notes/EditCreditNoteModal';
 import { CreditNotesSetupGuide } from '@/components/credit-notes/CreditNotesSetupGuide';
 import { CreditNoteRelationshipFix } from '@/components/credit-notes/CreditNoteRelationshipFix';
+import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/ForceCreditNoteCorrectMigration';
 import { useCreditNotePDFDownload } from '@/hooks/useCreditNotePDF';
 import type { CreditNote } from '@/hooks/useCreditNotes';
 
