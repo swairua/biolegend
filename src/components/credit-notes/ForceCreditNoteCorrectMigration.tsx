@@ -379,11 +379,19 @@ export function ForceCreditNoteCorrectMigration() {
       setCurrentStep('');
       
       if (failedSteps.length === 0) {
-        toast.success('🎉 Credit note migration completed successfully!');
+        if (manualExecutionRequired) {
+          toast.success('🎉 Migration prepared! Please execute the SQL manually in Supabase.');
+        } else {
+          toast.success('🎉 Credit note migration completed successfully!');
+        }
       } else if (failedSteps.some(id => migrationSteps.find(s => s.id === id)?.critical)) {
         toast.error('❌ Migration failed - critical steps could not be completed');
       } else {
-        toast.warning('⚠️ Migration completed with some non-critical failures');
+        if (manualExecutionRequired) {
+          toast.warning('⚠️ Migration partially complete - manual execution required for remaining steps');
+        } else {
+          toast.warning('⚠️ Migration completed with some non-critical failures');
+        }
       }
 
     } catch (error: any) {
