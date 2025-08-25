@@ -126,6 +126,7 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       const paymentRecord = {
         company_id: selectedInvoice?.company_id || currentCompany.id,
         customer_id: selectedInvoice?.customer_id || null,
+        invoice_id: paymentData.invoice_id, // Required for payment allocation
         payment_number: paymentNumber,
         payment_date: paymentData.payment_date,
         amount: paymentData.amount,
@@ -133,8 +134,8 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
         reference_number: paymentData.reference_number || paymentNumber,
         notes: paymentData.notes
       };
-      
-      await createPaymentMutation.mutateAsync(paymentRecord);
+
+      const result = await createPaymentMutation.mutateAsync(paymentRecord);
       
       toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
       onSuccess();
