@@ -577,8 +577,11 @@ export const CreateProformaModal = ({
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!formData.customer_id || items.length === 0}>
-              Create Proforma
+            <Button
+              type="submit"
+              disabled={!formData.customer_id || items.length === 0 || createProformaWithItems.isPending}
+            >
+              {createProformaWithItems.isPending ? 'Creating...' : 'Create Proforma'}
             </Button>
           </DialogFooter>
         </form>
