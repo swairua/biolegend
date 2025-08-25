@@ -61,19 +61,12 @@ export async function checkProformaFunction(): Promise<{
     console.log('🔍 Checking if generate_proforma_number function exists...');
     
     // Query the information_schema to check if function exists
-    const { data, error } = await supabase.rpc('sql', {
-      query: `
-        SELECT 
-          routine_name,
-          routine_type,
-          specific_name,
-          routine_definition
-        FROM information_schema.routines 
-        WHERE routine_schema = 'public' 
-        AND routine_name = 'generate_proforma_number'
-        AND routine_type = 'FUNCTION';
-      `
-    });
+    const { data, error } = await supabase
+      .from('information_schema.routines')
+      .select('routine_name, routine_type, specific_name')
+      .eq('routine_schema', 'public')
+      .eq('routine_name', 'generate_proforma_number')
+      .eq('routine_type', 'FUNCTION');
 
     if (error) {
       console.error('❌ Error checking function:', error);
@@ -105,10 +98,17 @@ export async function createProformaFunction(): Promise<{
   try {
     console.log('🚀 Creating generate_proforma_number function...');
     
-    // Execute the SQL to create the function
-    const { data, error } = await supabase.rpc('sql', {
-      query: CREATE_PROFORMA_FUNCTION_SQL
-    });
+    // Execute the SQL to create the function using exec_sql if available
+    let result;
+    try {
+      result = await supabase.rpc('exec_sql', { sql: CREATE_PROFORMA_FUNCTION_SQL });
+    } catch (execError) {
+      // If exec_sql doesn't exist, try alternative method
+      console.warn('exec_sql not available, trying direct execution...');
+      result = await supabase.rpc('sql', { query: CREATE_PROFORMA_FUNCTION_SQL });
+    }
+
+    const { data, error } = result;
 
     if (error) {
       console.error('❌ Error creating function:', error);
