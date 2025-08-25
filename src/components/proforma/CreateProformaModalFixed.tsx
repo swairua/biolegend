@@ -386,6 +386,11 @@ export const CreateProformaModalFixed = ({
             <ProformaErrorNotification
               error={functionError}
               onDismiss={() => setFunctionError('')}
+              onFixSuccess={(number) => {
+                setProformaNumber(number);
+                setFunctionError('');
+                toast.success(`Proforma function fixed! Number: ${number}`);
+              }}
             />
           )}
 
