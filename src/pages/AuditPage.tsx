@@ -44,6 +44,9 @@ export default function AuditPage() {
               <div className="text-sm space-y-2">
                 <div className="font-medium">Critical Columns:</div>
                 <div className="text-muted-foreground text-xs space-y-1">
+                  <div>• credit_note_items.tax_percentage</div>
+                  <div>• credit_note_items.tax_inclusive</div>
+                  <div>• credit_note_items.tax_setting_id</div>
                   <div>• lpo_items.unit_of_measure</div>
                   <div>• delivery_note_items.unit_of_measure</div>
                   <div>• invoices.lpo_number</div>
