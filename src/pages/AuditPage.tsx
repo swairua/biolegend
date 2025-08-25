@@ -28,6 +28,9 @@ export default function AuditPage() {
       {/* Credit Note Schema Verification - Critical for recent fixes */}
       <CreditNoteSchemaTest />
 
+      {/* Force Correct Credit Note Migration */}
+      <ForceCreditNoteCorrectMigration />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <QuickAuditRunner />
