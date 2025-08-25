@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import { useInvoices, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { EditInvoiceModal } from '@/components/invoices/EditInvoiceModal';
 import { ViewInvoiceModal } from '@/components/invoices/ViewInvoiceModal';
@@ -255,7 +256,7 @@ Website: www.biolegendscientific.co.ke`;
         <Card className="shadow-card">
           <CardContent className="pt-6">
             <div className="text-center py-8">
-              <p className="text-destructive">Error loading invoices: {error.message}</p>
+              <p className="text-destructive">Error loading invoices: {parseErrorMessage(error)}</p>
               <Button 
                 variant="outline" 
                 onClick={() => refetch()}
