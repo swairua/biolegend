@@ -37,7 +37,7 @@ import { toast } from 'sonner';
 
 interface CreditNoteItem {
   id: string;
-  product_id: string;
+  product_id?: string; // Optional to allow custom items
   product_name: string;
   description: string;
   quantity: number;
