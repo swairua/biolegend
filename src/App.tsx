@@ -335,6 +335,9 @@ const App = () => {
           {/* Proforma Function Fix - Fix generate_proforma_number function */}
           <Route path="/proforma-function-fix" element={<ProformaFunctionFixPage />} />
 
+          {/* Proforma Error Diagnostic - Debug "[object Object]" errors */}
+          <Route path="/proforma-error-diagnostic" element={<ProformaErrorDiagnosticPage />} />
+
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
 
