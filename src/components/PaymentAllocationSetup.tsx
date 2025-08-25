@@ -11,131 +11,12 @@ export function PaymentAllocationSetup() {
   const [setupComplete, setSetupComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const applyDatabaseFunction = async () => {
+  const testDatabaseFunction = async () => {
     setIsApplying(true);
     setError(null);
 
     try {
-      // Create the database function
-      const { error: functionError } = await supabase.rpc('exec_sql', {
-        sql: `
-        CREATE OR REPLACE FUNCTION record_payment_with_allocation(
-            p_company_id UUID,
-            p_customer_id UUID,
-            p_invoice_id UUID,
-            p_payment_number VARCHAR(50),
-            p_payment_date DATE,
-            p_amount DECIMAL(15,2),
-            p_payment_method payment_method_enum,
-            p_reference_number VARCHAR(100),
-            p_notes TEXT
-        ) RETURNS JSON AS $$
-        DECLARE
-            v_payment_id UUID;
-            v_invoice_record RECORD;
-            v_result JSON;
-        BEGIN
-            -- 1. Validate invoice exists and get current balance
-            SELECT id, total_amount, paid_amount, balance_due 
-            INTO v_invoice_record
-            FROM invoices 
-            WHERE id = p_invoice_id AND company_id = p_company_id;
-            
-            IF NOT FOUND THEN
-                RETURN json_build_object(
-                    'success', false, 
-                    'error', 'Invoice not found or does not belong to this company'
-                );
-            END IF;
-            
-            -- 2. Validate payment amount
-            IF p_amount = 0 THEN
-                RETURN json_build_object(
-                    'success', false, 
-                    'error', 'Payment amount cannot be zero'
-                );
-            END IF;
-            
-            -- 3. Insert payment record
-            INSERT INTO payments (
-                company_id,
-                customer_id,
-                payment_number,
-                payment_date,
-                amount,
-                payment_method,
-                reference_number,
-                notes
-            ) VALUES (
-                p_company_id,
-                p_customer_id,
-                p_payment_number,
-                p_payment_date,
-                p_amount,
-                p_payment_method,
-                p_reference_number,
-                p_notes
-            ) RETURNING id INTO v_payment_id;
-            
-            -- 4. Create payment allocation
-            INSERT INTO payment_allocations (
-                payment_id,
-                invoice_id,
-                amount_allocated
-            ) VALUES (
-                v_payment_id,
-                p_invoice_id,
-                p_amount
-            );
-            
-            -- 5. Update invoice balance
-            UPDATE invoices SET
-                paid_amount = COALESCE(paid_amount, 0) + p_amount,
-                balance_due = total_amount - (COALESCE(paid_amount, 0) + p_amount),
-                updated_at = NOW()
-            WHERE id = p_invoice_id;
-            
-            -- 6. Update invoice status based on balance
-            UPDATE invoices SET
-                status = CASE 
-                    WHEN balance_due <= 0 THEN 'paid'
-                    WHEN paid_amount > 0 THEN 'partial'
-                    ELSE status
-                END
-            WHERE id = p_invoice_id;
-            
-            -- 7. Return success with updated values
-            SELECT 
-                id, total_amount, paid_amount, balance_due
-            INTO v_invoice_record
-            FROM invoices 
-            WHERE id = p_invoice_id;
-            
-            RETURN json_build_object(
-                'success', true,
-                'payment_id', v_payment_id,
-                'invoice_id', p_invoice_id,
-                'amount_allocated', p_amount,
-                'new_paid_amount', v_invoice_record.paid_amount,
-                'new_balance_due', v_invoice_record.balance_due
-            );
-            
-        EXCEPTION 
-            WHEN OTHERS THEN
-                RETURN json_build_object(
-                    'success', false,
-                    'error', SQLERRM
-                );
-        END;
-        $$ LANGUAGE plpgsql;
-        `
-      });
-
-      if (functionError) {
-        throw functionError;
-      }
-
-      // Test the function exists
+      // Test if the function exists by calling it with test data
       const { error: testError } = await supabase.rpc('record_payment_with_allocation', {
         p_company_id: '00000000-0000-0000-0000-000000000000', // Test UUID
         p_customer_id: '00000000-0000-0000-0000-000000000000',
@@ -149,19 +30,82 @@ export function PaymentAllocationSetup() {
       });
 
       // We expect this to fail with "Invoice not found" which means the function is working
-      if (testError && !testError.message?.includes('Invoice not found')) {
+      if (testError && testError.message?.includes('Invoice not found')) {
+        setSetupComplete(true);
+        toast.success('Payment allocation system is working correctly!');
+      } else if (testError && testError.message?.includes('function record_payment_with_allocation')) {
+        setError('Database function not found. Please run the SQL manually in your database.');
+      } else if (testError) {
         throw testError;
+      } else {
+        setSetupComplete(true);
+        toast.success('Payment allocation system is working correctly!');
       }
-
-      setSetupComplete(true);
-      toast.success('Payment allocation system set up successfully!');
     } catch (err: any) {
-      console.error('Setup error:', err);
-      setError(err.message || 'Failed to set up payment allocation system');
-      toast.error('Setup failed. Check console for details.');
+      console.error('Test error:', err);
+      setError(err.message || 'Failed to test payment allocation system');
     } finally {
       setIsApplying(false);
     }
+  };
+
+  const copyToClipboard = () => {
+    const sql = `-- Payment allocation database function
+CREATE OR REPLACE FUNCTION record_payment_with_allocation(
+    p_company_id UUID,
+    p_customer_id UUID,
+    p_invoice_id UUID,
+    p_payment_number VARCHAR(50),
+    p_payment_date DATE,
+    p_amount DECIMAL(15,2),
+    p_payment_method payment_method_enum,
+    p_reference_number VARCHAR(100),
+    p_notes TEXT
+) RETURNS JSON AS $$
+DECLARE
+    v_payment_id UUID;
+    v_invoice_record RECORD;
+BEGIN
+    -- Validate invoice exists
+    SELECT id, total_amount, paid_amount, balance_due
+    INTO v_invoice_record
+    FROM invoices
+    WHERE id = p_invoice_id AND company_id = p_company_id;
+
+    IF NOT FOUND THEN
+        RETURN json_build_object('success', false, 'error', 'Invoice not found');
+    END IF;
+
+    -- Insert payment
+    INSERT INTO payments (company_id, customer_id, payment_number, payment_date, amount, payment_method, reference_number, notes)
+    VALUES (p_company_id, p_customer_id, p_payment_number, p_payment_date, p_amount, p_payment_method, p_reference_number, p_notes)
+    RETURNING id INTO v_payment_id;
+
+    -- Create allocation
+    INSERT INTO payment_allocations (payment_id, invoice_id, amount_allocated)
+    VALUES (v_payment_id, p_invoice_id, p_amount);
+
+    -- Update invoice
+    UPDATE invoices SET
+        paid_amount = COALESCE(paid_amount, 0) + p_amount,
+        balance_due = total_amount - (COALESCE(paid_amount, 0) + p_amount),
+        status = CASE
+            WHEN (total_amount - (COALESCE(paid_amount, 0) + p_amount)) <= 0 THEN 'paid'
+            WHEN (COALESCE(paid_amount, 0) + p_amount) > 0 THEN 'partial'
+            ELSE status
+        END,
+        updated_at = NOW()
+    WHERE id = p_invoice_id;
+
+    RETURN json_build_object('success', true, 'payment_id', v_payment_id);
+EXCEPTION
+    WHEN OTHERS THEN
+        RETURN json_build_object('success', false, 'error', SQLERRM);
+END;
+$$ LANGUAGE plpgsql;`;
+
+    navigator.clipboard.writeText(sql);
+    toast.success('SQL copied to clipboard!');
   };
 
   if (setupComplete) {
