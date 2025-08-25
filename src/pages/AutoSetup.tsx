@@ -29,10 +29,16 @@ export default function AutoSetup() {
         {/* Auto Migration Trigger */}
         <AutoMigrationTrigger autoStart={true} />
 
+        {/* Payment Allocation Setup */}
+        <div className="mt-8">
+          <PaymentAllocationSetup />
+        </div>
+
         {/* Instructions */}
         <div className="mt-8 text-center text-sm text-muted-foreground">
           <p>The migration will start automatically and create all necessary database tables.</p>
           <p>Once complete, you'll be able to use the full application functionality.</p>
+          <p className="mt-2">After basic setup, configure payment allocation to properly sync payment and invoice balances.</p>
         </div>
       </div>
     </div>
