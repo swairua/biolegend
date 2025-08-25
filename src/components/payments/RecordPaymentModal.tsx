@@ -141,7 +141,27 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       resetForm();
     } catch (error) {
       console.error('Error recording payment:', error);
-      toast.error('Failed to record payment. Please try again.');
+
+      // Provide more specific error messages
+      let errorMessage = 'Failed to record payment. Please try again.';
+
+      if (error instanceof Error) {
+        if (error.message.includes('payment_method')) {
+          errorMessage = 'Invalid payment method. Please select a valid payment method.';
+        } else if (error.message.includes('company_id')) {
+          errorMessage = 'Company information missing. Please refresh and try again.';
+        } else if (error.message.includes('customer_id')) {
+          errorMessage = 'Customer information missing. Please select a valid invoice.';
+        } else if (error.message.includes('amount')) {
+          errorMessage = 'Invalid payment amount. Please check the amount and try again.';
+        } else if (error.message.toLowerCase().includes('duplicate')) {
+          errorMessage = 'Payment number already exists. Please try again.';
+        } else {
+          errorMessage = `Payment failed: ${error.message}`;
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
