@@ -43,6 +43,7 @@ import { SystemFixTest } from "./pages/SystemFixTest";
 import FixQuotationIssues from "./pages/FixQuotationIssues";
 import ProformaNumberDiagnosticPage from "./pages/ProformaNumberDiagnostic";
 import ProformaFunctionFixPage from "./pages/ProformaFunctionFix";
+import ProformaErrorDiagnosticPage from "./pages/ProformaErrorDiagnostic";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
