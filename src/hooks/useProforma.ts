@@ -370,19 +370,39 @@ export const useDeleteProforma = () => {
 export const useGenerateProformaNumber = () => {
   return useMutation({
     mutationFn: async (companyId: string) => {
-      const { data, error } = await supabase.rpc('generate_proforma_number', {
-        company_uuid: companyId
-      });
+      try {
+        const { data, error } = await supabase.rpc('generate_proforma_number', {
+          company_uuid: companyId
+        });
 
-      if (error) {
-        console.error('Error generating proforma number:', error);
+        if (error) {
+          // Extract meaningful error message
+          const errorMessage = error.message || error.details || error.hint || JSON.stringify(error);
+          console.error('Error generating proforma number:', errorMessage);
+
+          // Check if it's a function not found error
+          if (errorMessage.includes('function generate_proforma_number') ||
+              errorMessage.includes('does not exist')) {
+            console.warn('generate_proforma_number function not found, using fallback');
+            throw new Error('Database function not found. Using fallback number generation.');
+          }
+
+          throw new Error(`Failed to generate proforma number: ${errorMessage}`);
+        }
+
+        return data;
+      } catch (error) {
         // Fallback to client-side generation
         const timestamp = Date.now().toString().slice(-6);
         const year = new Date().getFullYear();
-        return `PF-${year}-${timestamp}`;
-      }
+        const fallbackNumber = `PF-${year}-${timestamp}`;
 
-      return data;
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.warn('Proforma number generation failed, using fallback:', errorMessage);
+        console.info('Generated fallback number:', fallbackNumber);
+
+        return fallbackNumber;
+      }
     },
   });
 };
