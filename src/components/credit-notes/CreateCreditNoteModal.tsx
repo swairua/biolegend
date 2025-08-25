@@ -37,7 +37,7 @@ import { toast } from 'sonner';
 
 interface CreditNoteItem {
   id: string;
-  product_id: string;
+  product_id?: string; // Optional to allow custom items
   product_name: string;
   description: string;
   quantity: number;
@@ -114,7 +114,7 @@ export function CreateCreditNoteModal({
 
   const addItem = (product: any) => {
     const existingItem = items.find(item => item.product_id === product.id);
-    
+
     if (existingItem) {
       updateItemQuantity(existingItem.id, existingItem.quantity + 1);
       return;
@@ -141,6 +141,23 @@ export function CreateCreditNoteModal({
     setSearchProduct('');
   };
 
+  const addCustomItem = () => {
+    const newItem: CreditNoteItem = {
+      id: `custom-${Date.now()}`,
+      product_id: undefined, // No product association
+      product_name: 'Custom Item',
+      description: 'Custom credit item',
+      quantity: 1,
+      unit_price: 0,
+      tax_percentage: 0,
+      tax_amount: 0,
+      tax_inclusive: false,
+      line_total: 0
+    };
+
+    setItems([...items, newItem]);
+  };
+
   const calculateLineTotal = (item: CreditNoteItem, quantity?: number, unitPrice?: number, taxPercentage?: number, taxInclusive?: boolean) => {
     const qty = quantity ?? item.quantity;
     const price = unitPrice ?? item.unit_price;
@@ -151,10 +168,16 @@ export function CreateCreditNoteModal({
     let taxAmount = 0;
     let lineTotal = 0;
 
-    if (tax === 0 || !inclusive) {
+    if (tax === 0) {
+      // No tax
       lineTotal = baseAmount;
       taxAmount = 0;
+    } else if (inclusive) {
+      // Tax-inclusive: tax is included in the price
+      lineTotal = baseAmount;
+      taxAmount = baseAmount * (tax / (100 + tax));
     } else {
+      // Tax-exclusive: tax is added to the price
       taxAmount = baseAmount * (tax / 100);
       lineTotal = baseAmount + taxAmount;
     }
@@ -233,6 +256,7 @@ export function CreateCreditNoteModal({
   const totalAmount = items.reduce((sum, item) => sum + item.line_total, 0);
 
   const handleSubmit = async () => {
+    // Enhanced validation
     if (!companyId) {
       toast.error('Company information not available. Please ensure you have a company set up.');
       return;
@@ -250,6 +274,24 @@ export function CreateCreditNoteModal({
 
     if (!reason.trim()) {
       toast.error('Please provide a reason for the credit note');
+      return;
+    }
+
+    // Validate items
+    const invalidItems = items.filter(item =>
+      !item.description.trim() ||
+      item.quantity <= 0 ||
+      item.unit_price < 0
+    );
+
+    if (invalidItems.length > 0) {
+      toast.error('Please ensure all items have valid descriptions, quantities, and prices.');
+      return;
+    }
+
+    // Validate total amount
+    if (totalAmount <= 0) {
+      toast.error('Credit note total amount must be greater than zero.');
       return;
     }
 
@@ -279,13 +321,14 @@ export function CreateCreditNoteModal({
       };
 
       const creditNoteItems = items.map((item, index) => ({
-        product_id: item.product_id,
+        product_id: item.product_id || null,
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
         tax_percentage: item.tax_percentage,
         tax_amount: item.tax_amount,
         tax_inclusive: item.tax_inclusive,
+        tax_setting_id: item.tax_percentage > 0 ? defaultTax?.id || null : null,
         line_total: item.line_total,
         sort_order: index
       }));
@@ -458,14 +501,26 @@ export function CreateCreditNoteModal({
               <CardContent>
                 <div className="space-y-4">
                   {/* Product Search */}
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                      placeholder="Search products by name or code..."
-                      value={searchProduct}
-                      onChange={(e) => setSearchProduct(e.target.value)}
-                      className="pl-10"
-                    />
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        placeholder="Search products by name or code..."
+                        value={searchProduct}
+                        onChange={(e) => setSearchProduct(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={addCustomItem}
+                      className="w-full"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Custom Item
+                    </Button>
                   </div>
 
                   {/* Product List */}
@@ -537,8 +592,31 @@ export function CreateCreditNoteModal({
                     <TableRow key={item.id}>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{item.product_name}</div>
-                          <div className="text-sm text-muted-foreground">{item.description}</div>
+                          {item.product_id ? (
+                            <div>
+                              <div className="font-medium">{item.product_name}</div>
+                              <div className="text-sm text-muted-foreground">{item.description}</div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <Input
+                                value={item.product_name}
+                                onChange={(e) => setItems(items.map(i =>
+                                  i.id === item.id ? { ...i, product_name: e.target.value } : i
+                                ))}
+                                placeholder="Item name"
+                                className="font-medium text-sm h-8"
+                              />
+                              <Input
+                                value={item.description}
+                                onChange={(e) => setItems(items.map(i =>
+                                  i.id === item.id ? { ...i, description: e.target.value } : i
+                                ))}
+                                placeholder="Description"
+                                className="text-sm h-8"
+                              />
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>

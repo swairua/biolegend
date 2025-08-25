@@ -1,8 +1,10 @@
 import { QuickAuditRunner } from '@/components/QuickAuditRunner';
+import { CreditNoteSchemaTest } from '@/components/debug/CreditNoteSchemaTest';
+import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/ForceCreditNoteCorrectMigration';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Database, 
+import {
+  Database,
   FileText,
   CheckCircle
 } from 'lucide-react';
@@ -23,6 +25,12 @@ export default function AuditPage() {
         </Badge>
       </div>
 
+      {/* Credit Note Schema Verification - Critical for recent fixes */}
+      <CreditNoteSchemaTest />
+
+      {/* Force Correct Credit Note Migration */}
+      <ForceCreditNoteCorrectMigration />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <QuickAuditRunner />
@@ -40,6 +48,9 @@ export default function AuditPage() {
               <div className="text-sm space-y-2">
                 <div className="font-medium">Critical Columns:</div>
                 <div className="text-muted-foreground text-xs space-y-1">
+                  <div>• credit_note_items.tax_percentage</div>
+                  <div>• credit_note_items.tax_inclusive</div>
+                  <div>• credit_note_items.tax_setting_id</div>
                   <div>• lpo_items.unit_of_measure</div>
                   <div>• delivery_note_items.unit_of_measure</div>
                   <div>• invoices.lpo_number</div>

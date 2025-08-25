@@ -46,6 +46,7 @@ import { ViewCreditNoteModal } from '@/components/credit-notes/ViewCreditNoteMod
 import { EditCreditNoteModal } from '@/components/credit-notes/EditCreditNoteModal';
 import { CreditNotesSetupGuide } from '@/components/credit-notes/CreditNotesSetupGuide';
 import { CreditNoteRelationshipFix } from '@/components/credit-notes/CreditNoteRelationshipFix';
+import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/ForceCreditNoteCorrectMigration';
 import { useCreditNotePDFDownload } from '@/hooks/useCreditNotePDF';
 import type { CreditNote } from '@/hooks/useCreditNotes';
 
@@ -186,10 +187,17 @@ export default function CreditNotes() {
             <p className="text-muted-foreground">Manage customer credit notes and refunds</p>
           </div>
         </div>
+
+        {/* Show force migration for potential schema issues */}
+        <ForceCreditNoteCorrectMigration />
+
         <Card className="shadow-card">
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <p className="text-destructive">Error loading credit notes: {error.message}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                If the error persists, try the migration above to fix schema issues.
+              </p>
               <Button
                 variant="outline"
                 onClick={() => window.location.reload()}
