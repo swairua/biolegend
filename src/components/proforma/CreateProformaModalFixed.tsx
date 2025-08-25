@@ -66,7 +66,6 @@ export const CreateProformaModalFixed = ({
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
   const [tablesStatus, setTablesStatus] = useState<'checking' | 'ready' | 'missing' | 'error'>('checking');
-  const [functionError, setFunctionError] = useState<string>('');
 
   const { data: customers } = useCustomers(open ? companyId : undefined);
   const { data: products } = useProducts(open ? companyId : undefined);
@@ -329,18 +328,6 @@ export const CreateProformaModalFixed = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Error Notification */}
-          {functionError && (
-            <ProformaErrorNotification
-              error={functionError}
-              onDismiss={() => setFunctionError('')}
-              onFixSuccess={(number) => {
-                setProformaNumber(number);
-                setFunctionError('');
-                toast.success(`Proforma function fixed! Number: ${number}`);
-              }}
-            />
-          )}
 
           {/* Header Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
