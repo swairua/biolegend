@@ -173,64 +173,109 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [fetchProfile, updateLastLogin]);
 
-  // Initialize auth state with improved error handling
+  // Initialize auth state with improved error handling and timeout
   useEffect(() => {
     if (initializingRef.current) return;
-    
+
     initializingRef.current = true;
     mountedRef.current = true;
 
     const initializeAuthState = async () => {
-      try {
-        console.log('Initializing auth state...');
-        
-        // Use the helper function for initialization
-        const { session: initialSession, error } = await initializeAuth();
-        
-        if (error) {
-          console.error('Error during auth initialization:', error);
-          if (mountedRef.current) {
-            setLoading(false);
-            setInitialized(true);
-          }
-          return;
-        }
+      const initStartTime = Date.now();
+      const INIT_TIMEOUT = 10000; // 10 second timeout
 
-        if (initialSession?.user && mountedRef.current) {
-          console.log('Found valid session, fetching profile...');
-          const userProfile = await fetchProfile(initialSession.user.id);
-          
-          if (mountedRef.current) {
+      try {
+        console.log('🚀 Initializing auth state...');
+
+        // Create a timeout promise
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Auth initialization timeout')), INIT_TIMEOUT);
+        });
+
+        // Race the initialization against the timeout
+        const initPromise = (async () => {
+          // Use the helper function for initialization
+          const { session: initialSession, error } = await initializeAuth();
+
+          if (error) {
+            console.error('❌ Error during auth initialization:', error);
+            return { session: null, error };
+          }
+
+          if (initialSession?.user && mountedRef.current) {
+            console.log('✅ Found valid session, fetching profile...');
+
+            // Add timeout to profile fetching as well
+            const profilePromise = fetchProfile(initialSession.user.id);
+            const profileTimeoutPromise = new Promise<UserProfile | null>((_, reject) => {
+              setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+            });
+
+            let userProfile: UserProfile | null = null;
+            try {
+              userProfile = await Promise.race([profilePromise, profileTimeoutPromise]);
+            } catch (profileError) {
+              console.warn('⚠️ Profile fetch failed or timed out:', profileError);
+              // Continue without profile - we still have a valid session
+            }
+
+            return { session: initialSession, profile: userProfile, error: null };
+          } else {
+            console.log('ℹ️ No valid session found');
+            return { session: null, profile: null, error: null };
+          }
+        })();
+
+        // Wait for either initialization or timeout
+        const result = await Promise.race([initPromise, timeoutPromise]);
+
+        if (mountedRef.current && typeof result === 'object' && result !== null) {
+          const { session: initialSession, profile: userProfile } = result as any;
+
+          if (initialSession?.user) {
             setSession(initialSession);
             setUser(initialSession.user);
             setProfile(userProfile);
-            
-            // Update last login silently
+
+            // Update last login silently (don't await)
             if (userProfile) {
               updateLastLogin(initialSession.user.id).catch(console.error);
             }
+
+            console.log('✅ Auth initialization completed successfully');
           }
-        } else {
-          console.log('No valid session found');
         }
+
       } catch (error) {
-        console.error('Error initializing auth:', error);
-        
-        // Handle invalid token errors during initialization
-        if (error && typeof error === 'object' && 'message' in error) {
+        const initDuration = Date.now() - initStartTime;
+        console.error('❌ Error initializing auth (took', initDuration + 'ms):', error);
+
+        // Handle different types of errors
+        if (error instanceof Error && error.message.includes('timeout')) {
+          console.warn('⏰ Auth initialization timed out - app will continue without authentication');
+          toast.warning('Authentication check timed out. You may need to sign in again.');
+        } else if (error && typeof error === 'object' && 'message' in error) {
           const errorMessage = (error as any).message;
-          if (errorMessage?.includes('Invalid Refresh Token') || 
+          if (errorMessage?.includes('Invalid Refresh Token') ||
               errorMessage?.includes('Refresh Token Not Found')) {
-            console.warn('Clearing invalid tokens during initialization');
+            console.warn('🧹 Clearing invalid tokens during initialization');
             clearAuthTokens();
             toast.info('Authentication tokens were cleared. Please sign in again.');
           }
+        }
+
+        // Ensure we always complete initialization even on error
+        if (mountedRef.current) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
         }
       } finally {
         if (mountedRef.current) {
           setLoading(false);
           setInitialized(true);
           initializingRef.current = false;
+          console.log('🏁 Auth initialization finalized');
         }
       }
     };
