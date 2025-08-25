@@ -141,27 +141,60 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       resetForm();
     } catch (error) {
       console.error('Error recording payment:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
 
-      // Provide more specific error messages
       let errorMessage = 'Failed to record payment. Please try again.';
 
-      if (error instanceof Error) {
-        if (error.message.includes('payment_method')) {
-          errorMessage = 'Invalid payment method. Please select a valid payment method.';
-        } else if (error.message.includes('company_id')) {
-          errorMessage = 'Company information missing. Please refresh and try again.';
-        } else if (error.message.includes('customer_id')) {
-          errorMessage = 'Customer information missing. Please select a valid invoice.';
-        } else if (error.message.includes('amount')) {
-          errorMessage = 'Invalid payment amount. Please check the amount and try again.';
-        } else if (error.message.toLowerCase().includes('duplicate')) {
-          errorMessage = 'Payment number already exists. Please try again.';
-        } else {
-          errorMessage = `Payment failed: ${error.message}`;
+      try {
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (error && typeof error === 'object') {
+          const supabaseError = error as any;
+
+          // Check for specific Supabase error patterns
+          if (supabaseError.message) {
+            errorMessage = supabaseError.message;
+          } else if (supabaseError.details) {
+            errorMessage = supabaseError.details;
+          } else if (supabaseError.hint) {
+            errorMessage = supabaseError.hint;
+          } else if (supabaseError.code) {
+            // Handle specific error codes
+            switch (supabaseError.code) {
+              case '23505':
+                errorMessage = 'Payment number already exists. Please try again.';
+                break;
+              case '23503':
+                errorMessage = 'Invalid reference. Please check your input and try again.';
+                break;
+              case '23514':
+                errorMessage = 'Invalid payment data. Please check all fields and try again.';
+                break;
+              case '42703':
+                errorMessage = 'Database column is missing. Please contact support.';
+                break;
+              case '42P01':
+                errorMessage = 'Payment table not found. Please check your database setup.';
+                break;
+              default:
+                errorMessage = `Database error (${supabaseError.code}): ${supabaseError.message || 'Unknown error'}`;
+            }
+          } else {
+            // Fallback for other object types
+            errorMessage = error.toString() !== '[object Object]' ? error.toString() : 'Unknown payment error occurred';
+          }
+        } else if (typeof error === 'string') {
+          errorMessage = error;
         }
+      } catch (parseError) {
+        console.error('Error parsing payment error:', parseError);
+        errorMessage = 'Failed to record payment. Please check the console for details.';
       }
 
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        duration: 6000,
+        description: 'Check the console for technical details'
+      });
     } finally {
       setIsSubmitting(false);
     }
