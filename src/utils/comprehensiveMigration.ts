@@ -498,9 +498,7 @@ CREATE INDEX IF NOT EXISTS idx_lpos_status ON lpos(status);
 CREATE INDEX IF NOT EXISTS idx_lpos_lpo_date ON lpos(lpo_date);
 CREATE INDEX IF NOT EXISTS idx_lpo_items_lpo_id ON lpo_items(lpo_id);
 CREATE INDEX IF NOT EXISTS idx_lpo_items_product_id ON lpo_items(product_id);
-CREATE INDEX IF NOT EXISTS idx_credit_notes_company_id ON credit_notes(company_id);
-CREATE INDEX IF NOT EXISTS idx_credit_notes_customer_id ON credit_notes(customer_id);
-CREATE INDEX IF NOT EXISTS idx_credit_note_items_credit_note_id ON credit_note_items(credit_note_id);
+-- Credit note indexes removed - handled by dedicated migration
 
 -- 8. Create utility functions
 CREATE OR REPLACE FUNCTION update_updated_at_column()
