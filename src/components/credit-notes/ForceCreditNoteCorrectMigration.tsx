@@ -5,13 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Database, 
-  CheckCircle, 
-  AlertTriangle, 
+import { executeSQL, formatSQLForManualExecution } from '@/utils/execSQL';
+import {
+  Database,
+  CheckCircle,
+  AlertTriangle,
   Zap,
   FileCode,
-  ArrowRight
+  ArrowRight,
+  Copy,
+  ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
 
