@@ -17,7 +17,7 @@ export function Layout({ children }: LayoutProps) {
   console.log('🔍 Layout render - loading:', loading, 'isAuthenticated:', isAuthenticated);
 
   // Routes that don't require authentication
-  const publicRoutes = ['/auth-test', '/manual-setup', '/database-fix-page', '/auto-fix', '/audit', '/auto-payment-sync'];
+  const publicRoutes = ['/auth-test', '/manual-setup', '/database-fix-page', '/auto-fix', '/audit', '/auto-payment-sync', '/payment-sync'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
   // Show simple login for non-authenticated users (only when not loading and not on public routes)
