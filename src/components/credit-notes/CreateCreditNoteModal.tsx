@@ -285,13 +285,14 @@ export function CreateCreditNoteModal({
       };
 
       const creditNoteItems = items.map((item, index) => ({
-        product_id: item.product_id,
+        product_id: item.product_id || null,
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
         tax_percentage: item.tax_percentage,
         tax_amount: item.tax_amount,
         tax_inclusive: item.tax_inclusive,
+        tax_setting_id: item.tax_percentage > 0 ? defaultTax?.id || null : null,
         line_total: item.line_total,
         sort_order: index
       }));
