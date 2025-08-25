@@ -37,8 +37,7 @@ import {
   Calendar,
   Receipt
 } from 'lucide-react';
-import { useCompanies } from '@/hooks/useDatabase';
-import { useInvoicesFixed } from '@/hooks/useInvoicesFixed';
+import { useInvoices, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { EditInvoiceModal } from '@/components/invoices/EditInvoiceModal';
@@ -99,7 +98,7 @@ export default function Invoices() {
   const currentCompany = companies?.[0];
   
   // Use the fixed invoices hook
-  const { data: invoices, isLoading, error, refetch } = useInvoicesFixed(currentCompany?.id);
+  const { data: invoices, isLoading, error, refetch } = useInvoices(currentCompany?.id);
 
   // Filter and search logic
   const filteredInvoices = invoices?.filter(invoice => {
