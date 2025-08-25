@@ -193,7 +193,6 @@ export const CreateProformaModalFixed = ({
       discount_amount: 0,
       tax_percentage: defaultTaxRate,
       tax_amount: 0,
-      tax_inclusive: false,
       line_total: 0,
     };
 
@@ -215,15 +214,7 @@ export const CreateProformaModalFixed = ({
       if (item.id === id) {
         let updatedItem = { ...item, [field]: value };
 
-        // Special handling for tax_inclusive checkbox
-        if (field === 'tax_inclusive') {
-          if (value && item.tax_percentage === 0) {
-            updatedItem.tax_percentage = defaultTaxRate;
-          }
-          if (!value) {
-            updatedItem.tax_percentage = 0;
-          }
-        }
+        // No special handling needed since prices are always tax-exclusive
 
         // Recalculate using proper tax utility
         const calculatedItem = calculateItemTax(updatedItem);
@@ -246,7 +237,7 @@ export const CreateProformaModalFixed = ({
       quantity: item.quantity,
       unit_price: item.unit_price,
       tax_percentage: item.tax_percentage,
-      tax_inclusive: item.tax_inclusive,
+      tax_inclusive: false, // Prices are always tax-exclusive
       discount_percentage: item.discount_percentage,
       discount_amount: item.discount_amount,
     }));
@@ -526,7 +517,6 @@ export const CreateProformaModalFixed = ({
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Tax %</TableHead>
-                      <TableHead>Tax Incl.</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
@@ -572,12 +562,6 @@ export const CreateProformaModalFixed = ({
                             max="100"
                             step="0.01"
                             className="w-20"
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Checkbox
-                            checked={item.tax_inclusive}
-                            onCheckedChange={(checked) => updateItem(item.id!, 'tax_inclusive', checked)}
                           />
                         </TableCell>
                         <TableCell>{formatCurrency(item.line_total)}</TableCell>
