@@ -486,38 +486,9 @@ CREATE TABLE IF NOT EXISTS lpo_items (
     sort_order INTEGER DEFAULT 0
 );
 
--- 5. Create credit notes table
-CREATE TABLE IF NOT EXISTS credit_notes (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    company_id UUID REFERENCES companies(id) ON DELETE CASCADE,
-    customer_id UUID REFERENCES customers(id) ON DELETE CASCADE,
-    credit_note_number VARCHAR(100) UNIQUE NOT NULL,
-    credit_note_date DATE NOT NULL DEFAULT CURRENT_DATE,
-    original_invoice_id UUID REFERENCES invoices(id),
-    reason TEXT,
-    subtotal DECIMAL(15,2) DEFAULT 0,
-    tax_amount DECIMAL(15,2) DEFAULT 0,
-    total_amount DECIMAL(15,2) DEFAULT 0,
-    status VARCHAR(50) DEFAULT 'draft',
-    notes TEXT,
-    created_by UUID REFERENCES users(id),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- 6. Create credit note items table
-CREATE TABLE IF NOT EXISTS credit_note_items (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    credit_note_id UUID REFERENCES credit_notes(id) ON DELETE CASCADE,
-    product_id UUID REFERENCES products(id),
-    description TEXT NOT NULL,
-    quantity DECIMAL(10,3) NOT NULL,
-    unit_price DECIMAL(15,2) NOT NULL,
-    tax_rate DECIMAL(5,2) DEFAULT 0,
-    tax_amount DECIMAL(15,2) DEFAULT 0,
-    line_total DECIMAL(15,2) NOT NULL,
-    sort_order INTEGER DEFAULT 0
-);
+-- 5. Credit note tables removed from comprehensive migration
+-- Use dedicated creditNoteMigration.sql or ForceCreditNoteMigration component instead
+-- This prevents schema conflicts with the correct implementation
 
 -- 7. Create indexes
 CREATE INDEX IF NOT EXISTS idx_lpos_company_id ON lpos(company_id);
