@@ -20,10 +20,9 @@ import {
 } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Plus, 
-  Trash2, 
+import {
+  Plus,
+  Trash2,
   Search,
   Calculator,
   Receipt,
@@ -32,8 +31,7 @@ import {
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
-import { autoFixImproved } from '@/utils/improvedProformaFix';
-import { ProformaErrorSolution } from '@/components/fixes/ProformaErrorSolution';
+import { generateProformaNumberQuick, generateInstantProformaNumber } from '@/utils/lightweightProformaNumber';
 import { toast } from 'sonner';
 
 interface CreateProformaModalOptimizedProps {
@@ -61,22 +59,36 @@ export const CreateProformaModalOptimized = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
-  const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
-  const [functionError, setFunctionError] = useState<string>('');
-  const [createError, setCreateError] = useState<string>('');
+  const [createError, setCreateError] = useState('');
+  const [functionError, setFunctionError] = useState('');
 
-  const { data: customers, isLoading: customersLoading } = useCustomers(companyId);
-  const { data: products, isLoading: productsLoading } = useProducts(companyId);
-  const { data: taxSettings } = useTaxSettings(companyId);
+  const { data: customers, isLoading: customersLoading } = useCustomers(open ? companyId : undefined);
+  const { data: products, isLoading: productsLoading } = useProducts(open ? companyId : undefined);
+  const { data: taxSettings } = useTaxSettings(open ? companyId : undefined);
   const createProforma = useCreateProforma();
 
   const defaultTaxRate = taxSettings?.find(t => t.is_default)?.rate || 0;
 
-  // Generate proforma number when modal opens
+  // Generate proforma number when modal opens (fast version)
   useEffect(() => {
-    if (open && !proformaNumber && !isGeneratingNumber) {
-      generateProformaNumber();
-      
+    if (open && !proformaNumber) {
+      // Generate instant number for immediate UI feedback
+      const instantNumber = generateInstantProformaNumber();
+      setProformaNumber(instantNumber);
+
+      // Try to get better number in background (non-blocking)
+      generateProformaNumberQuick(companyId)
+        .then(betterNumber => {
+          if (betterNumber !== instantNumber) {
+            setProformaNumber(betterNumber);
+            console.log('✅ Updated with database-generated number:', betterNumber);
+          }
+        })
+        .catch(error => {
+          console.log('⚡ Using instant number (database failed):', instantNumber);
+          // Keep the instant number - no error shown to user
+        });
+
       // Set default valid until date (30 days from today)
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + 30);
@@ -85,44 +97,9 @@ export const CreateProformaModalOptimized = ({
         valid_until: validUntil.toISOString().split('T')[0]
       }));
     }
-  }, [open, proformaNumber, isGeneratingNumber]);
+  }, [open, proformaNumber, companyId]);
 
-  const generateProformaNumber = async () => {
-    setIsGeneratingNumber(true);
-    setFunctionError('');
-
-    try {
-      console.log('🔢 Generating proforma number...');
-
-      const result = await autoFixImproved();
-      setProformaNumber(result.number);
-
-      if (result.success) {
-        console.log('✅ Proforma number generated:', result.number);
-      } else {
-        console.warn('⚠️ Using fallback number:', result.number);
-        setFunctionError(result.error || 'Function creation failed');
-        toast.warning(`Using fallback number: ${result.number}`);
-      }
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('❌ Proforma number generation failed:', error);
-
-      setFunctionError(errorMessage);
-
-      // Generate fallback number
-      const timestamp = Date.now().toString().slice(-6);
-      const year = new Date().getFullYear();
-      const fallbackNumber = `PF-${year}-${timestamp}`;
-      setProformaNumber(fallbackNumber);
-
-      toast.warning(`Using fallback number: ${fallbackNumber}`);
-
-    } finally {
-      setIsGeneratingNumber(false);
-    }
-  };
+  // Removed heavy generateProformaNumber function - now using lightweight approach
 
   const filteredProducts = products?.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -141,7 +118,6 @@ export const CreateProformaModalOptimized = ({
       discount_amount: 0,
       tax_percentage: defaultTaxRate,
       tax_amount: 0,
-      tax_inclusive: false,
       line_total: 0,
     };
 
@@ -162,14 +138,7 @@ export const CreateProformaModalOptimized = ({
       if (item.id === id) {
         let updatedItem = { ...item, [field]: value };
 
-        if (field === 'tax_inclusive') {
-          if (value && item.tax_percentage === 0) {
-            updatedItem.tax_percentage = defaultTaxRate;
-          }
-          if (!value) {
-            updatedItem.tax_percentage = 0;
-          }
-        }
+        // No special handling needed since prices are always tax-exclusive
 
         const calculatedItem = calculateItemTax(updatedItem);
         return {
@@ -191,7 +160,7 @@ export const CreateProformaModalOptimized = ({
       quantity: item.quantity,
       unit_price: item.unit_price,
       tax_percentage: item.tax_percentage,
-      tax_inclusive: item.tax_inclusive,
+      tax_inclusive: false, // Prices are always tax-exclusive
       discount_percentage: item.discount_percentage,
       discount_amount: item.discount_amount,
     }));
@@ -265,7 +234,7 @@ export const CreateProformaModalOptimized = ({
   };
 
   const totals = calculateTotals();
-  const isLoading = customersLoading || productsLoading || isGeneratingNumber;
+  const isLoading = open && (customersLoading || productsLoading);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -289,20 +258,13 @@ export const CreateProformaModalOptimized = ({
 
         {!isLoading && (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error Notifications */}
-            {(functionError || createError) && (
-              <ProformaErrorSolution
-                error={functionError || createError}
-                onResolved={() => {
-                  setFunctionError('');
-                  setCreateError('');
-                  // Regenerate number if function was fixed
-                  if (functionError && !createError) {
-                    generateProformaNumber();
-                  }
-                }}
-                compact={true}
-              />
+
+            {/* Error Display */}
+            {(createError || functionError) && (
+              <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
+                <p className="font-medium">Error creating proforma:</p>
+                <p>{createError || functionError}</p>
+              </div>
             )}
             
             {/* Header Information */}
@@ -316,9 +278,6 @@ export const CreateProformaModalOptimized = ({
                     disabled
                     className="bg-muted"
                   />
-                  {isGeneratingNumber && (
-                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
-                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -442,7 +401,7 @@ export const CreateProformaModalOptimized = ({
                         <TableHead>Qty</TableHead>
                         <TableHead>Unit Price</TableHead>
                         <TableHead>Tax %</TableHead>
-                        <TableHead>Tax Incl.</TableHead>
+                        <TableHead>Tax Amount</TableHead>
                         <TableHead>Total</TableHead>
                         <TableHead></TableHead>
                       </TableRow>
@@ -490,12 +449,7 @@ export const CreateProformaModalOptimized = ({
                               className="w-20"
                             />
                           </TableCell>
-                          <TableCell>
-                            <Checkbox
-                              checked={item.tax_inclusive}
-                              onCheckedChange={(checked) => updateItem(item.id!, 'tax_inclusive', checked)}
-                            />
-                          </TableCell>
+                          <TableCell>{formatCurrency(item.tax_amount)}</TableCell>
                           <TableCell>{formatCurrency(item.line_total)}</TableCell>
                           <TableCell>
                             <Button
@@ -563,7 +517,7 @@ export const CreateProformaModalOptimized = ({
               </Button>
               <Button 
                 type="submit" 
-                disabled={!formData.customer_id || items.length === 0 || createProforma.isPending || isGeneratingNumber}
+                disabled={!formData.customer_id || items.length === 0 || createProforma.isPending}
               >
                 {createProforma.isPending ? (
                   <>

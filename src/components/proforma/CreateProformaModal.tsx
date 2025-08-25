@@ -29,8 +29,10 @@ import {
   Calculator,
   Receipt
 } from 'lucide-react';
-import { useCustomers, useProducts, useGenerateDocumentNumber, useTaxSettings } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProformaWithItems } from '@/hooks/useQuotationItems';
+import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
+import { generateInstantProformaNumber } from '@/utils/lightweightProformaNumber';
 import { toast } from 'sonner';
 
 interface ProformaItem {
@@ -72,37 +74,18 @@ export const CreateProformaModal = ({
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
 
-  const { data: customers } = useCustomers(companyId);
-  const { data: products } = useProducts(companyId);
-  const { data: taxSettings } = useTaxSettings(companyId);
-  const generateDocumentNumber = useGenerateDocumentNumber();
+  const { data: customers } = useCustomers(open ? companyId : undefined);
+  const { data: products } = useProducts(open ? companyId : undefined);
+  const { data: taxSettings } = useTaxSettings(open ? companyId : undefined);
   const createProformaWithItems = useCreateProformaWithItems();
 
   const defaultTaxRate = taxSettings?.find(t => t.is_default)?.rate || 0;
 
   useEffect(() => {
     if (open) {
-      // Generate proforma number
-      generateDocumentNumber.mutate(
-        { companyId, type: 'proforma' },
-        {
-          onSuccess: (number) => {
-            setProformaNumber(`PF-${number}`);
-          },
-          onError: (error) => {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            console.warn('Proforma number generation failed, using fallback:', errorMessage);
-
-            // Generate a fallback number using timestamp and random number
-            const timestamp = Date.now().toString().slice(-6);
-            const year = new Date().getFullYear();
-            const fallbackNumber = `PF-${year}-${timestamp}`;
-            setProformaNumber(fallbackNumber);
-
-            console.info('Using fallback proforma number:', fallbackNumber);
-          }
-        }
-      );
+      // Generate proforma number instantly (fast approach)
+      const quickNumber = generateInstantProformaNumber();
+      setProformaNumber(quickNumber);
 
       // Set default valid until date (30 days from today)
       const validUntil = new Date();
@@ -112,7 +95,7 @@ export const CreateProformaModal = ({
         valid_until: validUntil.toISOString().split('T')[0]
       }));
     }
-  }, [open, generateDocumentNumber, companyId]);
+  }, [open]);
 
   const filteredProducts = products?.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -145,17 +128,7 @@ export const CreateProformaModal = ({
       if (item.id === id) {
         let updatedItem = { ...item, [field]: value };
 
-        // Special handling for tax_inclusive checkbox
-        if (field === 'tax_inclusive') {
-          // When checking VAT Inclusive, auto-apply default tax rate if no VAT is set
-          if (value && item.tax_percentage === 0) {
-            updatedItem.tax_percentage = defaultTaxRate;
-          }
-          // When unchecking VAT Inclusive, reset VAT to 0
-          if (!value) {
-            updatedItem.tax_percentage = 0;
-          }
-        }
+        // No special handling needed since prices are always tax-exclusive
 
         return calculateItemTotals(updatedItem);
       }
@@ -164,25 +137,22 @@ export const CreateProformaModal = ({
   };
 
   const calculateItemTotals = (item: ProformaItem): ProformaItem => {
-    const baseAmount = item.quantity * item.unit_price;
+    // Use the proper tax calculation utility
+    const taxableItem: TaxableItem = {
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      tax_percentage: item.tax_percentage,
+      tax_inclusive: false, // Prices are always tax-exclusive
+      discount_percentage: 0,
+      discount_amount: 0,
+    };
 
-    if (item.tax_percentage === 0 || !item.tax_inclusive) {
-      // No tax or tax checkbox unchecked
-      return {
-        ...item,
-        tax_amount: 0,
-        line_total: parseFloat(baseAmount.toFixed(2))
-      };
-    }
-
-    // Tax checkbox checked: add tax to the base amount
-    const taxAmount = baseAmount * (item.tax_percentage / 100);
-    const lineTotal = baseAmount + taxAmount;
+    const calculatedItem = calculateItemTax(taxableItem);
 
     return {
       ...item,
-      tax_amount: parseFloat(taxAmount.toFixed(2)),
-      line_total: parseFloat(lineTotal.toFixed(2))
+      tax_amount: calculatedItem.tax_amount,
+      line_total: calculatedItem.line_total
     };
   };
 
@@ -191,18 +161,22 @@ export const CreateProformaModal = ({
   };
 
   const calculateTotals = () => {
-    // Unit prices are always tax-exclusive, so subtotal is always the base amount
-    const subtotal = items.reduce((sum, item) => {
-      return sum + (item.quantity * item.unit_price);
-    }, 0);
+    // Use the proper document totals calculation
+    const taxableItems: TaxableItem[] = items.map(item => ({
+      quantity: item.quantity,
+      unit_price: item.unit_price,
+      tax_percentage: item.tax_percentage,
+      tax_inclusive: false, // Prices are always tax-exclusive
+      discount_percentage: 0,
+      discount_amount: 0,
+    }));
 
-    const totalTax = items.reduce((sum, item) => sum + item.tax_amount, 0);
-    const total = items.reduce((sum, item) => sum + item.line_total, 0);
+    const totals = calculateDocumentTotals(taxableItems);
 
     return {
-      subtotal: parseFloat(subtotal.toFixed(2)),
-      totalTax: parseFloat(totalTax.toFixed(2)),
-      total: parseFloat(total.toFixed(2)),
+      subtotal: totals.subtotal,
+      totalTax: totals.tax_total,
+      total: totals.total_amount,
     };
   };
 
@@ -325,14 +299,6 @@ export const CreateProformaModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Error Notification */}
-          {createError && (
-            <ProformaErrorSolution
-              error={createError}
-              onResolved={() => setCreateError('')}
-              compact={true}
-            />
-          )}
 
           {/* Header Information */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -431,7 +397,7 @@ export const CreateProformaModal = ({
                             <div>
                               <p className="font-medium">{product.name}</p>
                               <p className="text-sm text-muted-foreground">
-                                {product.product_code} • ${product.selling_price}
+                                {product.product_code} • {formatCurrency(product.selling_price)}
                               </p>
                             </div>
                             <Button size="sm" variant="ghost">
@@ -466,7 +432,6 @@ export const CreateProformaModal = ({
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Tax %</TableHead>
-                      <TableHead>Tax Incl.</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
@@ -512,16 +477,9 @@ export const CreateProformaModal = ({
                             max="100"
                             step="0.01"
                             className="w-20"
-                            disabled={item.tax_inclusive}
                           />
                         </TableCell>
-                        <TableCell>
-                          <Checkbox
-                            checked={item.tax_inclusive}
-                            onCheckedChange={(checked) => updateItem(item.id, 'tax_inclusive', checked)}
-                          />
-                        </TableCell>
-                        <TableCell>${item.line_total.toFixed(2)}</TableCell>
+                        <TableCell>{formatCurrency(item.line_total)}</TableCell>
                         <TableCell>
                           <Button
                             type="button"
@@ -543,15 +501,15 @@ export const CreateProformaModal = ({
                 <div className="mt-6 space-y-2 max-w-sm ml-auto">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>${subtotal.toFixed(2)}</span>
+                    <span>{formatCurrency(subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax:</span>
-                    <span>${totalTax.toFixed(2)}</span>
+                    <span>{formatCurrency(totalTax)}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-lg border-t pt-2">
                     <span>Total:</span>
-                    <span>${total.toFixed(2)}</span>
+                    <span>{formatCurrency(total)}</span>
                   </div>
                 </div>
               )}

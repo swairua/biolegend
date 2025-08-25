@@ -15,7 +15,6 @@ export interface ProformaItem {
   discount_amount?: number;
   tax_percentage: number;
   tax_amount: number;
-  tax_inclusive: boolean;
   line_total: number;
 }
 
@@ -177,7 +176,7 @@ export const useCreateProforma = () => {
         quantity: item.quantity,
         unit_price: item.unit_price,
         tax_percentage: item.tax_percentage,
-        tax_inclusive: item.tax_inclusive,
+        tax_inclusive: false, // Prices are always tax-exclusive
         discount_percentage: item.discount_percentage,
         discount_amount: item.discount_amount,
       }));
@@ -217,7 +216,6 @@ export const useCreateProforma = () => {
           discount_amount: item.discount_amount || 0,
           tax_percentage: item.tax_percentage,
           tax_amount: item.tax_amount,
-          tax_inclusive: item.tax_inclusive,
           line_total: item.line_total,
         }));
 
@@ -270,7 +268,7 @@ export const useUpdateProforma = () => {
           quantity: item.quantity,
           unit_price: item.unit_price,
           tax_percentage: item.tax_percentage,
-          tax_inclusive: item.tax_inclusive,
+          tax_inclusive: false, // Prices are always tax-exclusive
           discount_percentage: item.discount_percentage,
           discount_amount: item.discount_amount,
         }));
@@ -326,7 +324,6 @@ export const useUpdateProforma = () => {
             discount_amount: item.discount_amount || 0,
             tax_percentage: item.tax_percentage,
             tax_amount: item.tax_amount,
-            tax_inclusive: item.tax_inclusive,
             line_total: item.line_total,
           }));
 
