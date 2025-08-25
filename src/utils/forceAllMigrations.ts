@@ -348,9 +348,7 @@ CREATE INDEX IF NOT EXISTS idx_lpos_status ON lpos(status);
 CREATE INDEX IF NOT EXISTS idx_lpos_lpo_date ON lpos(lpo_date);
 CREATE INDEX IF NOT EXISTS idx_lpo_items_lpo_id ON lpo_items(lpo_id);
 CREATE INDEX IF NOT EXISTS idx_lpo_items_product_id ON lpo_items(product_id);
-CREATE INDEX IF NOT EXISTS idx_credit_notes_company_id ON credit_notes(company_id);
-CREATE INDEX IF NOT EXISTS idx_credit_notes_customer_id ON credit_notes(customer_id);
-CREATE INDEX IF NOT EXISTS idx_credit_note_items_credit_note_id ON credit_note_items(credit_note_id);
+-- Credit note indexes removed - handled by dedicated migration
 CREATE INDEX IF NOT EXISTS idx_stock_movements_company_id ON stock_movements(company_id);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_product_id ON stock_movements(product_id);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_date ON stock_movements(movement_date);
