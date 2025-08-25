@@ -29,6 +29,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { parseErrorMessageWithCodes } from '@/utils/errorHelpers';
 import { useInvoices, useCreatePayment } from '@/hooks/useDatabase';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
 
@@ -143,53 +144,7 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       console.error('Error recording payment:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
 
-      let errorMessage = 'Failed to record payment. Please try again.';
-
-      try {
-        if (error instanceof Error) {
-          errorMessage = error.message;
-        } else if (error && typeof error === 'object') {
-          const supabaseError = error as any;
-
-          // Check for specific Supabase error patterns
-          if (supabaseError.message) {
-            errorMessage = supabaseError.message;
-          } else if (supabaseError.details) {
-            errorMessage = supabaseError.details;
-          } else if (supabaseError.hint) {
-            errorMessage = supabaseError.hint;
-          } else if (supabaseError.code) {
-            // Handle specific error codes
-            switch (supabaseError.code) {
-              case '23505':
-                errorMessage = 'Payment number already exists. Please try again.';
-                break;
-              case '23503':
-                errorMessage = 'Invalid reference. Please check your input and try again.';
-                break;
-              case '23514':
-                errorMessage = 'Invalid payment data. Please check all fields and try again.';
-                break;
-              case '42703':
-                errorMessage = 'Database column is missing. Please contact support.';
-                break;
-              case '42P01':
-                errorMessage = 'Payment table not found. Please check your database setup.';
-                break;
-              default:
-                errorMessage = `Database error (${supabaseError.code}): ${supabaseError.message || 'Unknown error'}`;
-            }
-          } else {
-            // Fallback for other object types
-            errorMessage = error.toString() !== '[object Object]' ? error.toString() : 'Unknown payment error occurred';
-          }
-        } else if (typeof error === 'string') {
-          errorMessage = error;
-        }
-      } catch (parseError) {
-        console.error('Error parsing payment error:', parseError);
-        errorMessage = 'Failed to record payment. Please check the console for details.';
-      }
+      const errorMessage = parseErrorMessageWithCodes(error, 'payment');
 
       toast.error(errorMessage, {
         duration: 6000,
