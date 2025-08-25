@@ -6,9 +6,19 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle, AlertTriangle, Copy, Database, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 
-const PAYMENT_SYNC_SQL = `-- Manual database function creation for payment-invoice synchronization
+const PAYMENT_SYNC_SQL = `-- Manual database setup for payment-invoice synchronization
 -- Run this SQL in your database admin panel (Supabase SQL Editor, pgAdmin, etc.)
 
+-- 1. Ensure payment_allocations table exists
+CREATE TABLE IF NOT EXISTS payment_allocations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    payment_id UUID REFERENCES payments(id) ON DELETE CASCADE,
+    invoice_id UUID REFERENCES invoices(id) ON DELETE CASCADE,
+    amount_allocated DECIMAL(15,2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 2. Create database function for payment recording
 CREATE OR REPLACE FUNCTION record_payment_with_allocation(
     p_company_id UUID,
     p_customer_id UUID,

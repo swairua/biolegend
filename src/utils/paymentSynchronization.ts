@@ -27,18 +27,45 @@ export interface SyncResult {
  */
 export async function analyzePaymentSyncStatus(): Promise<PaymentSyncAnalysis> {
   try {
-    // Get all payments with their allocations
-    const { data: payments, error: paymentsError } = await supabase
-      .from('payments')
-      .select(`
-        *,
-        payment_allocations(
-          id,
-          invoice_id,
-          amount_allocated
-        )
-      `)
-      .order('created_at', { ascending: false });
+    // First check if payment_allocations table exists
+    const { data: allocationsTest, error: allocationsTestError } = await supabase
+      .from('payment_allocations')
+      .select('id')
+      .limit(1);
+
+    let payments: any[] = [];
+    let paymentsError: any = null;
+
+    // If payment_allocations table exists, use the join query
+    if (!allocationsTestError) {
+      const result = await supabase
+        .from('payments')
+        .select(`
+          *,
+          payment_allocations(
+            id,
+            invoice_id,
+            amount_allocated
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      payments = result.data || [];
+      paymentsError = result.error;
+    } else {
+      // If payment_allocations table doesn't exist, just get payments
+      console.warn('payment_allocations table not found, treating all payments as unallocated');
+      const result = await supabase
+        .from('payments')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      payments = (result.data || []).map(payment => ({
+        ...payment,
+        payment_allocations: []
+      }));
+      paymentsError = result.error;
+    }
 
     if (paymentsError) throw paymentsError;
 
