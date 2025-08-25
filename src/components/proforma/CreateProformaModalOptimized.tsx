@@ -269,9 +269,6 @@ export const CreateProformaModalOptimized = ({
                     disabled
                     className="bg-muted"
                   />
-                  {isGeneratingNumber && (
-                    <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin" />
-                  )}
                 </div>
               </div>
               <div className="space-y-2">
@@ -511,7 +508,7 @@ export const CreateProformaModalOptimized = ({
               </Button>
               <Button 
                 type="submit" 
-                disabled={!formData.customer_id || items.length === 0 || createProforma.isPending || isGeneratingNumber}
+                disabled={!formData.customer_id || items.length === 0 || createProforma.isPending}
               >
                 {createProforma.isPending ? (
                   <>
