@@ -592,8 +592,31 @@ export function CreateCreditNoteModal({
                     <TableRow key={item.id}>
                       <TableCell>
                         <div>
-                          <div className="font-medium">{item.product_name}</div>
-                          <div className="text-sm text-muted-foreground">{item.description}</div>
+                          {item.product_id ? (
+                            <div>
+                              <div className="font-medium">{item.product_name}</div>
+                              <div className="text-sm text-muted-foreground">{item.description}</div>
+                            </div>
+                          ) : (
+                            <div className="space-y-1">
+                              <Input
+                                value={item.product_name}
+                                onChange={(e) => setItems(items.map(i =>
+                                  i.id === item.id ? { ...i, product_name: e.target.value } : i
+                                ))}
+                                placeholder="Item name"
+                                className="font-medium text-sm h-8"
+                              />
+                              <Input
+                                value={item.description}
+                                onChange={(e) => setItems(items.map(i =>
+                                  i.id === item.id ? { ...i, description: e.target.value } : i
+                                ))}
+                                placeholder="Description"
+                                className="text-sm h-8"
+                              />
+                            </div>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
