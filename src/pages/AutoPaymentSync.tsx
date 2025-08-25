@@ -5,6 +5,8 @@ import { ArrowLeft, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AutoPaymentSync } from '@/components/AutoPaymentSync';
 
+// This is a setup page that should work without authentication
+
 export default function AutoPaymentSyncPage() {
   const navigate = useNavigate();
 
