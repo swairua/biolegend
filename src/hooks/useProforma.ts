@@ -376,15 +376,51 @@ export const useGenerateProformaNumber = () => {
         });
 
         if (error) {
-          // Extract meaningful error message
-          const errorMessage = error.message || error.details || error.hint || JSON.stringify(error);
+          // Extract meaningful error message from Supabase error object
+          let errorMessage = 'Unknown database error';
+
+          if (typeof error === 'string') {
+            errorMessage = error;
+          } else if (error && typeof error === 'object') {
+            // Handle different Supabase error formats
+            if (error.message) {
+              errorMessage = error.message;
+            } else if (error.details) {
+              errorMessage = error.details;
+            } else if (error.hint) {
+              errorMessage = error.hint;
+            } else if (error.code) {
+              errorMessage = `Database error (code: ${error.code})`;
+            } else {
+              // Try to get meaningful info from error object
+              try {
+                const errorKeys = Object.keys(error);
+                if (errorKeys.length > 0) {
+                  errorMessage = JSON.stringify(error, null, 2);
+                }
+              } catch {
+                errorMessage = String(error);
+              }
+            }
+          }
+
           console.error('Error generating proforma number:', errorMessage);
 
           // Check if it's a function not found error
           if (errorMessage.includes('function generate_proforma_number') ||
-              errorMessage.includes('does not exist')) {
+              errorMessage.includes('does not exist') ||
+              errorMessage.includes('is not defined') ||
+              errorMessage.includes('cannot find')) {
             console.warn('generate_proforma_number function not found, using fallback');
             throw new Error('Database function not found. Using fallback number generation.');
+          }
+
+          // Check for permission errors
+          if (errorMessage.includes('permission denied') ||
+              errorMessage.includes('access denied') ||
+              errorMessage.includes('insufficient privilege')) {
+            console.warn('Permission denied for proforma number generation, using fallback');
+            throw new Error('Permission denied for database function. Using fallback number generation.');
           }
 
           throw new Error(`Failed to generate proforma number: ${errorMessage}`);
