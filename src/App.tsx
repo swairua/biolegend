@@ -26,6 +26,7 @@ import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
 import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
+import AutoPaymentSyncPage from "./pages/AutoPaymentSync";
 import DatabaseFixPage from "./pages/DatabaseFixPage";
 import AutoFixPage from "./pages/AutoFixPage";
 import AuditPage from "./pages/AuditPage";
@@ -267,6 +268,9 @@ const App = () => {
 
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
+
+          {/* Auto Payment Sync - No protection needed for setup */}
+          <Route path="/auto-payment-sync" element={<AutoPaymentSyncPage />} />
 
           {/* Database and Forms Audit */}
           <Route path="/audit" element={<AuditPage />} />
