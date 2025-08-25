@@ -59,6 +59,8 @@ export const CreateProformaModalOptimized = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [functionError, setFunctionError] = useState('');
 
   const { data: customers, isLoading: customersLoading } = useCustomers(open ? companyId : undefined);
   const { data: products, isLoading: productsLoading } = useProducts(open ? companyId : undefined);
