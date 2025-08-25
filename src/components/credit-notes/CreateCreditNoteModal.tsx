@@ -151,10 +151,16 @@ export function CreateCreditNoteModal({
     let taxAmount = 0;
     let lineTotal = 0;
 
-    if (tax === 0 || !inclusive) {
+    if (tax === 0) {
+      // No tax
       lineTotal = baseAmount;
       taxAmount = 0;
+    } else if (inclusive) {
+      // Tax-inclusive: tax is included in the price
+      lineTotal = baseAmount;
+      taxAmount = baseAmount * (tax / (100 + tax));
     } else {
+      // Tax-exclusive: tax is added to the price
       taxAmount = baseAmount * (tax / 100);
       lineTotal = baseAmount + taxAmount;
     }
