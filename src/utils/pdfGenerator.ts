@@ -820,6 +820,16 @@ export const generatePDF = (data: DocumentData) => {
               <td class="label">${data.type === 'statement' ? 'TOTAL OUTSTANDING:' : 'TOTAL:'}</td>
               <td class="amount">${formatCurrency(data.total_amount)}</td>
             </tr>
+            ${(data.type === 'invoice' || data.type === 'proforma') && data.paid_amount !== undefined ? `
+            <tr class="payment-info">
+              <td class="label">Paid Amount:</td>
+              <td class="amount" style="color: #10B981;">${formatCurrency(data.paid_amount || 0)}</td>
+            </tr>
+            <tr class="balance-info">
+              <td class="label" style="font-weight: bold;">Balance Due:</td>
+              <td class="amount" style="font-weight: bold; color: ${(data.balance_due || 0) > 0 ? '#DC2626' : '#10B981'};">${formatCurrency(data.balance_due || 0)}</td>
+            </tr>
+            ` : ''}
           </table>
         </div>
         ` : ''}
