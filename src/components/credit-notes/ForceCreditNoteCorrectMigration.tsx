@@ -338,35 +338,25 @@ export function ForceCreditNoteCorrectMigration() {
 
         try {
           console.log(`Executing step: ${step.name}`);
-          
-          // Execute the SQL
-          const { error } = await supabase.rpc('exec_sql', {
-            sql_query: step.sql
-          });
 
-          // If exec_sql doesn't exist, try direct execution
-          if (error?.message?.includes('function exec_sql') || error?.code === '42883') {
-            // Try executing each statement individually
-            const statements = step.sql
-              .split(';')
-              .map(s => s.trim())
-              .filter(s => s.length > 0);
-            
-            for (const statement of statements) {
-              if (statement.includes('--')) {
-                continue; // Skip comments
-              }
-              
-              try {
-                const { error: directError } = await supabase.from('_migration_temp').select('1').limit(0);
-                // This will fail but allows us to execute the statement indirectly
-                console.log('Direct execution for:', statement.substring(0, 50));
-              } catch (e) {
-                // Expected to fail
-              }
-            }
-          } else if (error) {
-            throw error;
+          // Execute the SQL using our utility
+          const result = await executeSQL(step.sql);
+
+          if (result.manual_execution_required) {
+            // Manual execution is required
+            setManualExecutionRequired(true);
+            setManualSQL(prev => prev + '\n\n-- ' + step.name + '\n' + formatSQLForManualExecution(step.sql));
+
+            toast.warning(`⚠️ ${step.name} requires manual execution in Supabase SQL Editor`);
+
+            // Mark as completed for now, but note it needs manual work
+            setCompletedSteps(prev => [...prev, step.id]);
+          } else if (result.error) {
+            throw result.error;
+          } else {
+            // Successfully executed
+            setCompletedSteps(prev => [...prev, step.id]);
+            toast.success(`✅ ${step.name} completed automatically`);
           }
 
           setCompletedSteps(prev => [...prev, step.id]);
