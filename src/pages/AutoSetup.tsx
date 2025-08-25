@@ -3,6 +3,7 @@ import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { PaymentAllocationSetup } from '@/components/PaymentAllocationSetup';
 
 export default function AutoSetup() {
   const navigate = useNavigate();
