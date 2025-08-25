@@ -173,11 +173,31 @@ export async function setupPaymentSync(): Promise<{ success: boolean; message: s
 
   } catch (error: any) {
     console.error('Payment sync setup failed:', error);
+
+    let errorMessage = 'Unknown error occurred';
+    let errorDetails = {};
+
+    if (error && typeof error === 'object') {
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.details) {
+        errorMessage = error.details;
+      } else if (error.code) {
+        errorMessage = `Database error (${error.code}): ${error.message || 'Unknown'}`;
+        errorDetails = { code: error.code, details: error.details, hint: error.hint };
+      } else {
+        errorMessage = JSON.stringify(error);
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+
     return {
       success: false,
-      message: `Failed to set up payment synchronization: ${error.message}`,
+      message: `Failed to set up payment synchronization: ${errorMessage}`,
       details: {
-        error: error.message,
+        error: errorMessage,
+        fullError: errorDetails,
         suggestion: 'You may need to run the SQL manually in your database admin panel'
       }
     };
@@ -213,9 +233,25 @@ export async function testPaymentSync(): Promise<{ isSetup: boolean; message: st
       message: 'Payment sync system is already configured'
     };
   } catch (error: any) {
+    let errorMessage = 'Unknown error';
+
+    if (error && typeof error === 'object') {
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.details) {
+        errorMessage = error.details;
+      } else if (error.code) {
+        errorMessage = `Database error (${error.code})`;
+      } else {
+        errorMessage = JSON.stringify(error);
+      }
+    } else if (typeof error === 'string') {
+      errorMessage = error;
+    }
+
     return {
       isSetup: false,
-      message: `Unable to test payment sync: ${error.message}`
+      message: `Unable to test payment sync: ${errorMessage}`
     };
   }
 }
