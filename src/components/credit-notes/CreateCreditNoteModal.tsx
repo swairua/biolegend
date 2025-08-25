@@ -239,6 +239,7 @@ export function CreateCreditNoteModal({
   const totalAmount = items.reduce((sum, item) => sum + item.line_total, 0);
 
   const handleSubmit = async () => {
+    // Enhanced validation
     if (!companyId) {
       toast.error('Company information not available. Please ensure you have a company set up.');
       return;
@@ -256,6 +257,24 @@ export function CreateCreditNoteModal({
 
     if (!reason.trim()) {
       toast.error('Please provide a reason for the credit note');
+      return;
+    }
+
+    // Validate items
+    const invalidItems = items.filter(item =>
+      !item.description.trim() ||
+      item.quantity <= 0 ||
+      item.unit_price < 0
+    );
+
+    if (invalidItems.length > 0) {
+      toast.error('Please ensure all items have valid descriptions, quantities, and prices.');
+      return;
+    }
+
+    // Validate total amount
+    if (totalAmount <= 0) {
+      toast.error('Credit note total amount must be greater than zero.');
       return;
     }
 
