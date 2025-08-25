@@ -514,11 +514,57 @@ export function ForceCreditNoteCorrectMigration() {
             </div>
           </div>
 
+          {manualExecutionRequired && manualSQL && (
+            <Card className="border-warning/20 bg-warning-light/10">
+              <CardHeader>
+                <CardTitle className="flex items-center space-x-2 text-warning">
+                  <AlertTriangle className="h-4 w-4" />
+                  <span>Manual Execution Required</span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Some SQL statements require manual execution in the Supabase SQL Editor.
+                  Copy the SQL below and execute it manually.
+                </p>
+
+                <div className="flex items-center space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      navigator.clipboard.writeText(manualSQL);
+                      toast.success('SQL copied to clipboard!');
+                    }}
+                  >
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy SQL
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open('https://supabase.com/dashboard', '_blank')}
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open Supabase
+                  </Button>
+                </div>
+
+                <div className="bg-muted p-3 rounded font-mono text-xs max-h-60 overflow-y-auto">
+                  <pre className="whitespace-pre-wrap">{manualSQL}</pre>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {(completedSteps.length > 0 || failedSteps.length > 0) && (
             <div className="grid grid-cols-2 gap-4 pt-4 border-t">
               <div className="text-center">
                 <div className="text-2xl font-bold text-success">{completedSteps.length}</div>
-                <div className="text-sm text-muted-foreground">Completed</div>
+                <div className="text-sm text-muted-foreground">
+                  {manualExecutionRequired ? 'Ready for Manual Execution' : 'Completed'}
+                </div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-destructive">{failedSteps.length}</div>
