@@ -112,13 +112,23 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       // Generate payment number
       const paymentNumber = `PAY-${Date.now()}`;
 
+      // Map UI payment method values to database enum values
+      const mapPaymentMethod = (method: string) => {
+        switch (method) {
+          case 'mpesa':
+            return 'mobile_money';
+          default:
+            return method;
+        }
+      };
+
       const paymentRecord = {
         company_id: selectedInvoice?.company_id || currentCompany.id,
         customer_id: selectedInvoice?.customer_id || '',
         payment_number: paymentNumber,
         payment_date: paymentData.payment_date,
         amount: paymentData.amount,
-        payment_method: paymentData.payment_method,
+        payment_method: mapPaymentMethod(paymentData.payment_method),
         reference_number: paymentData.reference_number || paymentNumber,
         notes: paymentData.notes
       };
