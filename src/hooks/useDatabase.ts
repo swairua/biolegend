@@ -545,12 +545,12 @@ export const useInvoices = (companyId?: string) => {
         if (invoicesError) throw invoicesError;
         if (!invoices || invoices.length === 0) return [];
 
-        // Step 2: Get customers separately
-        const customerIds = [...new Set(invoices.map(invoice => invoice.customer_id))];
-        const { data: customers } = await supabase
+        // Step 2: Get customers separately (filter out invalid UUIDs)
+        const customerIds = [...new Set(invoices.map(invoice => invoice.customer_id).filter(id => id && typeof id === 'string' && id.length === 36))];
+        const { data: customers } = customerIds.length > 0 ? await supabase
           .from('customers')
           .select('id, name, email, phone, address, city, country')
-          .in('id', customerIds);
+          .in('id', customerIds) : { data: [] };
 
         // Step 3: Get invoice items separately
         const { data: invoiceItems } = await supabase
@@ -767,12 +767,20 @@ export const useCreatePayment = () => {
   
   return useMutation({
     mutationFn: async (payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>) => {
+      // Validate UUID fields before insert
+      if (!payment.company_id || typeof payment.company_id !== 'string' || payment.company_id.length !== 36) {
+        throw new Error('Invalid company ID. Please refresh and try again.');
+      }
+      if (payment.customer_id && (typeof payment.customer_id !== 'string' || payment.customer_id.length !== 36)) {
+        throw new Error('Invalid customer ID. Please select a valid invoice.');
+      }
+
       const { data, error } = await supabase
         .from('payments')
         .insert([payment])
         .select()
         .single();
-      
+
       if (error) throw error;
       return data;
     },

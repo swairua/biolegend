@@ -125,7 +125,7 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
 
       const paymentRecord = {
         company_id: selectedInvoice?.company_id || currentCompany.id,
-        customer_id: selectedInvoice?.customer_id || '',
+        customer_id: selectedInvoice?.customer_id || null,
         payment_number: paymentNumber,
         payment_date: paymentData.payment_date,
         amount: paymentData.amount,
