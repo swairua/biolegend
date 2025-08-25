@@ -37,7 +37,8 @@ import {
   Calendar,
   Receipt
 } from 'lucide-react';
-import { useInvoices, useCompanies } from '@/hooks/useDatabase';
+import { useCompanies } from '@/hooks/useDatabase';
+import { useInvoicesFixed } from '@/hooks/useInvoicesFixed';
 import { toast } from 'sonner';
 import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { EditInvoiceModal } from '@/components/invoices/EditInvoiceModal';
@@ -96,7 +97,9 @@ export default function Invoices() {
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
-  const { data: invoices, isLoading, error, refetch } = useInvoices(currentCompany?.id);
+  
+  // Use the fixed invoices hook
+  const { data: invoices, isLoading, error, refetch } = useInvoicesFixed(currentCompany?.id);
 
   // Filter and search logic
   const filteredInvoices = invoices?.filter(invoice => {
@@ -256,7 +259,7 @@ Website: www.biolegendscientific.co.ke`;
               <p className="text-destructive">Error loading invoices: {error.message}</p>
               <Button 
                 variant="outline" 
-                onClick={() => window.location.reload()}
+                onClick={() => refetch()}
                 className="mt-4"
               >
                 Retry
