@@ -3,6 +3,7 @@ import { useOptimizedProductSearch, usePopularProducts } from '@/hooks/useOptimi
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { TestDataCreator } from './TestDataCreator';
 import { useState } from 'react';
 
 export function InventoryDebug() {
@@ -161,6 +162,13 @@ export function InventoryDebug() {
               Log Popular Products
             </Button>
           </div>
+
+          {/* Test Data Creator */}
+          {products && products.length === 0 && (
+            <div className="pt-2 border-t">
+              <TestDataCreator />
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
