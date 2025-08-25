@@ -401,6 +401,7 @@ export const CreateProformaModalOptimized = ({
                         <TableHead>Qty</TableHead>
                         <TableHead>Unit Price</TableHead>
                         <TableHead>Tax %</TableHead>
+                        <TableHead>Tax Amount</TableHead>
                         <TableHead>Total</TableHead>
                         <TableHead></TableHead>
                       </TableRow>
