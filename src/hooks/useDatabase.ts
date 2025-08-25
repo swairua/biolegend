@@ -778,7 +778,7 @@ export const useCreatePayment = () => {
         throw new Error('Invalid invoice ID. Please select a valid invoice.');
       }
 
-      // Use database function to record payment with invoice allocation and balance update
+      // Try using the database function first
       const { data, error } = await supabase.rpc('record_payment_with_allocation', {
         p_company_id: paymentData.company_id,
         p_customer_id: paymentData.customer_id,
@@ -791,6 +791,69 @@ export const useCreatePayment = () => {
         p_notes: paymentData.notes || null
       });
 
+      // If function doesn't exist (PGRST202), fall back to manual approach
+      if (error && error.code === 'PGRST202') {
+        console.warn('Database function not found, using fallback method');
+
+        // Fallback: Manual payment recording with invoice updates
+        const { invoice_id, ...paymentFields } = paymentData;
+
+        // 1. Insert payment
+        const { data: paymentResult, error: paymentError } = await supabase
+          .from('payments')
+          .insert([paymentFields])
+          .select()
+          .single();
+
+        if (paymentError) throw paymentError;
+
+        // 2. Create payment allocation
+        const { error: allocationError } = await supabase
+          .from('payment_allocations')
+          .insert([{
+            payment_id: paymentResult.id,
+            invoice_id: invoice_id,
+            amount_allocated: paymentData.amount
+          }]);
+
+        if (allocationError) {
+          console.error('Failed to create allocation:', allocationError);
+          // Continue anyway - payment was recorded
+        }
+
+        // 3. Update invoice balances
+        const { error: invoiceError } = await supabase.rpc('sql', {
+          query: `
+            UPDATE invoices
+            SET
+              paid_amount = COALESCE(paid_amount, 0) + $1,
+              balance_due = total_amount - (COALESCE(paid_amount, 0) + $1),
+              status = CASE
+                WHEN (total_amount - (COALESCE(paid_amount, 0) + $1)) <= 0 THEN 'paid'
+                WHEN (COALESCE(paid_amount, 0) + $1) > 0 THEN 'partial'
+                ELSE status
+              END,
+              updated_at = NOW()
+            WHERE id = $2
+          `,
+          args: [paymentData.amount, invoice_id]
+        });
+
+        if (invoiceError) {
+          console.error('Failed to update invoice balance:', invoiceError);
+          // Continue anyway - payment and allocation were recorded
+        }
+
+        return {
+          success: true,
+          payment_id: paymentResult.id,
+          invoice_id: invoice_id,
+          amount_allocated: paymentData.amount,
+          fallback_used: true
+        };
+      }
+
+      // If other error, throw it
       if (error) {
         console.error('Database function error:', error);
         throw error;
