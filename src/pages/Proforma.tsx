@@ -33,6 +33,7 @@ import { CreateProformaModalOptimized } from '@/components/proforma/CreateProfor
 import { EditProformaModal } from '@/components/proforma/EditProformaModal';
 import { ViewProformaModal } from '@/components/proforma/ViewProformaModal';
 import { ProformaSetupBanner } from '@/components/proforma/ProformaSetupBanner';
+import { ProformaDatabaseHarmonizer } from '@/components/ProformaDatabaseHarmonizer';
 import { downloadInvoicePDF, downloadQuotationPDF } from '@/utils/pdfGenerator';
 import { formatCurrency } from '@/utils/taxCalculation';
 
@@ -154,6 +155,15 @@ export default function Proforma() {
     <div className="space-y-6">
       {/* Database Setup Banner */}
       <ProformaSetupBanner />
+
+      {/* Database Schema Harmonizer */}
+      <ProformaDatabaseHarmonizer
+        companyId={currentCompany?.id}
+        onHarmonizationComplete={() => {
+          toast.success('Database schema harmonized! You can now create proformas without errors.');
+          refetch();
+        }}
+      />
 
       <div className="flex items-center justify-between">
         <div>
