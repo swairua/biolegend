@@ -162,23 +162,44 @@ $$ LANGUAGE plpgsql;`;
           </Alert>
         )}
 
-        <Button 
-          onClick={applyDatabaseFunction}
-          disabled={isApplying}
-          className="w-full"
-        >
-          {isApplying ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Setting up payment allocation system...
-            </>
-          ) : (
-            <>
-              <Database className="h-4 w-4 mr-2" />
-              Set Up Payment Allocation System
-            </>
-          )}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={testDatabaseFunction}
+            disabled={isApplying}
+            variant="outline"
+            className="flex-1"
+          >
+            {isApplying ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Testing...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Test Setup
+              </>
+            )}
+          </Button>
+
+          <Button
+            onClick={copyToClipboard}
+            variant="secondary"
+            className="flex-1"
+          >
+            <Database className="h-4 w-4 mr-2" />
+            Copy SQL
+          </Button>
+        </div>
+
+        {error && error.includes('not found') && (
+          <Alert>
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <strong>Manual Setup Required:</strong> Please run the SQL code (copied above) in your database admin panel or SQL editor to create the required function.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );
