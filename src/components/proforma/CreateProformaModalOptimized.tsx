@@ -258,6 +258,14 @@ export const CreateProformaModalOptimized = ({
 
         {!isLoading && (
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* Error Display */}
+            {(createError || functionError) && (
+              <div className="bg-destructive/10 border border-destructive text-destructive px-4 py-3 rounded">
+                <p className="font-medium">Error creating proforma:</p>
+                <p>{createError || functionError}</p>
+              </div>
+            )}
             
             {/* Header Information */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
