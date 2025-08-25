@@ -15,7 +15,6 @@ export interface ProformaItem {
   discount_amount?: number;
   tax_percentage: number;
   tax_amount: number;
-  tax_inclusive: boolean;
   line_total: number;
 }
 
