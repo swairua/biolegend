@@ -389,7 +389,7 @@ export default function Proforma() {
       </Card>
 
       {/* Modals */}
-      <CreateProformaModalFixed
+      <CreateProformaModalOptimized
         open={showCreateModal}
         onOpenChange={setShowCreateModal}
         onSuccess={handleCreateSuccess}
