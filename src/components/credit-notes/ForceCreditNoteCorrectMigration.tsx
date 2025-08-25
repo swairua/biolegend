@@ -329,6 +329,8 @@ export function ForceCreditNoteCorrectMigration() {
     setCompletedSteps([]);
     setFailedSteps([]);
     setCurrentStep('');
+    setManualExecutionRequired(false);
+    setManualSQL('');
 
     try {
       for (let i = 0; i < migrationSteps.length; i++) {
