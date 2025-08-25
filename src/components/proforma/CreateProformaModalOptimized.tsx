@@ -32,8 +32,8 @@ import {
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
-import { autoFixProformaFunction } from '@/utils/immediateProformaFix';
-import { ProformaErrorNotification } from '@/components/fixes/ProformaErrorNotification';
+import { autoFixImproved } from '@/utils/improvedProformaFix';
+import { ProformaErrorSolution } from '@/components/fixes/ProformaErrorSolution';
 import { toast } from 'sonner';
 
 interface CreateProformaModalOptimizedProps {
@@ -63,6 +63,7 @@ export const CreateProformaModalOptimized = ({
   const [proformaNumber, setProformaNumber] = useState('');
   const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
   const [functionError, setFunctionError] = useState<string>('');
+  const [createError, setCreateError] = useState<string>('');
 
   const { data: customers, isLoading: customersLoading } = useCustomers(companyId);
   const { data: products, isLoading: productsLoading } = useProducts(companyId);
@@ -89,29 +90,35 @@ export const CreateProformaModalOptimized = ({
   const generateProformaNumber = async () => {
     setIsGeneratingNumber(true);
     setFunctionError('');
-    
+
     try {
       console.log('🔢 Generating proforma number...');
-      
-      const number = await autoFixProformaFunction();
-      setProformaNumber(number);
-      
-      console.log('✅ Proforma number generated:', number);
-      
+
+      const result = await autoFixImproved();
+      setProformaNumber(result.number);
+
+      if (result.success) {
+        console.log('✅ Proforma number generated:', result.number);
+      } else {
+        console.warn('⚠️ Using fallback number:', result.number);
+        setFunctionError(result.error || 'Function creation failed');
+        toast.warning(`Using fallback number: ${result.number}`);
+      }
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage = error instanceof Error ? error.message : String(error);
       console.error('❌ Proforma number generation failed:', error);
-      
+
       setFunctionError(errorMessage);
-      
+
       // Generate fallback number
       const timestamp = Date.now().toString().slice(-6);
       const year = new Date().getFullYear();
       const fallbackNumber = `PF-${year}-${timestamp}`;
       setProformaNumber(fallbackNumber);
-      
+
       toast.warning(`Using fallback number: ${fallbackNumber}`);
-      
+
     } finally {
       setIsGeneratingNumber(false);
     }
@@ -194,7 +201,7 @@ export const CreateProformaModalOptimized = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.customer_id) {
       toast.error('Please select a customer');
       return;
@@ -204,6 +211,8 @@ export const CreateProformaModalOptimized = ({
       toast.error('Please add at least one item');
       return;
     }
+
+    setCreateError(''); // Clear previous errors
 
     try {
       const totals = calculateTotals();
@@ -230,7 +239,11 @@ export const CreateProformaModalOptimized = ({
       onSuccess?.();
       handleClose();
     } catch (error) {
-      console.error('Error creating proforma:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Error creating proforma:', errorMessage);
+      setCreateError(errorMessage);
+
+      // Don't show toast as the error will be displayed in the component
     }
   };
 
@@ -247,6 +260,7 @@ export const CreateProformaModalOptimized = ({
     setShowProductSearch(false);
     setProformaNumber('');
     setFunctionError('');
+    setCreateError('');
     onOpenChange(false);
   };
 
@@ -275,16 +289,19 @@ export const CreateProformaModalOptimized = ({
 
         {!isLoading && (
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Error Notification */}
-            {functionError && (
-              <ProformaErrorNotification 
-                error={functionError} 
-                onDismiss={() => setFunctionError('')}
-                onFixSuccess={(number) => {
-                  setProformaNumber(number);
+            {/* Error Notifications */}
+            {(functionError || createError) && (
+              <ProformaErrorSolution
+                error={functionError || createError}
+                onResolved={() => {
                   setFunctionError('');
-                  toast.success(`Proforma function fixed! Number: ${number}`);
+                  setCreateError('');
+                  // Regenerate number if function was fixed
+                  if (functionError && !createError) {
+                    generateProformaNumber();
+                  }
                 }}
+                compact={true}
               />
             )}
             
