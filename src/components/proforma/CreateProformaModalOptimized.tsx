@@ -32,7 +32,7 @@ import {
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
-import { autoFixImproved } from '@/utils/improvedProformaFix';
+import { generateProformaNumberQuick, generateInstantProformaNumber } from '@/utils/lightweightProformaNumber';
 import { ProformaErrorSolution } from '@/components/fixes/ProformaErrorSolution';
 import { toast } from 'sonner';
 
@@ -61,9 +61,6 @@ export const CreateProformaModalOptimized = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
-  const [isGeneratingNumber, setIsGeneratingNumber] = useState(false);
-  const [functionError, setFunctionError] = useState<string>('');
-  const [createError, setCreateError] = useState<string>('');
 
   const { data: customers, isLoading: customersLoading } = useCustomers(companyId);
   const { data: products, isLoading: productsLoading } = useProducts(companyId);
@@ -72,11 +69,26 @@ export const CreateProformaModalOptimized = ({
 
   const defaultTaxRate = taxSettings?.find(t => t.is_default)?.rate || 0;
 
-  // Generate proforma number when modal opens
+  // Generate proforma number when modal opens (fast version)
   useEffect(() => {
-    if (open && !proformaNumber && !isGeneratingNumber) {
-      generateProformaNumber();
-      
+    if (open && !proformaNumber) {
+      // Generate instant number for immediate UI feedback
+      const instantNumber = generateInstantProformaNumber();
+      setProformaNumber(instantNumber);
+
+      // Try to get better number in background (non-blocking)
+      generateProformaNumberQuick(companyId)
+        .then(betterNumber => {
+          if (betterNumber !== instantNumber) {
+            setProformaNumber(betterNumber);
+            console.log('✅ Updated with database-generated number:', betterNumber);
+          }
+        })
+        .catch(error => {
+          console.log('⚡ Using instant number (database failed):', instantNumber);
+          // Keep the instant number - no error shown to user
+        });
+
       // Set default valid until date (30 days from today)
       const validUntil = new Date();
       validUntil.setDate(validUntil.getDate() + 30);
@@ -85,44 +97,9 @@ export const CreateProformaModalOptimized = ({
         valid_until: validUntil.toISOString().split('T')[0]
       }));
     }
-  }, [open, proformaNumber, isGeneratingNumber]);
+  }, [open, proformaNumber, companyId]);
 
-  const generateProformaNumber = async () => {
-    setIsGeneratingNumber(true);
-    setFunctionError('');
-
-    try {
-      console.log('🔢 Generating proforma number...');
-
-      const result = await autoFixImproved();
-      setProformaNumber(result.number);
-
-      if (result.success) {
-        console.log('✅ Proforma number generated:', result.number);
-      } else {
-        console.warn('⚠️ Using fallback number:', result.number);
-        setFunctionError(result.error || 'Function creation failed');
-        toast.warning(`Using fallback number: ${result.number}`);
-      }
-
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      console.error('❌ Proforma number generation failed:', error);
-
-      setFunctionError(errorMessage);
-
-      // Generate fallback number
-      const timestamp = Date.now().toString().slice(-6);
-      const year = new Date().getFullYear();
-      const fallbackNumber = `PF-${year}-${timestamp}`;
-      setProformaNumber(fallbackNumber);
-
-      toast.warning(`Using fallback number: ${fallbackNumber}`);
-
-    } finally {
-      setIsGeneratingNumber(false);
-    }
-  };
+  // Removed heavy generateProformaNumber function - now using lightweight approach
 
   const filteredProducts = products?.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
