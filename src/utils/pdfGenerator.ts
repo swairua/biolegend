@@ -40,6 +40,8 @@ export interface DocumentData {
   subtotal?: number;
   tax_amount?: number;
   total_amount: number;
+  paid_amount?: number;
+  balance_due?: number;
   notes?: string;
   terms_and_conditions?: string;
   valid_until?: string; // For proforma invoices
