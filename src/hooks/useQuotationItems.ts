@@ -29,32 +29,22 @@ export interface InvoiceItem {
   sort_order?: number;
 }
 
-// Calculate line item totals with tax
+// Calculate line item totals with tax (always tax-exclusive)
 export const calculateLineItemTotal = (item: {
   quantity: number;
   unit_price: number;
   discount_percentage?: number;
   tax_percentage?: number;
-  tax_inclusive?: boolean;
 }) => {
-  const { quantity, unit_price, discount_percentage = 0, tax_percentage = 0, tax_inclusive = false } = item;
-  
+  const { quantity, unit_price, discount_percentage = 0, tax_percentage = 0 } = item;
+
   const baseAmount = quantity * unit_price;
   const discountAmount = baseAmount * (discount_percentage / 100);
   const afterDiscount = baseAmount - discountAmount;
-  
-  let taxAmount = 0;
-  let lineTotal = 0;
-  
-  if (tax_inclusive) {
-    // Tax is already included in the unit price
-    lineTotal = afterDiscount;
-    taxAmount = afterDiscount - (afterDiscount / (1 + tax_percentage / 100));
-  } else {
-    // Tax is added on top
-    taxAmount = afterDiscount * (tax_percentage / 100);
-    lineTotal = afterDiscount + taxAmount;
-  }
+
+  // Tax is always added on top since prices are always tax-exclusive
+  const taxAmount = afterDiscount * (tax_percentage / 100);
+  const lineTotal = afterDiscount + taxAmount;
   
   return {
     line_total: lineTotal,
