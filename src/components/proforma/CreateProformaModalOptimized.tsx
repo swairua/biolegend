@@ -21,13 +21,12 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { 
-  Plus, 
-  Trash2, 
+import {
+  Plus,
+  Trash2,
   Search,
   Calculator,
-  Receipt,
-  Loader2
+  Receipt
 } from 'lucide-react';
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
