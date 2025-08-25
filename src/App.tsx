@@ -339,6 +339,9 @@ const App = () => {
           {/* Proforma Error Diagnostic - Debug "[object Object]" errors */}
           <Route path="/proforma-error-diagnostic" element={<ProformaErrorDiagnosticPage />} />
 
+          {/* Proforma Creation Test - Test complete proforma creation flow */}
+          <Route path="/proforma-creation-test" element={<ProformaCreationTestPage />} />
+
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
 
