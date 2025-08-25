@@ -448,8 +448,7 @@ export const CreateProformaModalOptimized = ({
                               className="w-20"
                             />
                           </TableCell>
-                          <TableCell>
-                            </TableCell>
+                          <TableCell>{formatCurrency(item.tax_amount)}</TableCell>
                           <TableCell>{formatCurrency(item.line_total)}</TableCell>
                           <TableCell>
                             <Button
