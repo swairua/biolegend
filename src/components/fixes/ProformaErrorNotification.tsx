@@ -2,13 +2,15 @@ import { useState, useEffect } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, ExternalLink, X } from 'lucide-react';
+import { AutoFixProformaButton } from './AutoFixProformaButton';
 
 interface ProformaErrorNotificationProps {
   error?: string;
   onDismiss?: () => void;
+  onFixSuccess?: (number: string) => void;
 }
 
-export const ProformaErrorNotification = ({ error, onDismiss }: ProformaErrorNotificationProps) => {
+export const ProformaErrorNotification = ({ error, onDismiss, onFixSuccess }: ProformaErrorNotificationProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -42,18 +44,30 @@ export const ProformaErrorNotification = ({ error, onDismiss }: ProformaErrorNot
           <span className="ml-1">The proforma number generator needs to be set up.</span>
         </div>
         <div className="flex items-center gap-2 ml-4">
-          <Button 
-            size="sm" 
-            variant="outline" 
+          <AutoFixProformaButton
+            onSuccess={(number) => {
+              onFixSuccess?.(number);
+              handleDismiss();
+            }}
+            onError={() => {
+              // If auto-fix fails, suggest manual fix
+              openFix();
+            }}
+            variant="outline"
+            className="text-orange-700 border-orange-300 hover:bg-orange-100"
+          />
+          <Button
+            size="sm"
+            variant="outline"
             onClick={openFix}
             className="text-orange-700 border-orange-300 hover:bg-orange-100"
           >
             <ExternalLink className="h-3 w-3 mr-1" />
-            Fix Now
+            Manual Fix
           </Button>
-          <Button 
-            size="sm" 
-            variant="ghost" 
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={handleDismiss}
             className="text-orange-700 hover:bg-orange-100"
           >
