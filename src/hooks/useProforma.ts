@@ -149,6 +149,21 @@ export const useProforma = (proformaId?: string) => {
   });
 };
 
+// Utility function to serialize errors properly
+const serializeError = (error: any): string => {
+  if (!error) return 'Unknown error';
+  if (typeof error === 'string') return error;
+  if (error.message) return error.message;
+  if (error.details) return error.details;
+  if (error.hint) return error.hint;
+  if (error.code) return `Database error (code: ${error.code})`;
+  try {
+    return JSON.stringify(error, null, 2);
+  } catch {
+    return String(error);
+  }
+};
+
 /**
  * Hook to create a proforma invoice with items
  */
@@ -185,8 +200,9 @@ export const useCreateProforma = () => {
         .single();
 
       if (proformaError) {
-        console.error('Error creating proforma:', proformaError);
-        throw proformaError;
+        const errorMessage = serializeError(proformaError);
+        console.error('Error creating proforma:', errorMessage);
+        throw new Error(`Failed to create proforma: ${errorMessage}`);
       }
 
       // Create the proforma items
@@ -210,10 +226,11 @@ export const useCreateProforma = () => {
           .insert(proformaItems);
 
         if (itemsError) {
-          console.error('Error creating proforma items:', itemsError);
+          const errorMessage = serializeError(itemsError);
+          console.error('Error creating proforma items:', errorMessage);
           // Try to delete the proforma if items creation failed
           await supabase.from('proforma_invoices').delete().eq('id', proformaData.id);
-          throw itemsError;
+          throw new Error(`Failed to create proforma items: ${errorMessage}`);
         }
       }
 
@@ -224,8 +241,9 @@ export const useCreateProforma = () => {
       toast.success(`Proforma invoice ${data.proforma_number} created successfully!`);
     },
     onError: (error) => {
-      console.error('Error creating proforma:', error);
-      toast.error('Failed to create proforma invoice');
+      const errorMessage = serializeError(error);
+      console.error('Error creating proforma:', errorMessage);
+      toast.error(`Error creating proforma: ${errorMessage}`);
     },
   });
 };
@@ -277,8 +295,9 @@ export const useUpdateProforma = () => {
         .single();
 
       if (proformaError) {
-        console.error('Error updating proforma:', proformaError);
-        throw proformaError;
+        const errorMessage = serializeError(proformaError);
+        console.error('Error updating proforma:', errorMessage);
+        throw new Error(`Failed to update proforma: ${errorMessage}`);
       }
 
       // Update items if provided
@@ -290,8 +309,9 @@ export const useUpdateProforma = () => {
           .eq('proforma_id', proformaId);
 
         if (deleteError) {
-          console.error('Error deleting existing proforma items:', deleteError);
-          throw deleteError;
+          const errorMessage = serializeError(deleteError);
+          console.error('Error deleting existing proforma items:', errorMessage);
+          throw new Error(`Failed to delete existing proforma items: ${errorMessage}`);
         }
 
         // Insert new items
@@ -315,8 +335,9 @@ export const useUpdateProforma = () => {
             .insert(proformaItems);
 
           if (itemsError) {
-            console.error('Error creating updated proforma items:', itemsError);
-            throw itemsError;
+            const errorMessage = serializeError(itemsError);
+            console.error('Error creating updated proforma items:', errorMessage);
+            throw new Error(`Failed to create updated proforma items: ${errorMessage}`);
           }
         }
       }
@@ -329,8 +350,9 @@ export const useUpdateProforma = () => {
       toast.success(`Proforma invoice ${data.proforma_number} updated successfully!`);
     },
     onError: (error) => {
-      console.error('Error updating proforma:', error);
-      toast.error('Failed to update proforma invoice');
+      const errorMessage = serializeError(error);
+      console.error('Error updating proforma:', errorMessage);
+      toast.error(`Error updating proforma: ${errorMessage}`);
     },
   });
 };
@@ -349,8 +371,9 @@ export const useDeleteProforma = () => {
         .eq('id', proformaId);
 
       if (error) {
-        console.error('Error deleting proforma:', error);
-        throw error;
+        const errorMessage = serializeError(error);
+        console.error('Error deleting proforma:', errorMessage);
+        throw new Error(`Failed to delete proforma: ${errorMessage}`);
       }
     },
     onSuccess: () => {
@@ -358,8 +381,9 @@ export const useDeleteProforma = () => {
       toast.success('Proforma invoice deleted successfully!');
     },
     onError: (error) => {
-      console.error('Error deleting proforma:', error);
-      toast.error('Failed to delete proforma invoice');
+      const errorMessage = serializeError(error);
+      console.error('Error deleting proforma:', errorMessage);
+      toast.error(`Error deleting proforma: ${errorMessage}`);
     },
   });
 };
@@ -475,8 +499,9 @@ export const useConvertProformaToInvoice = () => {
       toast.success(`Proforma invoice ${data.proforma_number} converted to invoice!`);
     },
     onError: (error) => {
-      console.error('Error converting proforma to invoice:', error);
-      toast.error('Failed to convert proforma to invoice');
+      const errorMessage = serializeError(error);
+      console.error('Error converting proforma to invoice:', errorMessage);
+      toast.error(`Error converting proforma: ${errorMessage}`);
     },
   });
 };
