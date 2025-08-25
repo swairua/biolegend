@@ -180,9 +180,9 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
           name: product.name,
           product_code: product.product_code,
           unit_of_measure: product.unit_of_measure || 'pieces',
-          unit_price: product.unit_price || 0,
+          unit_price: product.selling_price || product.unit_price || 0,
           // Ensure both price fields are available for compatibility
-          selling_price: product.unit_price || 0,
+          selling_price: product.selling_price || product.unit_price || 0,
           stock_quantity: product.stock_quantity || 0,
           category_name: categoryMap.get(product.category_id) || 'Uncategorized'
         }));
