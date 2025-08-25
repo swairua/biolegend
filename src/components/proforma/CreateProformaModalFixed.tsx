@@ -32,7 +32,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
-import { useCreateProforma, useGenerateProformaNumber, type ProformaItem } from '@/hooks/useProforma';
+import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
+import { generateInstantProformaNumber } from '@/utils/lightweightProformaNumber';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
 import { setupProformaTables, checkProformaTables } from '@/utils/proformaDatabaseSetup';
 import { ProformaErrorNotification } from '@/components/fixes/ProformaErrorNotification';
@@ -67,10 +68,9 @@ export const CreateProformaModalFixed = ({
   const [tablesStatus, setTablesStatus] = useState<'checking' | 'ready' | 'missing' | 'error'>('checking');
   const [functionError, setFunctionError] = useState<string>('');
 
-  const { data: customers } = useCustomers(companyId);
-  const { data: products } = useProducts(companyId);
-  const { data: taxSettings } = useTaxSettings(companyId);
-  const generateProformaNumber = useGenerateProformaNumber();
+  const { data: customers } = useCustomers(open ? companyId : undefined);
+  const { data: products } = useProducts(open ? companyId : undefined);
+  const { data: taxSettings } = useTaxSettings(open ? companyId : undefined);
   const createProforma = useCreateProforma();
 
   const defaultTaxRate = taxSettings?.find(t => t.is_default)?.rate || 0;
@@ -119,52 +119,9 @@ export const CreateProformaModalFixed = ({
 
   useEffect(() => {
     if (open && tablesStatus === 'ready') {
-      // Generate proforma number with auto-fix
-      generateProformaNumber.mutate(companyId, {
-        onSuccess: (number) => {
-          setProformaNumber(number);
-          setFunctionError(''); // Clear any previous errors
-          console.log('Proforma number generated successfully:', number);
-        },
-        onError: async (error) => {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-          console.warn('Proforma number generation failed, attempting auto-fix:', errorMessage);
-
-          // Check if this is a function not found error
-          if (errorMessage.includes('generate_proforma_number') ||
-              errorMessage.includes('schema cache') ||
-              errorMessage.includes('function') ||
-              errorMessage.includes('does not exist')) {
-
-            console.log('🔧 Attempting automatic function fix...');
-            toast.info('Database function missing. Attempting automatic fix...');
-
-            try {
-              // Try automatic fix
-              const fixedNumber = await autoFixProformaFunction();
-              setProformaNumber(fixedNumber);
-              setFunctionError(''); // Clear error since we fixed it
-              toast.success(`Function fixed! Generated number: ${fixedNumber}`);
-              console.log('✅ Auto-fix successful, generated:', fixedNumber);
-              return;
-            } catch (fixError) {
-              console.error('❌ Auto-fix failed:', fixError);
-              // Fall through to manual error handling
-            }
-          }
-
-          // Set error for notification (if auto-fix failed or different error)
-          setFunctionError(errorMessage);
-
-          const timestamp = Date.now().toString().slice(-6);
-          const year = new Date().getFullYear();
-          const fallbackNumber = `PF-${year}-${timestamp}`;
-          setProformaNumber(fallbackNumber);
-
-          console.info('Using fallback proforma number:', fallbackNumber);
-          toast.warning(`Using fallback number: ${fallbackNumber}`);
-        }
-      });
+      // Generate proforma number instantly (fast approach)
+      const quickNumber = generateInstantProformaNumber();
+      setProformaNumber(quickNumber);
 
       // Set default valid until date (30 days from today)
       const validUntil = new Date();
@@ -174,7 +131,7 @@ export const CreateProformaModalFixed = ({
         valid_until: validUntil.toISOString().split('T')[0]
       }));
     }
-  }, [open, tablesStatus, generateProformaNumber, companyId]);
+  }, [open, tablesStatus, companyId]);
 
   const filteredProducts = products?.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
