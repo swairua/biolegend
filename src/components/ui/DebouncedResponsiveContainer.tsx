@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { ResponsiveContainer } from 'recharts';
 
 interface DebouncedResponsiveContainerProps {
@@ -12,61 +12,99 @@ interface DebouncedResponsiveContainerProps {
 export const DebouncedResponsiveContainer: React.FC<DebouncedResponsiveContainerProps> = ({
   width = "100%",
   height = 300,
-  debounceMs = 150,
+  debounceMs = 250, // Increased debounce time to prevent loops
   children,
   ...props
 }) => {
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [shouldRender, setShouldRender] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout>();
   const containerRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<ResizeObserver>();
+  const lastSizeRef = useRef({ width: 0, height: 0 });
+  const isObservingRef = useRef(false);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+  // Debounced callback to handle resize
+  const handleResize = useCallback((entries: ResizeObserverEntry[]) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
 
-    // Create a debounced resize observer
-    observerRef.current = new ResizeObserver((entries) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-
-      timeoutRef.current = setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
+      try {
         const entry = entries[0];
         if (entry) {
           const { width: newWidth, height: newHeight } = entry.contentRect;
-          setContainerSize({ width: newWidth, height: newHeight });
-          setShouldRender(true);
-        }
-      }, debounceMs);
-    });
 
-    observerRef.current.observe(containerRef.current);
+          // Only update if size actually changed significantly (prevents micro-adjustments)
+          const threshold = 1;
+          const widthChanged = Math.abs(newWidth - lastSizeRef.current.width) > threshold;
+          const heightChanged = Math.abs(newHeight - lastSizeRef.current.height) > threshold;
+
+          if (widthChanged || heightChanged) {
+            lastSizeRef.current = { width: newWidth, height: newHeight };
+            setShouldRender(true);
+          }
+        }
+      } catch (error) {
+        // Silently handle any ResizeObserver errors
+        console.debug('ResizeObserver error handled:', error);
+      }
+    }, debounceMs);
+  }, [debounceMs]);
+
+  useEffect(() => {
+    if (!containerRef.current || isObservingRef.current) return;
+
+    try {
+      // Create a more robust resize observer with error handling
+      observerRef.current = new ResizeObserver((entries) => {
+        // Use requestAnimationFrame to prevent synchronous layout thrashing
+        requestAnimationFrame(() => {
+          handleResize(entries);
+        });
+      });
+
+      observerRef.current.observe(containerRef.current);
+      isObservingRef.current = true;
+    } catch (error) {
+      // Fallback to simple timeout-based rendering
+      console.debug('ResizeObserver creation failed, using fallback:', error);
+      setShouldRender(true);
+    }
 
     return () => {
       if (observerRef.current) {
         observerRef.current.disconnect();
+        isObservingRef.current = false;
       }
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
     };
-  }, [debounceMs]);
+  }, [handleResize]);
 
-  // Initial render
+  // Initial render with fallback
   useEffect(() => {
-    const timer = setTimeout(() => setShouldRender(true), 100);
+    const timer = setTimeout(() => {
+      setShouldRender(true);
+    }, 100);
+
     return () => clearTimeout(timer);
   }, []);
 
   return (
     <div
       ref={containerRef}
-      style={{ width, height }}
-      className="relative"
+      style={{ width, height, minHeight: 0, minWidth: 0 }}
+      className="relative overflow-hidden"
     >
       {shouldRender && (
-        <ResponsiveContainer width="100%" height="100%" {...props}>
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minHeight={0}
+          {...props}
+        >
           {children}
         </ResponsiveContainer>
       )}
