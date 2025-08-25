@@ -146,17 +146,7 @@ export const CreateProformaModal = ({
       if (item.id === id) {
         let updatedItem = { ...item, [field]: value };
 
-        // Special handling for tax_inclusive checkbox
-        if (field === 'tax_inclusive') {
-          // When checking VAT Inclusive, auto-apply default tax rate if no VAT is set
-          if (value && item.tax_percentage === 0) {
-            updatedItem.tax_percentage = defaultTaxRate;
-          }
-          // When unchecking VAT Inclusive, reset VAT to 0
-          if (!value) {
-            updatedItem.tax_percentage = 0;
-          }
-        }
+        // No special handling needed since prices are always tax-exclusive
 
         return calculateItemTotals(updatedItem);
       }
@@ -170,7 +160,7 @@ export const CreateProformaModal = ({
       quantity: item.quantity,
       unit_price: item.unit_price,
       tax_percentage: item.tax_percentage,
-      tax_inclusive: item.tax_inclusive,
+      tax_inclusive: false, // Prices are always tax-exclusive
       discount_percentage: 0,
       discount_amount: 0,
     };
@@ -194,7 +184,7 @@ export const CreateProformaModal = ({
       quantity: item.quantity,
       unit_price: item.unit_price,
       tax_percentage: item.tax_percentage,
-      tax_inclusive: item.tax_inclusive,
+      tax_inclusive: false, // Prices are always tax-exclusive
       discount_percentage: 0,
       discount_amount: 0,
     }));
@@ -460,7 +450,6 @@ export const CreateProformaModal = ({
                       <TableHead>Qty</TableHead>
                       <TableHead>Unit Price</TableHead>
                       <TableHead>Tax %</TableHead>
-                      <TableHead>Tax Incl.</TableHead>
                       <TableHead>Total</TableHead>
                       <TableHead></TableHead>
                     </TableRow>
@@ -506,13 +495,6 @@ export const CreateProformaModal = ({
                             max="100"
                             step="0.01"
                             className="w-20"
-                            disabled={item.tax_inclusive}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Checkbox
-                            checked={item.tax_inclusive}
-                            onCheckedChange={(checked) => updateItem(item.id, 'tax_inclusive', checked)}
                           />
                         </TableCell>
                         <TableCell>{formatCurrency(item.line_total)}</TableCell>
