@@ -61,9 +61,9 @@ export const CreateProformaModalOptimized = ({
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [proformaNumber, setProformaNumber] = useState('');
 
-  const { data: customers, isLoading: customersLoading } = useCustomers(companyId);
-  const { data: products, isLoading: productsLoading } = useProducts(companyId);
-  const { data: taxSettings } = useTaxSettings(companyId);
+  const { data: customers, isLoading: customersLoading } = useCustomers(open ? companyId : undefined);
+  const { data: products, isLoading: productsLoading } = useProducts(open ? companyId : undefined);
+  const { data: taxSettings } = useTaxSettings(open ? companyId : undefined);
   const createProforma = useCreateProforma();
 
   const defaultTaxRate = taxSettings?.find(t => t.is_default)?.rate || 0;
@@ -233,7 +233,7 @@ export const CreateProformaModalOptimized = ({
   };
 
   const totals = calculateTotals();
-  const isLoading = customersLoading || productsLoading || isGeneratingNumber;
+  const isLoading = open && (customersLoading || productsLoading);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
