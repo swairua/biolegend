@@ -50,15 +50,15 @@ export const useInvoicesFixed = (companyId?: string) => {
           return [];
         }
 
-        // Step 2: Get unique customer IDs
-        const customerIds = [...new Set(invoices.map(invoice => invoice.customer_id))];
+        // Step 2: Get unique customer IDs (filter out invalid UUIDs)
+        const customerIds = [...new Set(invoices.map(invoice => invoice.customer_id).filter(id => id && typeof id === 'string' && id.length === 36))];
         console.log('Fetching customer data for IDs:', customerIds.length);
 
         // Step 3: Get customers separately
-        const { data: customers, error: customersError } = await supabase
+        const { data: customers, error: customersError } = customerIds.length > 0 ? await supabase
           .from('customers')
           .select('id, name, email, phone, address, city, country')
-          .in('id', customerIds);
+          .in('id', customerIds) : { data: [], error: null };
 
         if (customersError) {
           console.error('Error fetching customers (non-fatal):', customersError);

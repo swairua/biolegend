@@ -545,12 +545,12 @@ export const useInvoices = (companyId?: string) => {
         if (invoicesError) throw invoicesError;
         if (!invoices || invoices.length === 0) return [];
 
-        // Step 2: Get customers separately
-        const customerIds = [...new Set(invoices.map(invoice => invoice.customer_id))];
-        const { data: customers } = await supabase
+        // Step 2: Get customers separately (filter out invalid UUIDs)
+        const customerIds = [...new Set(invoices.map(invoice => invoice.customer_id).filter(id => id && typeof id === 'string' && id.length === 36))];
+        const { data: customers } = customerIds.length > 0 ? await supabase
           .from('customers')
           .select('id, name, email, phone, address, city, country')
-          .in('id', customerIds);
+          .in('id', customerIds) : { data: [] };
 
         // Step 3: Get invoice items separately
         const { data: invoiceItems } = await supabase
@@ -764,20 +764,124 @@ export const useCustomerPayments = (customerId?: string, companyId?: string) => 
 
 export const useCreatePayment = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async (payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase
-        .from('payments')
-        .insert([payment])
-        .select()
-        .single();
-      
-      if (error) throw error;
+    mutationFn: async (paymentData: Omit<Payment, 'id' | 'created_at' | 'updated_at'> & { invoice_id: string }) => {
+      // Validate UUID fields before insert
+      if (!paymentData.company_id || typeof paymentData.company_id !== 'string' || paymentData.company_id.length !== 36) {
+        throw new Error('Invalid company ID. Please refresh and try again.');
+      }
+      if (paymentData.customer_id && (typeof paymentData.customer_id !== 'string' || paymentData.customer_id.length !== 36)) {
+        throw new Error('Invalid customer ID. Please select a valid invoice.');
+      }
+      if (!paymentData.invoice_id || typeof paymentData.invoice_id !== 'string' || paymentData.invoice_id.length !== 36) {
+        throw new Error('Invalid invoice ID. Please select a valid invoice.');
+      }
+
+      // Try using the database function first
+      const { data, error } = await supabase.rpc('record_payment_with_allocation', {
+        p_company_id: paymentData.company_id,
+        p_customer_id: paymentData.customer_id,
+        p_invoice_id: paymentData.invoice_id,
+        p_payment_number: paymentData.payment_number,
+        p_payment_date: paymentData.payment_date,
+        p_amount: paymentData.amount,
+        p_payment_method: paymentData.payment_method,
+        p_reference_number: paymentData.reference_number || paymentData.payment_number,
+        p_notes: paymentData.notes || null
+      });
+
+      // If function doesn't exist (PGRST202), fall back to manual approach
+      if (error && error.code === 'PGRST202') {
+        console.warn('Database function not found, using fallback method');
+
+        // Fallback: Manual payment recording with invoice updates
+        const { invoice_id, ...paymentFields } = paymentData;
+
+        // 1. Insert payment
+        const { data: paymentResult, error: paymentError } = await supabase
+          .from('payments')
+          .insert([paymentFields])
+          .select()
+          .single();
+
+        if (paymentError) throw paymentError;
+
+        // 2. Create payment allocation
+        const { error: allocationError } = await supabase
+          .from('payment_allocations')
+          .insert([{
+            payment_id: paymentResult.id,
+            invoice_id: invoice_id,
+            amount_allocated: paymentData.amount
+          }]);
+
+        if (allocationError) {
+          console.error('Failed to create allocation:', allocationError);
+          // Continue anyway - payment was recorded
+        }
+
+        // 3. Get current invoice data and update balances
+        const { data: invoice, error: fetchError } = await supabase
+          .from('invoices')
+          .select('id, total_amount, paid_amount, balance_due')
+          .eq('id', invoice_id)
+          .single();
+
+        if (!fetchError && invoice) {
+          const newPaidAmount = (invoice.paid_amount || 0) + paymentData.amount;
+          const newBalanceDue = invoice.total_amount - newPaidAmount;
+          let newStatus = invoice.status;
+
+          if (newBalanceDue <= 0) {
+            newStatus = 'paid';
+          } else if (newPaidAmount > 0) {
+            newStatus = 'partial';
+          }
+
+          const { error: invoiceError } = await supabase
+            .from('invoices')
+            .update({
+              paid_amount: newPaidAmount,
+              balance_due: newBalanceDue,
+              status: newStatus,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', invoice_id);
+
+          if (invoiceError) {
+            console.error('Failed to update invoice balance:', invoiceError);
+            // Continue anyway - payment and allocation were recorded
+          }
+        }
+
+        return {
+          success: true,
+          payment_id: paymentResult.id,
+          invoice_id: invoice_id,
+          amount_allocated: paymentData.amount,
+          fallback_used: true
+        };
+      }
+
+      // If other error, throw it
+      if (error) {
+        console.error('Database function error:', error);
+        throw error;
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Failed to record payment');
+      }
+
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      // Invalidate multiple cache keys to refresh UI
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice', result.invoice_id] });
+      queryClient.invalidateQueries({ queryKey: ['customer_invoices'] });
     },
   });
 };
