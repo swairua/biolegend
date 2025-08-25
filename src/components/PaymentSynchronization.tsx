@@ -15,13 +15,14 @@ import {
   Users
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  analyzePaymentSyncStatus, 
-  synchronizePayments, 
+import {
+  analyzePaymentSyncStatus,
+  synchronizePayments,
   recalculateAllInvoiceBalances,
   PaymentSyncAnalysis,
-  SyncResult 
+  SyncResult
 } from '@/utils/paymentSynchronization';
+import { PaymentAllocationsTableSetup } from './PaymentAllocationsTableSetup';
 
 export function PaymentSynchronization() {
   const [analysis, setAnalysis] = useState<PaymentSyncAnalysis | null>(null);
@@ -153,6 +154,23 @@ export function PaymentSynchronization() {
   }
 
   if (error) {
+    // Check if error is specifically about payment_allocations table missing
+    if (error.includes('payment_allocations') && (error.includes('relationship') || error.includes('relation'))) {
+      return (
+        <div className="space-y-6">
+          <PaymentAllocationsTableSetup />
+          <Card>
+            <CardContent className="pt-6">
+              <Button onClick={runAnalysis} className="w-full">
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Retry Analysis After Table Creation
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
     return (
       <Card className="border-destructive/50 bg-destructive/5">
         <CardHeader>
