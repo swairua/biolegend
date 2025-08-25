@@ -114,7 +114,7 @@ export function CreateCreditNoteModal({
 
   const addItem = (product: any) => {
     const existingItem = items.find(item => item.product_id === product.id);
-    
+
     if (existingItem) {
       updateItemQuantity(existingItem.id, existingItem.quantity + 1);
       return;
@@ -139,6 +139,23 @@ export function CreateCreditNoteModal({
 
     setItems([...items, newItem]);
     setSearchProduct('');
+  };
+
+  const addCustomItem = () => {
+    const newItem: CreditNoteItem = {
+      id: `custom-${Date.now()}`,
+      product_id: undefined, // No product association
+      product_name: 'Custom Item',
+      description: 'Custom credit item',
+      quantity: 1,
+      unit_price: 0,
+      tax_percentage: 0,
+      tax_amount: 0,
+      tax_inclusive: false,
+      line_total: 0
+    };
+
+    setItems([...items, newItem]);
   };
 
   const calculateLineTotal = (item: CreditNoteItem, quantity?: number, unitPrice?: number, taxPercentage?: number, taxInclusive?: boolean) => {
