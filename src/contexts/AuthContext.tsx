@@ -54,10 +54,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
-  
+
   // Use refs to prevent stale closures and unnecessary re-renders
   const mountedRef = useRef(true);
   const initializingRef = useRef(false);
+  const forceCompletedRef = useRef(false);
 
   // Fetch user profile from database with error handling and retry logic
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
@@ -282,12 +283,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initializeAuthState();
 
+    // Safety timeout - force complete initialization after 20 seconds
+    const safetyTimeout = setTimeout(() => {
+      if (mountedRef.current && !initialized && !forceCompletedRef.current) {
+        console.warn('🚨 Force completing auth initialization due to timeout');
+        forceCompletedRef.current = true;
+        setLoading(false);
+        setInitialized(true);
+        initializingRef.current = false;
+        toast.warning('Authentication initialization took too long and was force completed. You may need to sign in again.');
+      }
+    }, 20000); // 20 second safety timeout
+
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
 
     return () => {
       mountedRef.current = false;
       subscription.unsubscribe();
+      clearTimeout(safetyTimeout);
     };
   }, [fetchProfile, updateLastLogin, handleAuthStateChange]);
 
@@ -453,7 +467,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     profile,
     session,
-    loading: loading || !initialized,
+    loading: (loading || !initialized) && !forceCompletedRef.current,
     signIn,
     signUp,
     signOut,
