@@ -32,6 +32,8 @@ export function ForceCreditNoteCorrectMigration() {
   const [completedSteps, setCompletedSteps] = useState<string[]>([]);
   const [failedSteps, setFailedSteps] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState<string>('');
+  const [manualExecutionRequired, setManualExecutionRequired] = useState(false);
+  const [manualSQL, setManualSQL] = useState<string>('');
 
   // The CORRECT credit note schema from creditNoteMigration.sql
   const migrationSteps: MigrationStep[] = [
