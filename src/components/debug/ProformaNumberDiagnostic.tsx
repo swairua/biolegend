@@ -3,14 +3,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle, 
-  XCircle, 
-  AlertTriangle, 
-  Database, 
+import {
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Database,
   Settings,
   Play,
-  RefreshCw
+  RefreshCw,
+  ExternalLink
 } from 'lucide-react';
 import { useGenerateProformaNumber } from '@/hooks/useProforma';
 import { checkProformaNumberFunction, createProformaNumberFunction } from '@/utils/databaseFunctionChecker';
@@ -244,6 +245,14 @@ export const ProformaNumberDiagnostic = () => {
           </Button>
           <Button onClick={clearResults} variant="outline" disabled={isRunning}>
             Clear Results
+          </Button>
+          <Button
+            onClick={() => window.open('/proforma-function-fix', '_blank')}
+            variant="secondary"
+            className="flex items-center gap-2"
+          >
+            <ExternalLink className="h-4 w-4" />
+            Open Function Fix
           </Button>
         </div>
 

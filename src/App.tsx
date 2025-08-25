@@ -42,6 +42,7 @@ import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
 import { SystemFixTest } from "./pages/SystemFixTest";
 import FixQuotationIssues from "./pages/FixQuotationIssues";
 import ProformaNumberDiagnosticPage from "./pages/ProformaNumberDiagnostic";
+import ProformaFunctionFixPage from "./pages/ProformaFunctionFix";
 
 const App = () => {
   // Run database diagnostics safely without setState during render
@@ -329,6 +330,9 @@ const App = () => {
 
           {/* Proforma Number Diagnostic - Debug proforma number generation */}
           <Route path="/proforma-number-diagnostic" element={<ProformaNumberDiagnosticPage />} />
+
+          {/* Proforma Function Fix - Fix generate_proforma_number function */}
+          <Route path="/proforma-function-fix" element={<ProformaFunctionFixPage />} />
 
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
