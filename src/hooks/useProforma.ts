@@ -176,7 +176,7 @@ export const useCreateProforma = () => {
         quantity: item.quantity,
         unit_price: item.unit_price,
         tax_percentage: item.tax_percentage,
-        tax_inclusive: item.tax_inclusive,
+        tax_inclusive: false, // Prices are always tax-exclusive
         discount_percentage: item.discount_percentage,
         discount_amount: item.discount_amount,
       }));
