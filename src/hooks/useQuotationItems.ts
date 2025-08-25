@@ -10,7 +10,6 @@ export interface QuotationItem {
   tax_setting_id?: string;
   tax_percentage?: number;
   tax_amount?: number;
-  tax_inclusive?: boolean;
   line_total: number;
   sort_order?: number;
 }
