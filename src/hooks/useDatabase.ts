@@ -764,28 +764,50 @@ export const useCustomerPayments = (customerId?: string, companyId?: string) => 
 
 export const useCreatePayment = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
-    mutationFn: async (payment: Omit<Payment, 'id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (paymentData: Omit<Payment, 'id' | 'created_at' | 'updated_at'> & { invoice_id: string }) => {
       // Validate UUID fields before insert
-      if (!payment.company_id || typeof payment.company_id !== 'string' || payment.company_id.length !== 36) {
+      if (!paymentData.company_id || typeof paymentData.company_id !== 'string' || paymentData.company_id.length !== 36) {
         throw new Error('Invalid company ID. Please refresh and try again.');
       }
-      if (payment.customer_id && (typeof payment.customer_id !== 'string' || payment.customer_id.length !== 36)) {
+      if (paymentData.customer_id && (typeof paymentData.customer_id !== 'string' || paymentData.customer_id.length !== 36)) {
         throw new Error('Invalid customer ID. Please select a valid invoice.');
       }
+      if (!paymentData.invoice_id || typeof paymentData.invoice_id !== 'string' || paymentData.invoice_id.length !== 36) {
+        throw new Error('Invalid invoice ID. Please select a valid invoice.');
+      }
 
-      const { data, error } = await supabase
-        .from('payments')
-        .insert([payment])
-        .select()
-        .single();
+      // Use database function to record payment with invoice allocation and balance update
+      const { data, error } = await supabase.rpc('record_payment_with_allocation', {
+        p_company_id: paymentData.company_id,
+        p_customer_id: paymentData.customer_id,
+        p_invoice_id: paymentData.invoice_id,
+        p_payment_number: paymentData.payment_number,
+        p_payment_date: paymentData.payment_date,
+        p_amount: paymentData.amount,
+        p_payment_method: paymentData.payment_method,
+        p_reference_number: paymentData.reference_number || paymentData.payment_number,
+        p_notes: paymentData.notes || null
+      });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database function error:', error);
+        throw error;
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Failed to record payment');
+      }
+
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
+      // Invalidate multiple cache keys to refresh UI
       queryClient.invalidateQueries({ queryKey: ['payments'] });
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['invoice', result.invoice_id] });
+      queryClient.invalidateQueries({ queryKey: ['customer_invoices'] });
     },
   });
 };
