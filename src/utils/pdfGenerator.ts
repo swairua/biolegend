@@ -40,6 +40,8 @@ export interface DocumentData {
   subtotal?: number;
   tax_amount?: number;
   total_amount: number;
+  paid_amount?: number;
+  balance_due?: number;
   notes?: string;
   terms_and_conditions?: string;
   valid_until?: string; // For proforma invoices
@@ -818,6 +820,16 @@ export const generatePDF = (data: DocumentData) => {
               <td class="label">${data.type === 'statement' ? 'TOTAL OUTSTANDING:' : 'TOTAL:'}</td>
               <td class="amount">${formatCurrency(data.total_amount)}</td>
             </tr>
+            ${(data.type === 'invoice' || data.type === 'proforma') && data.paid_amount !== undefined ? `
+            <tr class="payment-info">
+              <td class="label">Paid Amount:</td>
+              <td class="amount" style="color: #10B981;">${formatCurrency(data.paid_amount || 0)}</td>
+            </tr>
+            <tr class="balance-info">
+              <td class="label" style="font-weight: bold;">Balance Due:</td>
+              <td class="amount" style="font-weight: bold; color: ${(data.balance_due || 0) > 0 ? '#DC2626' : '#10B981'};">${formatCurrency(data.balance_due || 0)}</td>
+            </tr>
+            ` : ''}
           </table>
         </div>
         ` : ''}
@@ -935,6 +947,8 @@ export const downloadInvoicePDF = async (invoice: any, documentType: 'INVOICE' |
     subtotal: invoice.subtotal,
     tax_amount: invoice.tax_amount,
     total_amount: invoice.total_amount,
+    paid_amount: invoice.paid_amount || 0,
+    balance_due: invoice.balance_due || (invoice.total_amount - (invoice.paid_amount || 0)),
     notes: invoice.notes,
     terms_and_conditions: invoice.terms_and_conditions,
   };

@@ -29,6 +29,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { parseErrorMessageWithCodes } from '@/utils/errorHelpers';
 import { useInvoices, useCreatePayment } from '@/hooks/useDatabase';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
 
@@ -124,7 +125,8 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
 
       const paymentRecord = {
         company_id: selectedInvoice?.company_id || currentCompany.id,
-        customer_id: selectedInvoice?.customer_id || '',
+        customer_id: selectedInvoice?.customer_id || null,
+        invoice_id: paymentData.invoice_id, // Required for payment allocation
         payment_number: paymentNumber,
         payment_date: paymentData.payment_date,
         amount: paymentData.amount,
@@ -132,8 +134,8 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
         reference_number: paymentData.reference_number || paymentNumber,
         notes: paymentData.notes
       };
-      
-      await createPaymentMutation.mutateAsync(paymentRecord);
+
+      const result = await createPaymentMutation.mutateAsync(paymentRecord);
       
       toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
       onSuccess();
@@ -141,27 +143,14 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       resetForm();
     } catch (error) {
       console.error('Error recording payment:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
 
-      // Provide more specific error messages
-      let errorMessage = 'Failed to record payment. Please try again.';
+      const errorMessage = parseErrorMessageWithCodes(error, 'payment');
 
-      if (error instanceof Error) {
-        if (error.message.includes('payment_method')) {
-          errorMessage = 'Invalid payment method. Please select a valid payment method.';
-        } else if (error.message.includes('company_id')) {
-          errorMessage = 'Company information missing. Please refresh and try again.';
-        } else if (error.message.includes('customer_id')) {
-          errorMessage = 'Customer information missing. Please select a valid invoice.';
-        } else if (error.message.includes('amount')) {
-          errorMessage = 'Invalid payment amount. Please check the amount and try again.';
-        } else if (error.message.toLowerCase().includes('duplicate')) {
-          errorMessage = 'Payment number already exists. Please try again.';
-        } else {
-          errorMessage = `Payment failed: ${error.message}`;
-        }
-      }
-
-      toast.error(errorMessage);
+      toast.error(errorMessage, {
+        duration: 6000,
+        description: 'Check the console for technical details'
+      });
     } finally {
       setIsSubmitting(false);
     }

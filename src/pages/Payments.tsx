@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { ViewPaymentModal } from '@/components/payments/ViewPaymentModal';
 import { Button } from '@/components/ui/button';
@@ -146,7 +147,7 @@ export default function Payments() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Payments</h1>
-            <p className="text-destructive">Error loading payments: {error.message}</p>
+            <p className="text-destructive">Error loading payments: {parseErrorMessage(error)}</p>
           </div>
         </div>
       </div>
