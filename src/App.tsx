@@ -327,6 +327,9 @@ const App = () => {
           {/* System Fix Test - Comprehensive audit and fix */}
           <Route path="/system-fix-test" element={<SystemFixTest />} />
 
+          {/* Proforma Number Diagnostic - Debug proforma number generation */}
+          <Route path="/proforma-number-diagnostic" element={<ProformaNumberDiagnosticPage />} />
+
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
 
