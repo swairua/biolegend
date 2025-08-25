@@ -90,11 +90,16 @@ export const CreateProformaModal = ({
             setProformaNumber(`PF-${number}`);
           },
           onError: (error) => {
-            console.warn('Proforma number generation failed, using fallback:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            console.warn('Proforma number generation failed, using fallback:', errorMessage);
+
             // Generate a fallback number using timestamp and random number
             const timestamp = Date.now().toString().slice(-6);
             const year = new Date().getFullYear();
-            setProformaNumber(`PF-${year}-${timestamp}`);
+            const fallbackNumber = `PF-${year}-${timestamp}`;
+            setProformaNumber(fallbackNumber);
+
+            console.info('Using fallback proforma number:', fallbackNumber);
           }
         }
       );
