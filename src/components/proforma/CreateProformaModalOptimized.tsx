@@ -141,7 +141,6 @@ export const CreateProformaModalOptimized = ({
       discount_amount: 0,
       tax_percentage: defaultTaxRate,
       tax_amount: 0,
-      tax_inclusive: false,
       line_total: 0,
     };
 
@@ -162,14 +161,7 @@ export const CreateProformaModalOptimized = ({
       if (item.id === id) {
         let updatedItem = { ...item, [field]: value };
 
-        if (field === 'tax_inclusive') {
-          if (value && item.tax_percentage === 0) {
-            updatedItem.tax_percentage = defaultTaxRate;
-          }
-          if (!value) {
-            updatedItem.tax_percentage = 0;
-          }
-        }
+        // No special handling needed since prices are always tax-exclusive
 
         const calculatedItem = calculateItemTax(updatedItem);
         return {
@@ -191,7 +183,7 @@ export const CreateProformaModalOptimized = ({
       quantity: item.quantity,
       unit_price: item.unit_price,
       tax_percentage: item.tax_percentage,
-      tax_inclusive: item.tax_inclusive,
+      tax_inclusive: false, // Prices are always tax-exclusive
       discount_percentage: item.discount_percentage,
       discount_amount: item.discount_amount,
     }));
@@ -442,7 +434,6 @@ export const CreateProformaModalOptimized = ({
                         <TableHead>Qty</TableHead>
                         <TableHead>Unit Price</TableHead>
                         <TableHead>Tax %</TableHead>
-                        <TableHead>Tax Incl.</TableHead>
                         <TableHead>Total</TableHead>
                         <TableHead></TableHead>
                       </TableRow>
@@ -491,11 +482,7 @@ export const CreateProformaModalOptimized = ({
                             />
                           </TableCell>
                           <TableCell>
-                            <Checkbox
-                              checked={item.tax_inclusive}
-                              onCheckedChange={(checked) => updateItem(item.id!, 'tax_inclusive', checked)}
-                            />
-                          </TableCell>
+                            </TableCell>
                           <TableCell>{formatCurrency(item.line_total)}</TableCell>
                           <TableCell>
                             <Button
