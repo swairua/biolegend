@@ -351,8 +351,12 @@ export const CreateDeliveryNoteModal = ({
                   ))}
                 </SelectContent>
               </Select>
-              {formData.invoice_id && (
-                <p className="text-xs text-success">✅ Invoice selected - items will be auto-populated</p>
+              {formData.invoice_id ? (
+                <p className="text-xs text-success">✅ Invoice selected - items will be auto-populated from invoice</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  💡 Select an invoice to auto-load items, or leave blank to add items manually
+                </p>
               )}
             </div>
           </div>
