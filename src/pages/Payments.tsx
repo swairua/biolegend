@@ -8,6 +8,7 @@ import { PaymentAllocationAutoFix } from '@/components/payments/PaymentAllocatio
 import { PaymentAllocationTest } from '@/components/payments/PaymentAllocationTest';
 import { PaymentAllocationStatus } from '@/components/payments/PaymentAllocationStatus';
 import { PaymentSystemTest } from '@/components/payments/PaymentSystemTest';
+import { PaymentFunctionalityTest } from '@/components/payments/PaymentFunctionalityTest';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
