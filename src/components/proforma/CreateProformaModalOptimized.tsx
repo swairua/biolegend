@@ -32,7 +32,7 @@ import {
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
-import { autoFixImproved } from '@/utils/improvedProformaFix';
+import { generateNextProformaNumber } from '@/utils/improvedProformaFix';
 import { ProformaErrorSolution } from '@/components/fixes/ProformaErrorSolution';
 import { toast } from 'sonner';
 
