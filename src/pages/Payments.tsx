@@ -361,6 +361,7 @@ export default function Payments() {
       {/* System Diagnostics and Testing */}
       <PaymentAllocationAutoFix />
       <PaymentAllocationTest />
+      <PaymentSystemTest />
 
       {/* View Payment Modal */}
       <ViewPaymentModal
