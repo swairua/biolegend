@@ -219,6 +219,11 @@ export default function UserManagement() {
       {/* Invitation Test Diagnostic */}
       <InvitationTestDiagnostic />
 
+      {/* User Invitations Table Fix - Show when there's an error with invited_at column */}
+      {error && error.includes('invited_at does not exist') && (
+        <UserInvitationsTableFix />
+      )}
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="shadow-card">
