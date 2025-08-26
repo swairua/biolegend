@@ -371,14 +371,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 'signIn');
 
     if (error) {
-      setTimeout(() => toast.error(error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: error as AuthError };
     }
 
     if (data?.error) {
-      setTimeout(() => toast.error(data.error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: data.error };
     }
 
@@ -401,14 +401,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 'signUp');
 
     if (error) {
-      setTimeout(() => toast.error(error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: error as AuthError };
     }
 
     if (data?.error) {
-      setTimeout(() => toast.error(data.error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: data.error };
     }
 
@@ -457,12 +457,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 'resetPassword');
 
     if (error) {
-      setTimeout(() => toast.error(error.message), 0);
+      // Return error without showing toast - let the component handle it
       return { error: error as AuthError };
     }
 
     if (data?.error) {
-      setTimeout(() => toast.error(data.error.message), 0);
+      // Return error without showing toast - let the component handle it
       return { error: data.error };
     }
 
