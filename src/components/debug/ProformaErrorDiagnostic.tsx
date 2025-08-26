@@ -362,7 +362,8 @@ export const ProformaErrorDiagnostic = () => {
                 setTimeout(() => runComprehensiveDiagnostic(), 2000);
               }}
               onError={(error) => {
-                toast.error(`Fix failed: ${error}`);
+                const errorMessage = typeof error === 'string' ? error : error?.message || 'Unknown error';
+                toast.error(`Fix failed: ${errorMessage}`);
               }}
             />
           </div>
