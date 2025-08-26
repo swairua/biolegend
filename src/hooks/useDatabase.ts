@@ -720,23 +720,89 @@ export const usePayments = (companyId?: string) => {
   return useQuery({
     queryKey: ['payments', companyId],
     queryFn: async () => {
-      let query = supabase
-        .from('payments')
-        .select(`
-          *,
-          customers:customers!customer_id(name, email),
-          payment_allocations(*, invoices(invoice_number, total_amount))
-        `)
-        .order('created_at', { ascending: false });
+      if (!companyId) return [];
 
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+      try {
+        // Step 1: Get payments without embedded relationships
+        let query = supabase
+          .from('payments')
+          .select(`
+            id,
+            company_id,
+            customer_id,
+            payment_number,
+            payment_date,
+            amount,
+            payment_method,
+            reference_number,
+            notes,
+            created_at,
+            updated_at
+          `)
+          .eq('company_id', companyId)
+          .order('created_at', { ascending: false });
+
+        const { data: payments, error: paymentsError } = await query;
+
+        if (paymentsError) throw paymentsError;
+        if (!payments || payments.length === 0) return [];
+
+        // Step 2: Get customers separately (filter out invalid UUIDs)
+        const customerIds = [...new Set(payments.map(payment => payment.customer_id).filter(id => id && typeof id === 'string' && id.length === 36))];
+        const { data: customers } = customerIds.length > 0 ? await supabase
+          .from('customers')
+          .select('id, name, email, phone, address, city, country')
+          .in('id', customerIds) : { data: [] };
+
+        // Step 3: Get payment allocations separately
+        const { data: paymentAllocations } = await supabase
+          .from('payment_allocations')
+          .select(`
+            id,
+            payment_id,
+            invoice_id,
+            amount_allocated,
+            invoices(id, invoice_number, total_amount)
+          `)
+          .in('payment_id', payments.map(payment => payment.id));
+
+        // Step 4: Create lookup maps
+        const customerMap = new Map();
+        (customers || []).forEach(customer => {
+          customerMap.set(customer.id, customer);
+        });
+
+        const allocationsMap = new Map();
+        (paymentAllocations || []).forEach(allocation => {
+          if (!allocationsMap.has(allocation.payment_id)) {
+            allocationsMap.set(allocation.payment_id, []);
+          }
+          allocationsMap.get(allocation.payment_id).push({
+            id: allocation.id,
+            invoice_number: allocation.invoices?.invoice_number || 'N/A',
+            allocated_amount: allocation.amount_allocated,
+            invoice_total: allocation.invoices?.total_amount || 0
+          });
+        });
+
+        // Step 5: Combine data
+        return payments.map(payment => ({
+          ...payment,
+          customers: customerMap.get(payment.customer_id) || {
+            name: 'Unknown Customer',
+            email: null,
+            phone: null
+          },
+          payment_allocations: allocationsMap.get(payment.id) || []
+        }));
+
+      } catch (error) {
+        console.error('Error in usePayments:', error);
+        const errorMessage = typeof error === 'string' ? error :
+                            (error as any)?.message ||
+                            'Failed to load payments';
+        throw new Error(errorMessage);
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
     },
   });
 };
@@ -814,18 +880,45 @@ export const useCreatePayment = () => {
 
         if (paymentError) throw paymentError;
 
-        // 2. Create payment allocation
-        const { error: allocationError } = await supabase
-          .from('payment_allocations')
-          .insert([{
-            payment_id: paymentResult.id,
-            invoice_id: invoice_id,
-            amount_allocated: paymentData.amount
-          }]);
+        // 2. Create payment allocation with enhanced error handling
+        let allocationError: any = null;
+        try {
+          // First check if payment_allocations table exists
+          const { error: tableCheckError } = await supabase
+            .from('payment_allocations')
+            .select('id')
+            .limit(1);
+
+          if (tableCheckError && tableCheckError.message.includes('relation') && tableCheckError.message.includes('does not exist')) {
+            allocationError = new Error('payment_allocations table does not exist. Please run the table setup SQL.');
+          } else {
+            // Table exists, try to insert allocation
+            const { error: insertError } = await supabase
+              .from('payment_allocations')
+              .insert([{
+                payment_id: paymentResult.id,
+                invoice_id: invoice_id,
+                amount_allocated: paymentData.amount
+              }]);
+
+            allocationError = insertError;
+          }
+        } catch (err) {
+          allocationError = err;
+        }
 
         if (allocationError) {
           console.error('Failed to create allocation:', allocationError);
+          console.error('Allocation error details:', JSON.stringify(allocationError, null, 2));
+          console.error('Payment was recorded successfully, but allocation failed');
+
+          // If it's an RLS error, provide specific guidance
+          if (allocationError.message?.includes('row-level security') || allocationError.message?.includes('permission denied')) {
+            console.error('RLS Error: User profile may not be linked to a company or RLS policies are blocking the insert');
+          }
+
           // Continue anyway - payment was recorded
+          // The UI should show this as a warning, not a complete failure
         }
 
         // 3. Get current invoice data and update balances
@@ -867,7 +960,9 @@ export const useCreatePayment = () => {
           payment_id: paymentResult.id,
           invoice_id: invoice_id,
           amount_allocated: paymentData.amount,
-          fallback_used: true
+          fallback_used: true,
+          allocation_failed: !!allocationError,
+          allocation_error: allocationError ? JSON.stringify(allocationError) : null
         };
       }
 

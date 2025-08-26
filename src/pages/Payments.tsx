@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { parseErrorMessage } from '@/utils/errorHelpers';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { ViewPaymentModal } from '@/components/payments/ViewPaymentModal';
+import { PaymentAllocationDiagnostic } from '@/components/PaymentAllocationDiagnostic';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -82,11 +83,10 @@ export default function Payments() {
   const [selectedPayment, setSelectedPayment] = useState<any>(null);
   
   // Fetch live payments data and company details
-  const { data: payments = [], isLoading, error } = usePayments();
   const { data: companies = [] } = useCompanies();
-
-  // Get the current company (assuming first company for now)
   const currentCompany = companies[0];
+  const { data: payments = [], isLoading, error } = usePayments(currentCompany?.id);
+
 
   const handleRecordPayment = () => {
     setShowRecordModal(true);
@@ -150,6 +150,9 @@ export default function Payments() {
             <p className="text-destructive">Error loading payments: {parseErrorMessage(error)}</p>
           </div>
         </div>
+
+        {/* Show diagnostic if there's an error */}
+        <PaymentAllocationDiagnostic />
       </div>
     );
   }

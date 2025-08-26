@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth, UserProfile, UserRole, UserStatus } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { parseErrorMessage, parseErrorMessageWithCodes } from '@/utils/errorHelpers';
 
 export interface UserInvitation {
   id: string;
@@ -63,9 +64,10 @@ export const useUserManagement = () => {
 
       setUsers(data || []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch users';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessage(err);
+      console.error('Error fetching users:', err);
+      setError(`Failed to fetch users: ${errorMessage}`);
+      toast.error(`Error fetching users: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -90,7 +92,10 @@ export const useUserManagement = () => {
 
       setInvitations(data || []);
     } catch (err) {
+      const errorMessage = parseErrorMessage(err);
       console.error('Error fetching invitations:', err);
+      setError(`Failed to fetch invitations: ${errorMessage}`);
+      toast.error(`Error fetching invitations: ${errorMessage}`);
     }
   };
 
@@ -150,8 +155,9 @@ export const useUserManagement = () => {
       await fetchUsers();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create user';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'user creation');
+      console.error('Error creating user:', err);
+      toast.error(`Failed to create user: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -180,8 +186,9 @@ export const useUserManagement = () => {
       await fetchUsers();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update user';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'user update');
+      console.error('Error updating user:', err);
+      toast.error(`Failed to update user: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -208,8 +215,9 @@ export const useUserManagement = () => {
       await fetchUsers();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete user';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'user deletion');
+      console.error('Error deleting user:', err);
+      toast.error(`Failed to delete user: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -268,8 +276,9 @@ export const useUserManagement = () => {
       await fetchInvitations();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to send invitation';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'invitation');
+      console.error('Error sending invitation:', err);
+      toast.error(`Failed to send invitation: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -298,8 +307,9 @@ export const useUserManagement = () => {
       await fetchInvitations();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to revoke invitation';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'invitation revocation');
+      console.error('Error revoking invitation:', err);
+      toast.error(`Failed to revoke invitation: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
@@ -345,7 +355,8 @@ export const useUserManagement = () => {
 
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to accept invitation';
+      const errorMessage = parseErrorMessageWithCodes(err, 'invitation acceptance');
+      console.error('Error accepting invitation:', err);
       return { success: false, error: errorMessage };
     }
   };

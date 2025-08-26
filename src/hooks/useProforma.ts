@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { calculateDocumentTotals, type TaxableItem } from '@/utils/taxCalculation';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 
 export interface ProformaItem {
   id?: string;
@@ -160,7 +161,7 @@ const serializeError = (error: any): string => {
   try {
     return JSON.stringify(error, null, 2);
   } catch {
-    return String(error);
+    return parseErrorMessage(error);
   }
 };
 
@@ -423,7 +424,7 @@ export const useGenerateProformaNumber = () => {
                   errorMessage = JSON.stringify(error, null, 2);
                 }
               } catch {
-                errorMessage = String(error);
+                errorMessage = parseErrorMessage(error);
               }
             }
           }
