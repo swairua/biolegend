@@ -363,6 +363,11 @@ export default function Payments() {
       {/* System Diagnostics and Testing */}
       <PaymentAllocationAutoFix />
 
+      {/* Test Data Creation (if needed) */}
+      {availableInvoices.length === 0 && (
+        <TestInvoiceCreator />
+      )}
+
       {/* Quick Functionality Test */}
       <PaymentFunctionalityTest />
 
