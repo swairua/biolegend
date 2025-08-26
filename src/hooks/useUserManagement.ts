@@ -186,8 +186,9 @@ export const useUserManagement = () => {
       await fetchUsers();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to update user';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'user update');
+      console.error('Error updating user:', err);
+      toast.error(`Failed to update user: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
