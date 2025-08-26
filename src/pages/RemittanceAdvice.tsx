@@ -408,6 +408,16 @@ const RemittanceAdvice = () => {
           // Optional callback when PDF is downloaded from view modal
         }}
       />
+
+      {/* Edit Remittance Modal */}
+      <EditRemittanceModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        remittance={selectedRemittance}
+        onSuccess={() => {
+          toast.success('Remittance advice updated successfully!');
+        }}
+      />
     </div>
   );
 };
