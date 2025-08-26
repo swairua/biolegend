@@ -161,7 +161,7 @@ const serializeError = (error: any): string => {
   try {
     return JSON.stringify(error, null, 2);
   } catch {
-    return String(error);
+    return parseErrorMessage(error);
   }
 };
 
