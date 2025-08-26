@@ -424,7 +424,7 @@ export const useGenerateProformaNumber = () => {
                   errorMessage = JSON.stringify(error, null, 2);
                 }
               } catch {
-                errorMessage = String(error);
+                errorMessage = parseErrorMessage(error);
               }
             }
           }
