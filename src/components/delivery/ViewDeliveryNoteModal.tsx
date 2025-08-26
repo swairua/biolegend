@@ -178,11 +178,13 @@ export const ViewDeliveryNoteModal = ({
                 </div>
               </div>
 
-              {mappedDeliveryNote.invoice_number && (
+              {(mappedDeliveryNote.invoice_number || mappedDeliveryNote.invoices?.invoice_number) && (
                 <div className="mt-4 pt-4 border-t">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Related Invoice</p>
-                    <p className="text-sm">{mappedDeliveryNote.invoice_number}</p>
+                    <p className="text-sm font-semibold text-primary">
+                      {mappedDeliveryNote.invoice_number || mappedDeliveryNote.invoices?.invoice_number}
+                    </p>
                   </div>
                 </div>
               )}
