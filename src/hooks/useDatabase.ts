@@ -724,7 +724,7 @@ export const usePayments = (companyId?: string) => {
         .from('payments')
         .select(`
           *,
-          customers(name, email),
+          customers:customers!customer_id(name, email),
           payment_allocations(*, invoices(invoice_number, total_amount))
         `)
         .order('created_at', { ascending: false });
