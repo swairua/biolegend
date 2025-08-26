@@ -187,8 +187,6 @@ export default function CreditNotes() {
           </div>
         </div>
 
-        {/* Show force migration for potential schema issues */}
-        <ForceCreditNoteCorrectMigration />
 
         <Card className="shadow-card">
           <CardContent className="pt-6">
