@@ -70,6 +70,48 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Generate advice number when modal opens
+  const generateAdviceNumber = async () => {
+    if (!currentCompany?.id) return;
+
+    try {
+      const number = await generateNumberMutation.mutateAsync({
+        documentType: 'remittance',
+        companyId: currentCompany.id
+      });
+      setFormData(prev => ({ ...prev, adviceNumber: number }));
+    } catch (error) {
+      console.error('Error generating advice number:', error);
+      // Fallback to simple number generation
+      const fallbackNumber = `RA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
+      setFormData(prev => ({ ...prev, adviceNumber: fallbackNumber }));
+    }
+  };
+
+  // Generate number when modal opens and company is available
+  useState(() => {
+    if (open && currentCompany?.id && !formData.adviceNumber) {
+      generateAdviceNumber();
+    }
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    // Auto-populate customer data when customer is selected
+    if (field === 'customerId') {
+      const customer = customers.find(c => c.id === value);
+      if (customer) {
+        setFormData(prev => ({
+          ...prev,
+          customerId: value,
+          customerName: customer.name,
+          customerAddress: customer.address || ''
+        }));
+      }
+    }
+  };
+
   const addItem = () => {
     const newItem: RemittanceItem = {
       id: Date.now().toString(),
@@ -89,18 +131,24 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
     }
   };
 
-  const updateItem = (id: string, field: keyof RemittanceItem, value: any) => {
-    setItems(items.map(item => 
+  const updateItem = (id: string, field: keyof RemittanceItem, value: string | number) => {
+    setItems(items.map(item =>
       item.id === id ? { ...item, [field]: value } : item
     ));
   };
 
   const calculateTotalPayment = () => {
-    return items.reduce((sum, item) => sum + (item.payment || 0), 0);
+    return items.reduce((total, item) => total + (item.payment || 0), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!currentCompany?.id || !profile?.id) {
+      toast.error('Company or user information not available');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -110,31 +158,46 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
         return;
       }
 
+      if (!formData.customerId && !formData.customerName) {
+        toast.error('Please select a customer');
+        return;
+      }
+
       if (items.some(item => !item.date || item.payment === 0)) {
         toast.error('All items must have a date and payment amount');
         return;
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      // Prepare remittance data for database
       const remittanceData = {
-        ...formData,
-        items,
-        totalPayment: calculateTotalPayment(),
-        status: 'draft',
-        createdAt: new Date().toISOString(),
+        company_id: currentCompany.id,
+        customer_id: formData.customerId || null, // Can be null if customer is not in system
+        advice_number: formData.adviceNumber,
+        advice_date: formData.date,
+        total_payment: calculateTotalPayment(),
+        status: 'draft' as const,
+        notes: formData.notes || null,
+        created_by: profile.id,
       };
 
-      console.log('Creating remittance advice:', remittanceData);
-      
+      // Create the remittance advice
+      const createdRemittance = await createRemittanceMutation.mutateAsync(remittanceData);
+
+      // TODO: Create remittance advice items
+      // Note: This would require a separate hook for creating items
+      // For now, we're creating the main record
+
+      console.log('Created remittance advice:', createdRemittance);
+      console.log('Items to be created:', items);
+
       toast.success('Remittance advice created successfully!');
       onSuccess?.();
       onOpenChange(false);
-      
+
       // Reset form
       setFormData({
-        adviceNumber: `RA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
+        adviceNumber: '',
+        customerId: '',
         customerName: '',
         customerAddress: '',
         date: new Date().toISOString().split('T')[0],
@@ -149,10 +212,10 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
         creditAmount: 0,
         payment: 0,
       }]);
-      
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error creating remittance advice:', error);
-      toast.error('Failed to create remittance advice. Please try again.');
+      toast.error('Failed to create remittance advice: ' + (error.message || 'Unknown error'));
     } finally {
       setIsSubmitting(false);
     }
