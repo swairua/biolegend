@@ -1329,6 +1329,7 @@ export const useDeliveryNotes = (companyId?: string) => {
         .select(`
           *,
           customers:customers!customer_id(name, email, phone, address, city, country),
+          invoices:invoices!invoice_id(invoice_number, total_amount),
           delivery_note_items(*, products(name, unit_of_measure))
         `)
         .order('created_at', { ascending: false });
