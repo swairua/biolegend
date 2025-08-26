@@ -181,13 +181,30 @@ export function EditRemittanceModal({ open, onOpenChange, remittance, onSuccess 
 
       // Update the remittance advice
       await updateRemittanceMutation.mutateAsync(updateData);
-      
-      // TODO: Update remittance advice items
-      // Note: This would require a separate hook for updating items
-      // For now, we're updating the main record
-      
+
+      // Update remittance advice items
+      if (items && items.length > 0) {
+        const itemsToUpdate = items
+          .filter(item => item.payment > 0) // Only save items with payment amounts
+          .map((item, index) => ({
+            id: item.id,
+            document_date: item.date,
+            document_number: item.invoiceNumber || item.creditNote || `Item ${index + 1}`,
+            document_type: (item.invoiceNumber ? 'invoice' : item.creditNote ? 'credit_note' : 'payment') as 'invoice' | 'credit_note' | 'payment',
+            invoice_amount: item.invoiceAmount || null,
+            credit_amount: item.creditAmount || null,
+            payment_amount: item.payment,
+            sort_order: index + 1,
+          }));
+
+        await updateItemsMutation.mutateAsync({
+          remittanceId: remittance.id,
+          items: itemsToUpdate
+        });
+        console.log('Updated remittance advice items:', itemsToUpdate);
+      }
+
       console.log('Updated remittance advice:', updateData);
-      console.log('Items to be updated:', items);
       
       toast.success('Remittance advice updated successfully!');
       onSuccess?.();
