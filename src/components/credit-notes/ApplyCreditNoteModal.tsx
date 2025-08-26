@@ -27,7 +27,7 @@ import {
   FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useInvoices } from '@/hooks/useDatabase';
+import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { useApplyCreditNoteToInvoice, type CreditNote } from '@/hooks/useCreditNotes';
 import { useAuth } from '@/contexts/AuthContext';
 

@@ -4,7 +4,6 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { EnhancedLogin } from '@/components/auth/EnhancedLogin';
-import { AuthStateDebugWithNetwork } from '@/components/debug/AuthStateDebug';
 import { EmergencyAuthReset } from '@/components/auth/EmergencyAuthReset';
 
 interface LayoutProps {
@@ -50,10 +49,10 @@ export function Layout({ children }: LayoutProps) {
     return (
       <div className="min-h-screen bg-background p-6">
         <div className="mb-4 text-center">
-          <h2 className="text-lg font-semibold mb-2">Loading Debug</h2>
+          <h2 className="text-lg font-semibold mb-2">Loading...</h2>
           <p className="text-muted-foreground">App appears to be stuck in loading state...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mt-4"></div>
         </div>
-        <AuthStateDebugWithNetwork />
       </div>
     );
   }

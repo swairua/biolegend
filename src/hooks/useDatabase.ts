@@ -511,6 +511,7 @@ export const useDeleteTaxSetting = () => {
 export const useInvoices = (companyId?: string) => {
   return useQuery({
     queryKey: ['invoices', companyId],
+    enabled: !!companyId,
     queryFn: async () => {
       if (!companyId) return [];
 

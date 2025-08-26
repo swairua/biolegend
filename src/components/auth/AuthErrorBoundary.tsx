@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { AlertTriangle, RefreshCw, Shield } from 'lucide-react';
-import { NetworkDiagnostics } from '@/components/debug/NetworkDiagnostics';
 
 interface Props {
   children: ReactNode;
@@ -100,7 +99,9 @@ export class AuthErrorBoundary extends Component<Props, State> {
 
                 {this.state.showDiagnostics && (
                   <div className="mt-4">
-                    <NetworkDiagnostics />
+                    <div className="text-sm text-muted-foreground">
+                      Network diagnostics temporarily disabled.
+                    </div>
                   </div>
                 )}
 

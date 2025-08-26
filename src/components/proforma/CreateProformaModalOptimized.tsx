@@ -32,7 +32,7 @@ import {
 import { useCustomers, useProducts, useTaxSettings } from '@/hooks/useDatabase';
 import { useCreateProforma, type ProformaItem } from '@/hooks/useProforma';
 import { calculateItemTax, calculateDocumentTotals, formatCurrency, type TaxableItem } from '@/utils/taxCalculation';
-import { autoFixImproved } from '@/utils/improvedProformaFix';
+import { generateNextProformaNumber } from '@/utils/improvedProformaFix';
 import { ProformaErrorSolution } from '@/components/fixes/ProformaErrorSolution';
 import { toast } from 'sonner';
 
@@ -94,16 +94,11 @@ export const CreateProformaModalOptimized = ({
     try {
       console.log('🔢 Generating proforma number...');
 
-      const result = await autoFixImproved();
-      setProformaNumber(result.number);
+      const proformaNumber = await generateNextProformaNumber();
+      setProformaNumber(proformaNumber);
 
-      if (result.success) {
-        console.log('✅ Proforma number generated:', result.number);
-      } else {
-        console.warn('⚠️ Using fallback number:', result.number);
-        setFunctionError(result.error || 'Function creation failed');
-        toast.warning(`Using fallback number: ${result.number}`);
-      }
+      console.log('✅ Proforma number generated:', proformaNumber);
+      toast.success(`Proforma number generated: ${proformaNumber}`);
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

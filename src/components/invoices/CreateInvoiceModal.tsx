@@ -35,7 +35,6 @@ import { useOptimizedProductSearch, usePopularProducts } from '@/hooks/useOptimi
 import { useCreateInvoiceWithItems } from '@/hooks/useQuotationItems';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { InventoryDebug } from '@/components/debug/InventoryDebug';
 
 interface InvoiceItem {
   id: string;
@@ -784,8 +783,6 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         </DialogFooter>
       </DialogContent>
 
-      {/* Debug Component - only show when modal is open */}
-      {open && <InventoryDebug />}
     </Dialog>
   );
 }

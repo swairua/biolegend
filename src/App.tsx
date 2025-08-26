@@ -31,6 +31,8 @@ import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimiz
 import ProformaNumberDiagnosticPage from "./pages/ProformaNumberDiagnostic";
 import ProformaErrorDiagnosticPage from "./pages/ProformaErrorDiagnostic";
 import PDFDiagnostic from "./pages/PDFDiagnostic";
+import SetupAndTest from "./components/SetupAndTest";
+import AuthTest from "./components/AuthTest";
 
 const App = () => {
 

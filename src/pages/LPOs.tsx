@@ -188,7 +188,24 @@ export default function LPOs() {
           </div>
         </div>
         {isTableMissing ? (
-          <DirectForceMigration />
+          <Card className="shadow-card">
+            <CardContent className="pt-6">
+              <div className="text-center py-8">
+                <AlertTriangle className="h-16 w-16 text-destructive mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Database Table Missing</h3>
+                <p className="text-destructive mb-4">
+                  The LPOs table appears to be missing from the database.
+                </p>
+                <Button
+                  variant="outline"
+                  onClick={() => window.location.reload()}
+                  className="mt-4"
+                >
+                  Retry
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
           <Card className="shadow-card">
             <CardContent className="pt-6">

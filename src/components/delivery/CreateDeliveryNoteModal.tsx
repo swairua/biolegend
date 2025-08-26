@@ -27,7 +27,8 @@ import {
   Truck,
   Package
 } from 'lucide-react';
-import { useCustomers, useProducts, useInvoices, useCompanies } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useCompanies } from '@/hooks/useDatabase';
+import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { useCreateDeliveryNote } from '@/hooks/useQuotationItems';
 import { mapDeliveryNoteForDatabase } from '@/utils/deliveryNoteMapper';
 import { validateDeliveryNoteData } from '@/utils/deliveryNoteValidation';
