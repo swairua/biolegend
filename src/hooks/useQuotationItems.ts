@@ -320,17 +320,34 @@ export const useCreateInvoiceWithItems = () => {
               movement_type: 'OUT' as const,
               reference_type: 'INVOICE' as const,
               reference_id: invoiceData.id,
-              quantity: -item.quantity, // Negative for outgoing stock
+              reference_number: invoice.invoice_number,
+              quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
               cost_per_unit: item.unit_price,
-              notes: `Stock reduction for invoice ${invoice.invoice_number}`
+              movement_date: invoice.invoice_date || new Date().toISOString().split('T')[0],
+              notes: `Stock reduction for invoice ${invoice.invoice_number}`,
+              created_by: invoice.created_by
             }));
+
+          console.log('📦 Creating stock movements for invoice:', {
+            invoice_id: invoiceData.id,
+            invoice_number: invoice.invoice_number,
+            movements_count: stockMovements.length,
+            movements: stockMovements
+          });
 
           if (stockMovements.length > 0) {
             const { error: stockError } = await supabase
               .from('stock_movements')
               .insert(stockMovements);
 
-            if (stockError) throw stockError;
+            if (stockError) {
+              console.error('❌ Stock movement insert failed:', {
+                error: stockError,
+                error_details: JSON.stringify(stockError, null, 2),
+                movements_attempted: stockMovements
+              });
+              throw new Error(`Failed to create stock movements: ${stockError.message || stockError.details || 'Unknown database error'}`);
+            }
 
             // Update product stock quantities in parallel for better performance
             const stockUpdatePromises = stockMovements.map(movement =>
