@@ -161,7 +161,19 @@ export default function Invoices() {
 
   const handleDownloadInvoice = (invoice: Invoice) => {
     try {
-      downloadInvoicePDF(invoice);
+      // Get current company details for PDF
+      const companyDetails = currentCompany ? {
+        name: currentCompany.name,
+        address: currentCompany.address,
+        city: currentCompany.city,
+        country: currentCompany.country,
+        phone: currentCompany.phone,
+        email: currentCompany.email,
+        tax_number: currentCompany.tax_number,
+        logo_url: currentCompany.logo_url
+      } : undefined;
+
+      downloadInvoicePDF(invoice, 'INVOICE', companyDetails);
       toast.success(`PDF download started for ${invoice.invoice_number}`);
     } catch (error) {
       console.error('Error downloading PDF:', error);
