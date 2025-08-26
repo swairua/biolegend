@@ -129,6 +129,16 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
       try {
         console.log('Fetching popular products for company:', companyId);
 
+        // Check authentication first
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        if (authError) {
+          console.error('Authentication error:', authError);
+          throw new Error(`Authentication failed: ${authError.message}`);
+        }
+        if (!user) {
+          throw new Error('User not authenticated');
+        }
+
         // Get products without embedded relationships first
         const { data: products, error: productsError } = await supabase
           .from('products')
@@ -150,7 +160,7 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
 
         if (productsError) {
           console.error('Error fetching products:', productsError);
-          throw new Error(`Failed to fetch products: ${productsError.message || 'Unknown error'}`);
+          throw new Error(`Failed to fetch products: ${productsError.message || productsError.code || 'Unknown error'}`);
         }
 
         console.log('Products fetched successfully:', products?.length || 0);
