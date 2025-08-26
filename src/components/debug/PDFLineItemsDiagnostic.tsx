@@ -183,12 +183,12 @@ export default function PDFLineItemsDiagnostic() {
                     >
                       View Data
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
-                      onClick={() => testInvoicePDF(invoice)}
-                      disabled={!invoice.invoice_items || invoice.invoice_items.length === 0}
+                      onClick={() => testInvoicePDF(invoice, logoTestMode)}
+                      disabled={!logoTestMode && (!invoice.invoice_items || invoice.invoice_items.length === 0)}
                     >
-                      Test PDF
+                      Test PDF{logoTestMode ? ' + Logo' : ''}
                     </Button>
                   </div>
                 </div>
