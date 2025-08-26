@@ -68,7 +68,10 @@ const RemittanceAdvice = () => {
           city: remittance.customers?.city || 'Nairobi',
           country: remittance.customers?.country || 'Kenya'
         },
-        notes: remittance.notes || `Remittance advice for ${remittance.customers?.name}`
+        notes: remittance.notes || `Remittance advice for ${remittance.customers?.name}`,
+        // Include line items for PDF generation
+        remittance_advice_items: remittance.remittance_advice_items || [],
+        items: remittance.items || [] // Fallback for legacy format
       };
 
       // Pass company details to PDF generator
