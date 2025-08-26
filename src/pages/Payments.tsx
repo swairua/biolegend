@@ -92,6 +92,7 @@ export default function Payments() {
   const { data: companies = [] } = useCompanies();
   const currentCompany = companies[0];
   const { data: payments = [], isLoading, error } = usePayments(currentCompany?.id);
+  const { data: invoices = [] } = useInvoices(currentCompany?.id);
 
 
   const handleRecordPayment = () => {
