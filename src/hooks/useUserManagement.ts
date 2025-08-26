@@ -215,8 +215,9 @@ export const useUserManagement = () => {
       await fetchUsers();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to delete user';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'user deletion');
+      console.error('Error deleting user:', err);
+      toast.error(`Failed to delete user: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
