@@ -89,7 +89,21 @@ export default function PDFLineItemsDiagnostic() {
           <CardTitle>PDF Line Items Diagnostic</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          
+
+          {/* Logo Test Toggle */}
+          <div className="flex items-center space-x-2 p-3 bg-blue-50 border border-blue-200 rounded">
+            <input
+              type="checkbox"
+              id="logoTest"
+              checked={logoTestMode}
+              onChange={(e) => setLogoTestMode(e.target.checked)}
+              className="rounded"
+            />
+            <label htmlFor="logoTest" className="text-sm font-medium">
+              Logo Test Mode (Forces logo display even without line items)
+            </label>
+          </div>
+
           {/* Quotations Section */}
           <div>
             <h3 className="text-lg font-semibold mb-3">Quotations ({quotations?.length || 0})</h3>
