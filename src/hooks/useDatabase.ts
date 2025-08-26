@@ -891,7 +891,10 @@ export const useCreatePayment = () => {
 
         if (allocationError) {
           console.error('Failed to create allocation:', allocationError);
+          console.error('Allocation error details:', JSON.stringify(allocationError, null, 2));
+          console.error('Payment was recorded successfully, but allocation failed');
           // Continue anyway - payment was recorded
+          // The UI should show this as a warning, not a complete failure
         }
 
         // 3. Get current invoice data and update balances
