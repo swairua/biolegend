@@ -796,8 +796,15 @@ export const generatePDF = (data: DocumentData) => {
                   <td>${index + 1}</td>
                   <td class="description-cell">${item.description}</td>
                   ${data.type === 'delivery' ? `
-                  <td>${item.quantity}</td>
+                  <td>${(item as any).quantity_ordered || item.quantity}</td>
+                  <td style="font-weight: bold; color: ${(item as any).quantity_delivered >= (item as any).quantity_ordered ? '#10B981' : '#F59E0B'};">${(item as any).quantity_delivered || item.quantity}</td>
                   <td>${(item as any).unit_of_measure || 'pcs'}</td>
+                  <td style="font-size: 10px;">
+                    ${(item as any).quantity_delivered >= (item as any).quantity_ordered ?
+                      '<span style="color: #10B981; font-weight: bold;">✓ Complete</span>' :
+                      '<span style="color: #F59E0B; font-weight: bold;">⚠ Partial</span>'
+                    }
+                  </td>
                   ` : `
                   <td>${item.quantity}</td>
                   <td class="amount-cell">${formatCurrency(item.unit_price)}</td>
