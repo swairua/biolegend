@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 export default function PDFLineItemsDiagnostic() {
   const [selectedDocument, setSelectedDocument] = useState<any>(null);
   const [showRawData, setShowRawData] = useState(false);
+  const [logoTestMode, setLogoTestMode] = useState(false);
   
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
