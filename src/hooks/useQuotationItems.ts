@@ -674,25 +674,64 @@ export const useCreateDeliveryNote = () => {
         // Create stock movements for delivered items
         const stockMovements = items
           .filter(item => item.product_id && item.quantity > 0)
-          .map(item => ({
-            company_id: deliveryNote.company_id,
-            product_id: item.product_id,
-            movement_type: 'OUT' as const,
-            reference_type: 'DELIVERY_NOTE' as const,
-            reference_id: deliveryData.id,
-            quantity: -item.quantity,
-            notes: `Stock delivery for delivery note ${deliveryNote.delivery_number || deliveryNote.delivery_note_number}`
-          }));
-        
+          .map(item => {
+            // Validate required fields
+            if (!deliveryNote.company_id) {
+              throw new Error('Company ID is required for stock movements');
+            }
+            if (!item.product_id) {
+              throw new Error('Product ID is required for stock movements');
+            }
+            if (!item.quantity || item.quantity <= 0) {
+              throw new Error('Valid quantity is required for stock movements');
+            }
+
+            return {
+              company_id: deliveryNote.company_id,
+              product_id: item.product_id,
+              movement_type: 'OUT' as const,
+              reference_type: 'DELIVERY_NOTE' as const,
+              reference_id: deliveryData.id,
+              reference_number: deliveryNote.delivery_number || deliveryNote.delivery_note_number || null,
+              quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
+              cost_per_unit: item.unit_price || null,
+              movement_date: deliveryNote.delivery_date || new Date().toISOString().split('T')[0],
+              notes: `Stock delivery for delivery note ${deliveryNote.delivery_number || deliveryNote.delivery_note_number}`,
+              created_by: deliveryNote.created_by || null
+            };
+          });
+
+        console.log('📦 Creating delivery note stock movements:', {
+          delivery_note_id: deliveryData.id,
+          movements_count: stockMovements.length,
+          movements: stockMovements
+        });
+
         if (stockMovements.length > 0) {
-          await supabase.from('stock_movements').insert(stockMovements);
-          
+          const { error: stockError } = await supabase
+            .from('stock_movements')
+            .insert(stockMovements);
+
+          if (stockError) {
+            console.error('❌ Delivery note stock movement insert failed:', {
+              error: stockError,
+              error_details: JSON.stringify(stockError, null, 2),
+              movements_attempted: stockMovements
+            });
+            throw new Error(`Failed to create delivery note stock movements: ${stockError.message || stockError.details || 'Unknown database error'}`);
+          }
+
           // Update product stock quantities
           for (const movement of stockMovements) {
-            await supabase.rpc('update_product_stock', {
+            const { error: updateError } = await supabase.rpc('update_product_stock', {
               product_uuid: movement.product_id,
-              quantity_change: movement.quantity
+              movement_type: movement.movement_type,
+              quantity: movement.quantity
             });
+
+            if (updateError) {
+              console.error('Failed to update stock for delivery note product:', movement.product_id, updateError);
+            }
           }
         }
       }
