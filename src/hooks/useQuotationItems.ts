@@ -350,7 +350,7 @@ export const useCreateInvoiceWithItems = () => {
               supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
                 movement_type: movement.movement_type,
-                quantity: movement.quantity
+                quantity: Math.abs(movement.quantity) // Use absolute value since movement_type determines direction
               })
             );
 
