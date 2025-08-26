@@ -276,8 +276,9 @@ export const useUserManagement = () => {
       await fetchInvitations();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to send invitation';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'invitation');
+      console.error('Error sending invitation:', err);
+      toast.error(`Failed to send invitation: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
