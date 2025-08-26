@@ -284,12 +284,12 @@ export const ViewDeliveryNoteModal = ({
                           <TableCell>{item.unit_of_measure}</TableCell>
                           <TableCell>
                             {isFullyDelivered ? (
-                              <Badge variant="destructive" className="text-xs">
+                              <Badge className="text-xs bg-success text-success-foreground">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Complete
                               </Badge>
                             ) : isPartiallyDelivered ? (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge className="text-xs bg-warning text-warning-foreground">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
                                 Partial
                               </Badge>
