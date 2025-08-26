@@ -49,6 +49,7 @@ import { EditUserModal } from '@/components/users/EditUserModal';
 import { InviteUserModal } from '@/components/users/InviteUserModal';
 import { UserProfileDiagnostic } from '@/components/UserProfileDiagnostic';
 import { PaymentAllocationDiagnostic } from '@/components/PaymentAllocationDiagnostic';
+import { AdminRoleDiagnostic } from '@/components/AdminRoleDiagnostic';
 import { toast } from 'sonner';
 
 function getRoleColor(role: string) {
