@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS stock_movements (
     movement_date DATE NOT NULL DEFAULT CURRENT_DATE,
     notes TEXT,
     created_by UUID,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Add foreign key constraints if the referenced tables exist
