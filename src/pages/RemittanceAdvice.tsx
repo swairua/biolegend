@@ -23,7 +23,7 @@ import {
 import { downloadRemittancePDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 import { useRemittanceAdvice, useCompanies } from '@/hooks/useDatabase';
-import { CreateRemittanceModal } from '@/components/remittance/CreateRemittanceModal';
+import { CreateRemittanceModal } from '@/components/remittance/CreateRemittanceModalFixed';
 import { ViewRemittanceModal } from '@/components/remittance/ViewRemittanceModal';
 
 // Remittance advice page - uses real database data via useRemittanceAdvice hook
