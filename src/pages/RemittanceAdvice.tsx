@@ -16,6 +16,7 @@ import {
   Search,
   FileText,
   Download,
+  Edit,
   Calendar,
   CreditCard,
   Building2
@@ -250,6 +251,14 @@ const RemittanceAdvice = () => {
                       >
                         <FileText className="mr-1 h-3 w-3" />
                         View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditRemittance(remittance)}
+                      >
+                        <Edit className="mr-1 h-3 w-3" />
+                        Edit
                       </Button>
                       <Button
                         variant="outline"
