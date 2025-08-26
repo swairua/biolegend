@@ -51,6 +51,7 @@ import { UserProfileDiagnostic } from '@/components/UserProfileDiagnostic';
 import { PaymentAllocationDiagnostic } from '@/components/PaymentAllocationDiagnostic';
 import { AdminRoleDiagnostic } from '@/components/AdminRoleDiagnostic';
 import { InvitationTestDiagnostic } from '@/components/InvitationTestDiagnostic';
+import { UserInvitationsTableFix } from '@/components/UserInvitationsTableFix';
 import { toast } from 'sonner';
 
 function getRoleColor(role: string) {
