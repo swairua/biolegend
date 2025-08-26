@@ -1,6 +1,6 @@
 import { QuickAuditRunner } from '@/components/QuickAuditRunner';
 import { CreditNoteSchemaTest } from '@/components/debug/CreditNoteSchemaTest';
-import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/ForceCreditNoteCorrectMigration';
+import { CreditNoteMigrationSQL } from '@/components/credit-notes/CreditNoteMigrationSQL';
 import { InvoiceErrorTest } from '@/components/debug/InvoiceErrorTest';
 import { MigrationErrorTest } from '@/components/debug/MigrationErrorTest';
 import { SupabaseConnectionTest } from '@/components/debug/SupabaseConnectionTest';
@@ -61,8 +61,8 @@ export default function AuditPage() {
       {/* Credit Note Schema Verification - Critical for recent fixes */}
       <CreditNoteSchemaTest />
 
-      {/* Force Correct Credit Note Migration - Keep available for reference */}
-      <ForceCreditNoteCorrectMigration />
+      {/* Simple Credit Note Migration SQL - Just copy and paste */}
+      <CreditNoteMigrationSQL />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
