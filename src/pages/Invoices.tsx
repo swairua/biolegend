@@ -25,9 +25,9 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { 
-  Plus, 
-  Search, 
+import {
+  Plus,
+  Search,
   Filter,
   Eye,
   Edit,
@@ -35,7 +35,8 @@ import {
   Download,
   Send,
   Calendar,
-  Receipt
+  Receipt,
+  Truck
 } from 'lucide-react';
 import { useInvoices, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
@@ -44,6 +45,7 @@ import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { EditInvoiceModal } from '@/components/invoices/EditInvoiceModal';
 import { ViewInvoiceModal } from '@/components/invoices/ViewInvoiceModal';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
+import { CreateDeliveryNoteModal } from '@/components/delivery/CreateDeliveryNoteModal';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 
 interface Invoice {
@@ -85,6 +87,7 @@ export default function Invoices() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDeliveryNoteModal, setShowDeliveryNoteModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   // Filter states
@@ -231,6 +234,22 @@ Website: www.biolegendscientific.co.ke`;
 
     setSelectedInvoice(invoiceData);
     setShowPaymentModal(true);
+  };
+
+  const handleCreateDeliveryNote = (invoice: Invoice) => {
+    if (!invoice) {
+      toast.error('Invoice not found');
+      return;
+    }
+
+    if (!invoice.invoice_items || invoice.invoice_items.length === 0) {
+      toast.error('Cannot create delivery note: Invoice has no items');
+      return;
+    }
+
+    setSelectedInvoice(invoice);
+    setShowDeliveryNoteModal(true);
+    toast.info(`Creating delivery note for invoice ${invoice.invoice_number}`);
   };
 
   const handleClearFilters = () => {
@@ -520,6 +539,17 @@ Website: www.biolegendscientific.co.ke`;
                         >
                           <Download className="h-4 w-4" />
                         </Button>
+                        {/* Create Delivery Note - Available for sent/paid invoices */}
+                        {(invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'partial') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleCreateDeliveryNote(invoice)}
+                            title="Create delivery note"
+                          >
+                            <Truck className="h-4 w-4" />
+                          </Button>
+                        )}
                         {invoice.status !== 'paid' && (
                           <>
                             {invoice.status === 'draft' && (
@@ -600,6 +630,17 @@ Website: www.biolegendscientific.co.ke`;
           invoice={selectedInvoice}
         />
       )}
+
+      {/* Create Delivery Note Modal */}
+      <CreateDeliveryNoteModal
+        open={showDeliveryNoteModal}
+        onOpenChange={setShowDeliveryNoteModal}
+        invoiceId={selectedInvoice?.id}
+        onSuccess={() => {
+          setShowDeliveryNoteModal(false);
+          toast.success('Delivery note created successfully!');
+        }}
+      />
     </div>
   );
 }

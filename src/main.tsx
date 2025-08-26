@@ -9,12 +9,7 @@ import { AuthStatusIndicator } from '@/components/auth/AuthStatusIndicator';
 import App from './App.tsx'
 import './index.css'
 
-// Force execute comprehensive migration on app start
-import { autoExecuteComprehensiveMigration } from '@/utils/comprehensiveMigration';
-
-// Import test utilities (makes them available in console)
-import '@/utils/testMigration';
-import '@/utils/testAdminSignIn';
+// Removed auto-migration imports for production safety
 
 const queryClient = new QueryClient();
 
