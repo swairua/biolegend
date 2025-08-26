@@ -14,6 +14,8 @@ export interface UserProfile {
   company_id?: string;
   department?: string;
   position?: string;
+  role?: string;
+  status?: string;
   last_login?: string;
   created_at: string;
   updated_at: string;
