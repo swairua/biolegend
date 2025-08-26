@@ -539,6 +539,17 @@ Website: www.biolegendscientific.co.ke`;
                         >
                           <Download className="h-4 w-4" />
                         </Button>
+                        {/* Create Delivery Note - Available for sent/paid invoices */}
+                        {(invoice.status === 'sent' || invoice.status === 'paid' || invoice.status === 'partial') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleCreateDeliveryNote(invoice)}
+                            title="Create delivery note"
+                          >
+                            <Truck className="h-4 w-4" />
+                          </Button>
+                        )}
                         {invoice.status !== 'paid' && (
                           <>
                             {invoice.status === 'draft' && (
