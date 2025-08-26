@@ -630,6 +630,17 @@ Website: www.biolegendscientific.co.ke`;
           invoice={selectedInvoice}
         />
       )}
+
+      {/* Create Delivery Note Modal */}
+      <CreateDeliveryNoteModal
+        open={showDeliveryNoteModal}
+        onOpenChange={setShowDeliveryNoteModal}
+        invoiceId={selectedInvoice?.id}
+        onSuccess={() => {
+          setShowDeliveryNoteModal(false);
+          toast.success('Delivery note created successfully!');
+        }}
+      />
     </div>
   );
 }
