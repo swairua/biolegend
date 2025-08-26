@@ -95,6 +95,9 @@ export const CreateDeliveryNoteModal = ({
     if (formData.invoice_id && invoices) {
       const selectedInvoice = invoices.find(inv => inv.id === formData.invoice_id);
       if (selectedInvoice) {
+        console.log('📦 Loading delivery items from invoice:', selectedInvoice.invoice_number);
+
+        // Update form data with customer and delivery info
         setFormData(prev => ({
           ...prev,
           customer_id: selectedInvoice.customer_id || '',
@@ -102,18 +105,37 @@ export const CreateDeliveryNoteModal = ({
         }));
 
         // Populate items from invoice
-        if (selectedInvoice.invoice_items) {
+        if (selectedInvoice.invoice_items && selectedInvoice.invoice_items.length > 0) {
           const deliveryItems: DeliveryItem[] = selectedInvoice.invoice_items.map((item: any) => ({
             id: `item-${item.id}`,
-            product_id: item.product_id,
-            product_name: item.products?.name || 'Unknown Product',
-            description: item.description || '',
-            quantity_ordered: item.quantity,
-            quantity_delivered: item.quantity, // Default to full quantity
+            product_id: item.product_id || '',
+            product_name: item.products?.name || item.description || 'Unknown Product',
+            description: item.description || item.products?.name || '',
+            quantity_ordered: Number(item.quantity) || 0,
+            quantity_delivered: Number(item.quantity) || 0, // Default to full quantity
             unit_of_measure: item.products?.unit_of_measure || 'pcs',
           }));
+
           setItems(deliveryItems);
+          console.log(`✅ Loaded ${deliveryItems.length} items from invoice ${selectedInvoice.invoice_number}`);
+          toast.success(`Loaded ${deliveryItems.length} items from invoice ${selectedInvoice.invoice_number}`);
+        } else {
+          console.warn('⚠️ No items found in selected invoice');
+          setItems([]);
+          toast.info('Selected invoice has no items');
         }
+      } else {
+        console.warn('⚠️ Invoice not found:', formData.invoice_id);
+      }
+    } else {
+          // Clear items when no invoice is selected
+      if (!formData.invoice_id) {
+        setItems([]);
+        setFormData(prev => ({
+          ...prev,
+          customer_id: '',
+          delivery_address: ''
+        }));
       }
     }
   }, [formData.invoice_id, invoices]);
@@ -158,7 +180,7 @@ export const CreateDeliveryNoteModal = ({
     }
 
     if (!formData.invoice_id) {
-      toast.error('Please select an invoice. Delivery notes must be backed by a sale.');
+      toast.error('Please select an invoice. Delivery notes must be linked to an invoice to auto-populate items.');
       return;
     }
 
@@ -221,9 +243,10 @@ export const CreateDeliveryNoteModal = ({
   };
 
   const handleClose = () => {
+    // Reset form to initial state
     setFormData({
       customer_id: '',
-      invoice_id: '',
+      invoice_id: invoiceId || '', // Preserve invoice if passed as prop
       delivery_date: new Date().toISOString().split('T')[0],
       delivery_address: '',
       delivery_method: 'pickup',
@@ -284,22 +307,32 @@ export const CreateDeliveryNoteModal = ({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="invoice_id">Related Invoice (Optional)</Label>
-              <Select value={formData.invoice_id} onValueChange={(value) => 
-                setFormData(prev => ({ ...prev, invoice_id: value }))
-              }>
+              <Label htmlFor="invoice_id">Related Invoice *</Label>
+              <Select value={formData.invoice_id} onValueChange={(value) => {
+                setFormData(prev => ({ ...prev, invoice_id: value }));
+                if (value) {
+                  toast.info('Loading items from selected invoice...');
+                }
+              }}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select invoice" />
+                  <SelectValue placeholder="Select invoice to load items" />
                 </SelectTrigger>
                 <SelectContent>
                   {invoices?.filter(inv => !formData.customer_id || inv.customer_id === formData.customer_id)
                     .map((invoice) => (
                     <SelectItem key={invoice.id} value={invoice.id}>
                       {invoice.invoice_number} - ${invoice.total_amount?.toFixed(2)}
+                      {invoice.invoice_items && invoice.invoice_items.length > 0 ?
+                        ` (${invoice.invoice_items.length} items)` :
+                        ' (no items)'
+                      }
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {formData.invoice_id && (
+                <p className="text-xs text-success">✅ Invoice selected - items will be auto-populated</p>
+              )}
             </div>
           </div>
 
@@ -436,9 +469,19 @@ export const CreateDeliveryNoteModal = ({
 
               {items.length === 0 ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  {formData.invoice_id 
-                    ? 'Select an invoice to load items for delivery.'
-                    : 'No items added yet. Click "Add Item" to start.'
+                  {formData.invoice_id
+                    ? (
+                        <div className="space-y-2">
+                          <p>No items found in selected invoice.</p>
+                          <p className="text-xs">The invoice may not have any items or they failed to load.</p>
+                        </div>
+                      )
+                    : (
+                        <div className="space-y-2">
+                          <p>📋 Select an invoice above to automatically load items for delivery.</p>
+                          <p className="text-xs">Items from the selected invoice will appear here automatically.</p>
+                        </div>
+                      )
                   }
                 </div>
               ) : (

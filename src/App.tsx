@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Routes, Route } from "react-router-dom";
 import { enableResizeObserverErrorSuppression } from "@/utils/resizeObserverErrorHandler";
-import { useDatabaseDiagnostics } from "@/hooks/useDatabaseDiagnostics";
 import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
@@ -20,36 +19,20 @@ import InventoryReports from "./pages/reports/InventoryReports";
 import StatementOfAccounts from "./pages/reports/StatementOfAccounts";
 import CompanySettings from "./pages/settings/CompanySettings";
 import UserManagement from "./pages/settings/UserManagement";
-import SetupAndTest from "./pages/SetupAndTest";
 import RemittanceAdvice from "./pages/RemittanceAdvice";
 import LPOs from "./pages/LPOs";
 import CreditNotes from "./pages/CreditNotes";
-import AuthTest from "./pages/AuthTest";
 import NotFound from "./pages/NotFound";
-import AutoPaymentSyncPage from "./pages/AutoPaymentSync";
 import PaymentSynchronizationPage from "./pages/PaymentSynchronization";
-import DatabaseFixPage from "./pages/DatabaseFixPage";
-import AutoFixPage from "./pages/AutoFixPage";
-import AuditPage from "./pages/AuditPage";
-import ProductTableFixPage from "./pages/ProductTableFixPage";
 import OptimizedInventory from "./pages/OptimizedInventory";
 import PerformanceOptimizerPage from "./pages/PerformanceOptimizerPage";
-import QuotationsTableFixPage from "./pages/QuotationsTableFixPage";
-import TestQuotationFixes from "./pages/TestQuotationFixes";
 import OptimizedCustomers from "./pages/OptimizedCustomers";
 import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
-import { ManualDatabaseSetup } from "@/components/ManualDatabaseSetup";
-import { SystemFixTest } from "./pages/SystemFixTest";
-import FixQuotationIssues from "./pages/FixQuotationIssues";
 import ProformaNumberDiagnosticPage from "./pages/ProformaNumberDiagnostic";
-import ProformaFunctionFixPage from "./pages/ProformaFunctionFix";
 import ProformaErrorDiagnosticPage from "./pages/ProformaErrorDiagnostic";
-import ProformaCreationTestPage from "./pages/ProformaCreationTest";
 import PDFDiagnostic from "./pages/PDFDiagnostic";
 
 const App = () => {
-  // Run database diagnostics safely without setState during render
-  const diagnostics = useDatabaseDiagnostics();
 
   useEffect(() => {
     // Suppress ResizeObserver loop errors
@@ -275,23 +258,10 @@ const App = () => {
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
 
-          {/* Auto Payment Sync - No protection needed for setup */}
-          <Route path="/auto-payment-sync" element={<AutoPaymentSyncPage />} />
 
           {/* Payment Synchronization - No protection needed for setup */}
           <Route path="/payment-sync" element={<PaymentSynchronizationPage />} />
 
-          {/* Database and Forms Audit */}
-          <Route path="/audit" element={<AuditPage />} />
-
-          {/* Auto-execute Database Fixes and RLS removal */}
-          <Route path="/auto-fix" element={<AutoFixPage />} />
-
-          {/* Database Fixes - No protection needed for setup */}
-          <Route path="/database-fix-page" element={<DatabaseFixPage />} />
-
-          {/* Product Table Fix - Audit and fix product table schema */}
-          <Route path="/product-table-fix" element={<ProductTableFixPage />} />
 
           {/* Optimized Inventory - Performance-optimized inventory page */}
           <Route
@@ -306,14 +276,6 @@ const App = () => {
           {/* Performance Optimizer - Database and inventory performance optimization */}
           <Route path="/performance-optimizer" element={<PerformanceOptimizerPage />} />
 
-          {/* Quotations Table Fix - Fix missing columns in quotations tables */}
-          <Route path="/quotations-table-fix" element={<QuotationsTableFixPage />} />
-
-          {/* Test Quotation Fixes - Verify foreign key constraint fixes */}
-          <Route path="/test-quotation-fixes" element={<TestQuotationFixes />} />
-
-          {/* Fix Quotation Issues - Resolve foreign key failures and database issues */}
-          <Route path="/fix-quotation-issues" element={<FixQuotationIssues />} />
 
           {/* Optimized Customers - Performance-optimized customers page */}
           <Route
@@ -328,26 +290,18 @@ const App = () => {
           {/* Customer Performance Optimizer - Database and customer performance optimization */}
           <Route path="/customer-performance-optimizer" element={<CustomerPerformanceOptimizerPage />} />
 
-          {/* System Fix Test - Comprehensive audit and fix */}
-          <Route path="/system-fix-test" element={<SystemFixTest />} />
 
           {/* Proforma Number Diagnostic - Debug proforma number generation */}
           <Route path="/proforma-number-diagnostic" element={<ProformaNumberDiagnosticPage />} />
 
-          {/* Proforma Function Fix - Fix generate_proforma_number function */}
-          <Route path="/proforma-function-fix" element={<ProformaFunctionFixPage />} />
 
           {/* Proforma Error Diagnostic - Debug "[object Object]" errors */}
           <Route path="/proforma-error-diagnostic" element={<ProformaErrorDiagnosticPage />} />
 
-          {/* Proforma Creation Test - Test complete proforma creation flow */}
-          <Route path="/proforma-creation-test" element={<ProformaCreationTestPage />} />
 
           {/* PDF Diagnostic - Test and audit PDF generation line items */}
           <Route path="/pdf-diagnostic" element={<PDFDiagnostic />} />
 
-          {/* Manual Database Setup - No protection needed */}
-          <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
 
           {/* 404 Page */}
           <Route path="*" element={<NotFound />} />
