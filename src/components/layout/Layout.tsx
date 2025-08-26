@@ -16,7 +16,6 @@ export function Layout({ children }: LayoutProps) {
   const [loadingStartTime] = useState(Date.now());
   const [showEmergencyReset, setShowEmergencyReset] = useState(false);
 
-  console.log('🔍 Layout render - loading:', loading, 'isAuthenticated:', isAuthenticated);
 
   // Check for loading timeout and show emergency reset after 15 seconds
   useEffect(() => {
@@ -27,7 +26,6 @@ export function Layout({ children }: LayoutProps) {
 
     const timer = setTimeout(() => {
       if (loading) {
-        console.warn('⚠️ App has been loading for more than 15 seconds - showing emergency reset');
         setShowEmergencyReset(true);
       }
     }, 15000); // 15 second timeout
@@ -44,7 +42,6 @@ export function Layout({ children }: LayoutProps) {
     return <EnhancedLogin />;
   }
 
-  // Show loading debug if stuck loading for authenticated users
   if (loading && isAuthenticated) {
     return (
       <div className="min-h-screen bg-background p-6">
