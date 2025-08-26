@@ -289,7 +289,7 @@ export default function CompanySettings() {
       const userMessage = getUserFriendlyMessage(error, '🧪 Test failed');
 
       // Check if this is a schema error
-      const errorString = String(error);
+      const errorString = parseErrorMessage(error);
       if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
         setSchemaError('currency column missing');
       }
