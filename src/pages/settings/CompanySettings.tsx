@@ -14,6 +14,7 @@ import { ForceTaxSettings } from '@/components/ForceTaxSettings';
 import { supabase } from '@/integrations/supabase/client';
 import StorageSetup from '@/components/StorageSetup';
 import { getUserFriendlyMessage, logError } from '@/utils/errorParser';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 import { QuickSchemaFix } from '@/components/QuickSchemaFix';
 import { addCurrencyColumn, ADD_CURRENCY_COLUMN_SQL } from '@/utils/addCurrencyColumn';
 import { CompaniesTableAuditPanel } from '@/components/CompaniesTableAuditPanel';
