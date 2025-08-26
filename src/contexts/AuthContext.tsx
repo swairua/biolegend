@@ -186,7 +186,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuthState = async () => {
       const initStartTime = Date.now();
-      const INIT_TIMEOUT = 15000; // 15 second timeout (increased for better reliability)
+      // Allow timeout to be configured via environment variable for debugging
+      const INIT_TIMEOUT = parseInt(import.meta.env.VITE_AUTH_TIMEOUT || '15000'); // Default 15 seconds
 
       try {
         console.log('🚀 Initializing auth state...');
