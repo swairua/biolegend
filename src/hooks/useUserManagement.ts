@@ -92,8 +92,21 @@ export const useUserManagement = () => {
 
       setInvitations(data || []);
     } catch (err) {
-      const errorMessage = parseErrorMessage(err);
       console.error('Error fetching invitations:', err);
+
+      // Ensure we get a proper string error message
+      let errorMessage = 'Unknown error occurred';
+      try {
+        errorMessage = parseErrorMessage(err);
+        // Double-check that it's actually a string
+        if (typeof errorMessage !== 'string') {
+          errorMessage = String(errorMessage);
+        }
+      } catch (parseErr) {
+        console.error('Error parsing error message:', parseErr);
+        errorMessage = err?.message || err?.toString() || 'Failed to parse error';
+      }
+
       setError(`Failed to fetch invitations: ${errorMessage}`);
       toast.error(`Error fetching invitations: ${errorMessage}`);
     }
