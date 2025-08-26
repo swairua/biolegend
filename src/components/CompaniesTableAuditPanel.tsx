@@ -70,8 +70,9 @@ export function CompaniesTableAuditPanel() {
         toast.error(result.message);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      toast.error('Fix failed: ' + errorMsg);
+      const errorMsg = parseErrorMessage(error);
+      console.error('Fix failed:', error);
+      toast.error(`Fix failed: ${errorMsg}`);
       setFixResults([errorMsg]);
     } finally {
       setIsFixing(false);
