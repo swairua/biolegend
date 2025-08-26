@@ -67,7 +67,8 @@ export const ForceMigrationButton = () => {
       }
     } catch (error) {
       console.error('Migration error:', error);
-      setMigrationStatus(`❌ Migration failed: ${error}`);
+      const errorMessage = typeof error === 'string' ? error : error?.message || 'Unknown error';
+      setMigrationStatus(`❌ Migration failed: ${errorMessage}`);
       toast.error('Migration failed with an unexpected error');
     } finally {
       setIsRunning(false);
