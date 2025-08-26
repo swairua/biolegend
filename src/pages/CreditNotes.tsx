@@ -45,7 +45,7 @@ import { CreateCreditNoteModal } from '@/components/credit-notes/CreateCreditNot
 import { ViewCreditNoteModal } from '@/components/credit-notes/ViewCreditNoteModal';
 import { EditCreditNoteModal } from '@/components/credit-notes/EditCreditNoteModal';
 import { CreditNotesSetupGuide } from '@/components/credit-notes/CreditNotesSetupGuide';
-import { CreditNoteForeignKeyPatch } from '@/components/credit-notes/CreditNoteForeignKeyPatch';
+import { SimpleForeignKeyPatch } from '@/components/credit-notes/SimpleForeignKeyPatch';
 import { CreditNotesConnectionStatus } from '@/components/credit-notes/CreditNotesConnectionStatus';
 import { useCreditNotePDFDownload } from '@/hooks/useCreditNotePDF';
 import type { CreditNote } from '@/hooks/useCreditNotes';
@@ -173,7 +173,7 @@ export default function CreditNotes() {
           </div>
         </div>
 
-        <CreditNoteForeignKeyPatch />
+        <SimpleForeignKeyPatch />
       </div>
     );
   }
