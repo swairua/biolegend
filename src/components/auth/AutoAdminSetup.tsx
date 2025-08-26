@@ -332,17 +332,7 @@ export function AutoAdminSetup() {
     };
   }, []);
 
-  // Auto-check admin existence on mount
-  useEffect(() => {
-    if (!hasCheckedRef.current && !status.rateLimited) {
-      // Delay slightly to avoid immediate rate limiting
-      const timer = setTimeout(() => {
-        checkAdminExists();
-      }, 1000);
-
-      return () => clearTimeout(timer);
-    }
-  }, []); // Only run once on mount
+  // Auto-check removed - users can manually check admin existence if needed
 
   // Show rate limited state
   if (status.rateLimited && status.rateLimitRemaining > 0) {
