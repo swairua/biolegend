@@ -227,16 +227,16 @@ export const useConvertQuotationToInvoice = () => {
         
         if (itemsError) throw itemsError;
         
-        // Create stock movements
+        // Create stock movements with exact string values
         const stockMovements = invoiceItems
           .filter(item => item.product_id && item.quantity > 0)
           .map(item => ({
             company_id: invoice.company_id,
             product_id: item.product_id,
-            movement_type: 'OUT' as const,
-            reference_type: 'INVOICE' as const,
+            movement_type: 'OUT', // Exact string, not const assertion
+            reference_type: 'INVOICE', // Exact string, not const assertion
             reference_id: invoice.id,
-            quantity: -item.quantity,
+            quantity: Math.abs(item.quantity), // Ensure positive quantity
             cost_per_unit: item.unit_price,
             notes: `Stock reduction for invoice ${invoice.invoice_number} (converted from quotation ${quotation.quotation_number})`
           }));
