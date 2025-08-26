@@ -1056,6 +1056,96 @@ export const useUpdateRemittanceAdvice = () => {
   });
 };
 
+// Remittance Advice Items hooks
+export const useCreateRemittanceAdviceItems = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (items: Array<{
+      remittance_advice_id: string;
+      document_date: string;
+      document_number: string;
+      document_type: 'invoice' | 'credit_note' | 'payment';
+      invoice_amount?: number;
+      credit_amount?: number;
+      payment_amount: number;
+      payment_id?: string;
+      invoice_id?: string;
+      sort_order?: number;
+    }>) => {
+      const { data, error } = await supabase
+        .from('remittance_advice_items')
+        .insert(items)
+        .select();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['remittance_advice'] });
+    },
+  });
+};
+
+export const useUpdateRemittanceAdviceItems = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      remittanceId,
+      items
+    }: {
+      remittanceId: string;
+      items: Array<{
+        id?: string;
+        document_date: string;
+        document_number: string;
+        document_type: 'invoice' | 'credit_note' | 'payment';
+        invoice_amount?: number;
+        credit_amount?: number;
+        payment_amount: number;
+        payment_id?: string;
+        invoice_id?: string;
+        sort_order?: number;
+      }>;
+    }) => {
+      // First, delete existing items
+      await supabase
+        .from('remittance_advice_items')
+        .delete()
+        .eq('remittance_advice_id', remittanceId);
+
+      // Then insert new items
+      if (items.length > 0) {
+        const itemsToInsert = items.map((item, index) => ({
+          remittance_advice_id: remittanceId,
+          document_date: item.document_date,
+          document_number: item.document_number,
+          document_type: item.document_type,
+          invoice_amount: item.invoice_amount || null,
+          credit_amount: item.credit_amount || null,
+          payment_amount: item.payment_amount,
+          payment_id: item.payment_id || null,
+          invoice_id: item.invoice_id || null,
+          sort_order: index + 1,
+        }));
+
+        const { data, error } = await supabase
+          .from('remittance_advice_items')
+          .insert(itemsToInsert)
+          .select();
+
+        if (error) throw error;
+        return data;
+      }
+      return [];
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['remittance_advice'] });
+    },
+  });
+};
+
 // Quotations hooks
 export const useQuotations = (companyId?: string) => {
   return useQuery({

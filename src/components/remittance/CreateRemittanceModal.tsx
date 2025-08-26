@@ -21,6 +21,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Minus, Calendar, FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { useCreateRemittanceAdvice, useCreateRemittanceAdviceItems, useCustomers, useGenerateDocumentNumber } from '@/hooks/useDatabase';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
+import type { RemittanceAdviceItemFormData } from '@/types/remittance';
 
 interface CreateRemittanceModalProps {
   open: boolean;
@@ -31,34 +35,83 @@ interface CreateRemittanceModalProps {
 interface RemittanceItem {
   id: string;
   date: string;
-  invoiceNumber?: string;
-  creditNote?: string;
-  invoiceAmount?: number;
-  creditAmount?: number;
+  invoiceNumber: string;
+  creditNote: string;
+  invoiceAmount: number;
+  creditAmount: number;
   payment: number;
 }
 
 export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateRemittanceModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { profile } = useAuth();
+  const { currentCompany } = useCurrentCompany();
+  const createRemittanceMutation = useCreateRemittanceAdvice();
+  const createItemsMutation = useCreateRemittanceAdviceItems();
+  const { data: customers = [] } = useCustomers(currentCompany?.id);
+  const generateNumberMutation = useGenerateDocumentNumber();
+
   const [formData, setFormData] = useState({
-    adviceNumber: `RA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
+    adviceNumber: '',
+    customerId: '',
     customerName: '',
     customerAddress: '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
   });
 
-  const [items, setItems] = useState<RemittanceItem[]>([
-    {
-      id: '1',
-      date: new Date().toISOString().split('T')[0],
-      invoiceNumber: '',
-      creditNote: '',
-      invoiceAmount: 0,
-      creditAmount: 0,
-      payment: 0,
+  const [items, setItems] = useState<RemittanceItem[]>([{
+    id: '1',
+    date: new Date().toISOString().split('T')[0],
+    invoiceNumber: '',
+    creditNote: '',
+    invoiceAmount: 0,
+    creditAmount: 0,
+    payment: 0,
+  }]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Generate advice number when modal opens
+  const generateAdviceNumber = async () => {
+    if (!currentCompany?.id) return;
+
+    try {
+      const number = await generateNumberMutation.mutateAsync({
+        documentType: 'remittance',
+        companyId: currentCompany.id
+      });
+      setFormData(prev => ({ ...prev, adviceNumber: number }));
+    } catch (error) {
+      console.error('Error generating advice number:', error);
+      // Fallback to simple number generation
+      const fallbackNumber = `RA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`;
+      setFormData(prev => ({ ...prev, adviceNumber: fallbackNumber }));
     }
-  ]);
+  };
+
+  // Generate number when modal opens and company is available
+  useState(() => {
+    if (open && currentCompany?.id && !formData.adviceNumber) {
+      generateAdviceNumber();
+    }
+  });
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+
+    // Auto-populate customer data when customer is selected
+    if (field === 'customerId') {
+      const customer = customers.find(c => c.id === value);
+      if (customer) {
+        setFormData(prev => ({
+          ...prev,
+          customerId: value,
+          customerName: customer.name,
+          customerAddress: customer.address || ''
+        }));
+      }
+    }
+  };
 
   const addItem = () => {
     const newItem: RemittanceItem = {
@@ -79,18 +132,24 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
     }
   };
 
-  const updateItem = (id: string, field: keyof RemittanceItem, value: any) => {
-    setItems(items.map(item => 
+  const updateItem = (id: string, field: keyof RemittanceItem, value: string | number) => {
+    setItems(items.map(item =>
       item.id === id ? { ...item, [field]: value } : item
     ));
   };
 
   const calculateTotalPayment = () => {
-    return items.reduce((sum, item) => sum + (item.payment || 0), 0);
+    return items.reduce((total, item) => total + (item.payment || 0), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!currentCompany?.id || !profile?.id) {
+      toast.error('Company or user information not available');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -100,31 +159,62 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
         return;
       }
 
+      if (!formData.customerId && !formData.customerName) {
+        toast.error('Please select a customer');
+        return;
+      }
+
       if (items.some(item => !item.date || item.payment === 0)) {
         toast.error('All items must have a date and payment amount');
         return;
       }
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      // Prepare remittance data for database
       const remittanceData = {
-        ...formData,
-        items,
-        totalPayment: calculateTotalPayment(),
-        status: 'draft',
-        createdAt: new Date().toISOString(),
+        company_id: currentCompany.id,
+        customer_id: formData.customerId || null, // Can be null if customer is not in system
+        advice_number: formData.adviceNumber,
+        advice_date: formData.date,
+        total_payment: calculateTotalPayment(),
+        status: 'draft' as const,
+        notes: formData.notes || null,
+        created_by: profile.id,
       };
 
-      console.log('Creating remittance advice:', remittanceData);
-      
+      // Create the remittance advice
+      const createdRemittance = await createRemittanceMutation.mutateAsync(remittanceData);
+
+      // Create remittance advice items
+      if (items && items.length > 0) {
+        const itemsToCreate = items
+          .filter(item => item.payment > 0) // Only save items with payment amounts
+          .map((item, index) => ({
+            remittance_advice_id: createdRemittance.id,
+            document_date: item.date,
+            document_number: item.invoiceNumber || item.creditNote || `Item ${index + 1}`,
+            document_type: (item.invoiceNumber ? 'invoice' : item.creditNote ? 'credit_note' : 'payment') as 'invoice' | 'credit_note' | 'payment',
+            invoice_amount: item.invoiceAmount || null,
+            credit_amount: item.creditAmount || null,
+            payment_amount: item.payment,
+            sort_order: index + 1,
+          }));
+
+        if (itemsToCreate.length > 0) {
+          await createItemsMutation.mutateAsync(itemsToCreate);
+          console.log('Created remittance advice items:', itemsToCreate);
+        }
+      }
+
+      console.log('Created remittance advice:', createdRemittance);
+
       toast.success('Remittance advice created successfully!');
       onSuccess?.();
       onOpenChange(false);
-      
+
       // Reset form
       setFormData({
-        adviceNumber: `RA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
+        adviceNumber: '',
+        customerId: '',
         customerName: '',
         customerAddress: '',
         date: new Date().toISOString().split('T')[0],
@@ -139,10 +229,10 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
         creditAmount: 0,
         payment: 0,
       }]);
-      
-    } catch (error) {
+
+    } catch (error: any) {
       console.error('Error creating remittance advice:', error);
-      toast.error('Failed to create remittance advice. Please try again.');
+      toast.error('Failed to create remittance advice: ' + (error.message || 'Unknown error'));
     } finally {
       setIsSubmitting(false);
     }
@@ -162,32 +252,48 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
+          {/* Header Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Basic Information</CardTitle>
+              <CardTitle className="text-lg">Remittance Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="adviceNumber">Advice Number</Label>
-                  <Input
-                    id="adviceNumber"
-                    value={formData.adviceNumber}
-                    onChange={(e) => setFormData({ ...formData, adviceNumber: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
-                  />
-                </div>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="adviceNumber">Advice Number</Label>
+                <Input
+                  id="adviceNumber"
+                  value={formData.adviceNumber}
+                  onChange={(e) => handleInputChange('adviceNumber', e.target.value)}
+                  placeholder="Auto-generated"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => handleInputChange('date', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="customer">Customer</Label>
+                <Select value={formData.customerId} onValueChange={(value) => handleInputChange('customerId', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -195,19 +301,30 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
                 <Input
                   id="customerName"
                   value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  placeholder="Enter customer name"
+                  onChange={(e) => handleInputChange('customerName', e.target.value)}
+                  placeholder="Customer name"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="customerAddress">Customer Address</Label>
                 <Textarea
                   id="customerAddress"
                   value={formData.customerAddress}
-                  onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
-                  placeholder="Enter customer address"
+                  onChange={(e) => handleInputChange('customerAddress', e.target.value)}
+                  placeholder="Customer address"
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  placeholder="Additional notes or comments"
                   rows={3}
                 />
               </div>

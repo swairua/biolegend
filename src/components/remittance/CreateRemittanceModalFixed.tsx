@@ -23,7 +23,7 @@ import { Plus, Minus, Calendar, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useCreateRemittanceAdvice, useCustomers, useGenerateDocumentNumber } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCurrentCompany } from '@/hooks/useCurrentCompany';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 import type { RemittanceAdviceItemFormData } from '@/types/remittance';
 
 interface CreateRemittanceModalProps {

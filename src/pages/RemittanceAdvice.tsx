@@ -16,6 +16,7 @@ import {
   Search,
   FileText,
   Download,
+  Edit,
   Calendar,
   CreditCard,
   Building2
@@ -23,8 +24,9 @@ import {
 import { downloadRemittancePDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
 import { useRemittanceAdvice, useCompanies } from '@/hooks/useDatabase';
-import { CreateRemittanceModal } from '@/components/remittance/CreateRemittanceModal';
+import { CreateRemittanceModal } from '@/components/remittance/CreateRemittanceModalFixed';
 import { ViewRemittanceModal } from '@/components/remittance/ViewRemittanceModal';
+import { EditRemittanceModal } from '@/components/remittance/EditRemittanceModal';
 
 // Remittance advice page - uses real database data via useRemittanceAdvice hook
 
@@ -33,6 +35,7 @@ const RemittanceAdvice = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRemittance, setSelectedRemittance] = useState<any>(null);
 
   // Fetch live remittance advice data and company details
@@ -45,6 +48,11 @@ const RemittanceAdvice = () => {
   const handleViewRemittance = (remittance: any) => {
     setSelectedRemittance(remittance);
     setShowViewModal(true);
+  };
+
+  const handleEditRemittance = (remittance: any) => {
+    setSelectedRemittance(remittance);
+    setShowEditModal(true);
   };
 
   const handleDownloadRemittance = (remittance: any) => {
@@ -60,7 +68,10 @@ const RemittanceAdvice = () => {
           city: remittance.customers?.city || 'Nairobi',
           country: remittance.customers?.country || 'Kenya'
         },
-        notes: remittance.notes || `Remittance advice for ${remittance.customers?.name}`
+        notes: remittance.notes || `Remittance advice for ${remittance.customers?.name}`,
+        // Include line items for PDF generation
+        remittance_advice_items: remittance.remittance_advice_items || [],
+        items: remittance.items || [] // Fallback for legacy format
       };
 
       // Pass company details to PDF generator
@@ -196,6 +207,7 @@ const RemittanceAdvice = () => {
                 <TableHead>Advice Number</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Items</TableHead>
                 <TableHead>Total Payment</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -225,8 +237,14 @@ const RemittanceAdvice = () => {
                     </div>
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span>{(remittance.remittance_advice_items?.length || remittance.items?.length || 0)} items</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="font-medium">
-                      ${(remittance.totalPayment || 0).toFixed(2)}
+                      ${(remittance.total_payment || remittance.totalPayment || 0).toFixed(2)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -243,6 +261,14 @@ const RemittanceAdvice = () => {
                       >
                         <FileText className="mr-1 h-3 w-3" />
                         View
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditRemittance(remittance)}
+                      >
+                        <Edit className="mr-1 h-3 w-3" />
+                        Edit
                       </Button>
                       <Button
                         variant="outline"
@@ -390,6 +416,16 @@ const RemittanceAdvice = () => {
         remittance={selectedRemittance}
         onDownload={() => {
           // Optional callback when PDF is downloaded from view modal
+        }}
+      />
+
+      {/* Edit Remittance Modal */}
+      <EditRemittanceModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        remittance={selectedRemittance}
+        onSuccess={() => {
+          toast.success('Remittance advice updated successfully!');
         }}
       />
     </div>
