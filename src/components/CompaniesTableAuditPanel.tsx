@@ -16,14 +16,15 @@ import {
   FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  auditCompaniesTable, 
-  fixCompaniesTable, 
+import {
+  auditCompaniesTable,
+  fixCompaniesTable,
   ensureCompaniesTableComplete,
   testCompaniesTable,
   MANUAL_COMPANIES_FIX_SQL,
-  type CompaniesTableAudit 
+  type CompaniesTableAudit
 } from '@/utils/auditAndFixCompaniesTable';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 
 export function CompaniesTableAuditPanel() {
   const [audit, setAudit] = useState<CompaniesTableAudit | null>(null);
