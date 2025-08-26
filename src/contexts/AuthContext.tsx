@@ -30,6 +30,7 @@ export interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   refreshProfile: () => Promise<void>;
   clearTokens: () => void;
 }
