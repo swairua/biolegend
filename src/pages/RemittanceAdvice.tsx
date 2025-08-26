@@ -204,6 +204,7 @@ const RemittanceAdvice = () => {
                 <TableHead>Advice Number</TableHead>
                 <TableHead>Customer</TableHead>
                 <TableHead>Date</TableHead>
+                <TableHead>Items</TableHead>
                 <TableHead>Total Payment</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -233,8 +234,14 @@ const RemittanceAdvice = () => {
                     </div>
                   </TableCell>
                   <TableCell>
+                    <div className="flex items-center space-x-2">
+                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <span>{(remittance.remittance_advice_items?.length || remittance.items?.length || 0)} items</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     <div className="font-medium">
-                      ${(remittance.totalPayment || 0).toFixed(2)}
+                      ${(remittance.total_payment || remittance.totalPayment || 0).toFixed(2)}
                     </div>
                   </TableCell>
                   <TableCell>
