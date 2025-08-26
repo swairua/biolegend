@@ -37,7 +37,8 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { useInvoices, useCustomers, useProducts } from '@/hooks/useDatabase';
+import { useCustomers, useProducts } from '@/hooks/useDatabase';
+import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { toast } from 'sonner';
 
 // No sample data - using real database data only

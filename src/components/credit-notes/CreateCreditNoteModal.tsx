@@ -30,7 +30,8 @@ import {
   FileText,
   AlertCircle
 } from 'lucide-react';
-import { useCustomers, useProducts, useTaxSettings, useInvoices, useCompanies } from '@/hooks/useDatabase';
+import { useCustomers, useProducts, useTaxSettings, useCompanies } from '@/hooks/useDatabase';
+import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { useGenerateCreditNoteNumber } from '@/hooks/useCreditNotes';
 import { useCreateCreditNoteWithItems } from '@/hooks/useCreditNoteItems';
 import { toast } from 'sonner';
