@@ -151,15 +151,16 @@ export const CreateDeliveryNoteModal = ({
       id: `item-${Date.now()}`,
       product_id: product.id,
       product_name: product.name,
-      description: product.description || '',
-      quantity_ordered: 1,
-      quantity_delivered: 1,
+      description: product.description || product.name || '',
+      quantity_ordered: 1, // Default to 1 unit
+      quantity_delivered: 1, // Default to 1 unit for delivery
       unit_of_measure: product.unit_of_measure || 'pcs',
     };
 
     setItems(prev => [...prev, newItem]);
     setShowProductSearch(false);
     setSearchTerm('');
+    toast.success(`Added ${product.name} to delivery note`);
   };
 
   const updateItem = (id: string, field: keyof DeliveryItem, value: any) => {
