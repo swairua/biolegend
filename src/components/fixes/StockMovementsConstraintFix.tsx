@@ -3,13 +3,14 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  AlertTriangle, 
-  Database, 
-  Copy, 
+import {
+  AlertTriangle,
+  Database,
+  Copy,
   CheckCircle,
   ExternalLink,
-  Wrench
+  Wrench,
+  RefreshCw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
