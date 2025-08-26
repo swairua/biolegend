@@ -1146,28 +1146,115 @@ export const useUpdateRemittanceAdviceItems = () => {
   });
 };
 
-// Quotations hooks
+// Quotations hooks - Fixed to avoid relationship ambiguity
 export const useQuotations = (companyId?: string) => {
   return useQuery({
     queryKey: ['quotations', companyId],
     queryFn: async () => {
-      let query = supabase
-        .from('quotations')
-        .select(`
-          *,
-          customers:customers!customer_id(name, email, phone),
-          quotation_items(*, products(name, unit_of_measure))
-        `)
-        .order('created_at', { ascending: false });
-      
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+      if (!companyId) return [];
+
+      try {
+        // Step 1: Get quotations without embedded relationships
+        let query = supabase
+          .from('quotations')
+          .select(`
+            id,
+            company_id,
+            customer_id,
+            quotation_number,
+            quotation_date,
+            valid_until,
+            status,
+            subtotal,
+            tax_amount,
+            total_amount,
+            notes,
+            terms_and_conditions,
+            created_at,
+            updated_at
+          `)
+          .eq('company_id', companyId)
+          .order('created_at', { ascending: false });
+
+        const { data: quotations, error: quotationsError } = await query;
+
+        if (quotationsError) throw quotationsError;
+        if (!quotations || quotations.length === 0) return [];
+
+        // Step 2: Get customers separately (filter out invalid UUIDs)
+        const customerIds = [...new Set(quotations.map(quotation => quotation.customer_id).filter(id => id && typeof id === 'string' && id.length === 36))];
+        const { data: customers } = customerIds.length > 0 ? await supabase
+          .from('customers')
+          .select('id, name, email, phone, address, city, country')
+          .in('id', customerIds) : { data: [] };
+
+        // Step 3: Get quotation items separately
+        const { data: quotationItems } = await supabase
+          .from('quotation_items')
+          .select(`
+            id,
+            quotation_id,
+            product_id,
+            description,
+            quantity,
+            unit_price,
+            tax_rate,
+            tax_amount,
+            line_total,
+            sort_order
+          `)
+          .in('quotation_id', quotations.map(quot => quot.id));
+
+        // Step 4: Get products for quotation items
+        const productIds = [...new Set((quotationItems || []).map(item => item.product_id).filter(id => id))];
+        const { data: products } = productIds.length > 0 ? await supabase
+          .from('products')
+          .select('id, name, unit_of_measure')
+          .in('id', productIds) : { data: [] };
+
+        // Step 5: Create lookup maps
+        const customerMap = new Map();
+        (customers || []).forEach(customer => {
+          customerMap.set(customer.id, customer);
+        });
+
+        const productMap = new Map();
+        (products || []).forEach(product => {
+          productMap.set(product.id, product);
+        });
+
+        const itemsMap = new Map();
+        (quotationItems || []).forEach(item => {
+          if (!itemsMap.has(item.quotation_id)) {
+            itemsMap.set(item.quotation_id, []);
+          }
+          itemsMap.get(item.quotation_id).push({
+            ...item,
+            products: productMap.get(item.product_id) || null
+          });
+        });
+
+        // Step 6: Combine data
+        return quotations.map(quotation => ({
+          ...quotation,
+          customers: customerMap.get(quotation.customer_id) || {
+            name: 'Unknown Customer',
+            email: null,
+            phone: null,
+            address: null,
+            city: null,
+            country: null
+          },
+          quotation_items: itemsMap.get(quotation.id) || []
+        }));
+
+      } catch (error) {
+        console.error('Error in useQuotations:', error);
+        const errorMessage = typeof error === 'string' ? error :
+                            (error as any)?.message ||
+                            'Failed to load quotations';
+        throw new Error(errorMessage);
       }
-      
-      const { data, error } = await query;
-      
-      if (error) throw error;
-      return data;
     },
   });
 };
