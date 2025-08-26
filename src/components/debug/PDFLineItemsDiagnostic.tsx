@@ -137,12 +137,12 @@ export default function PDFLineItemsDiagnostic() {
                     >
                       View Data
                     </Button>
-                    <Button 
+                    <Button
                       size="sm"
-                      onClick={() => testQuotationPDF(quotation)}
-                      disabled={!quotation.quotation_items || quotation.quotation_items.length === 0}
+                      onClick={() => testQuotationPDF(quotation, logoTestMode)}
+                      disabled={!logoTestMode && (!quotation.quotation_items || quotation.quotation_items.length === 0)}
                     >
-                      Test PDF
+                      Test PDF{logoTestMode ? ' + Logo' : ''}
                     </Button>
                   </div>
                 </div>
