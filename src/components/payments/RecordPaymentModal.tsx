@@ -54,6 +54,13 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [allocationFailed, setAllocationFailed] = useState(false);
 
+  // Reset allocation failed state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setAllocationFailed(false);
+    }
+  }, [open]);
+
   // Fetch all available invoices for selection
   const { currentCompany } = useCurrentCompany();
   const { data: invoices = [] } = useInvoices(currentCompany?.id);
