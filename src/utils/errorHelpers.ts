@@ -5,35 +5,60 @@
 export function parseErrorMessage(error: any): string {
   try {
     if (!error) return 'Unknown error occurred';
-    
+
     // Handle standard Error instances
     if (error instanceof Error) {
-      return error.message;
+      return error.message || 'Error instance with no message';
     }
-    
+
     // Handle string errors
     if (typeof error === 'string') {
       return error;
     }
-    
+
     // Handle Supabase/PostgrestError objects
     if (error && typeof error === 'object') {
-      if (error.message) return error.message;
-      if (error.details) return error.details;
-      if (error.hint) return error.hint;
-      if (error.code) {
-        return `Database error (${error.code}): ${error.message || 'Unknown error'}`;
+      // Try different properties in order of preference
+      if (error.message && typeof error.message === 'string') {
+        return error.message;
       }
-      
-      // Fallback for other objects - avoid "[object Object]"
-      const stringified = error.toString();
-      return stringified !== '[object Object]' ? stringified : 'Unknown error occurred';
+      if (error.details && typeof error.details === 'string') {
+        return error.details;
+      }
+      if (error.hint && typeof error.hint === 'string') {
+        return error.hint;
+      }
+      if (error.code) {
+        const msg = error.message || error.details || 'Unknown database error';
+        return `Database error (${error.code}): ${msg}`;
+      }
+
+      // Try to extract meaningful information from nested objects
+      if (error.error && typeof error.error === 'object') {
+        return parseErrorMessage(error.error);
+      }
+
+      // Try JSON.stringify for complex objects
+      try {
+        const jsonStr = JSON.stringify(error);
+        if (jsonStr && jsonStr !== '{}' && jsonStr !== 'null') {
+          return `Error object: ${jsonStr}`;
+        }
+      } catch (jsonError) {
+        // JSON.stringify failed, continue to other methods
+      }
+
+      // Final fallback - use toString but check if it's meaningful
+      const stringified = String(error);
+      if (stringified && stringified !== '[object Object]' && stringified !== 'null' && stringified !== 'undefined') {
+        return stringified;
+      }
     }
-    
-    return 'Unknown error occurred';
+
+    return 'Unknown error occurred - unable to extract error message';
   } catch (parseError) {
     console.error('Error parsing error message:', parseError);
-    return 'Error parsing failed';
+    return `Error parsing failed: ${parseError?.message || 'Unknown parsing error'}`;
   }
 }
 
