@@ -550,50 +550,70 @@ export const useCreateDeliveryNote = () => {
   
   return useMutation({
     mutationFn: async ({ deliveryNote, items }: { deliveryNote: any; items: any[] }) => {
-      // Validate that delivery note is backed by a sale (invoice)
-      if (!deliveryNote.invoice_id) {
-        throw new Error('Delivery note must be linked to an existing invoice or sale.');
-      }
+      console.log('🚚 Creating delivery note:', {
+        has_invoice: !!deliveryNote.invoice_id,
+        invoice_id: deliveryNote.invoice_id,
+        customer_id: deliveryNote.customer_id,
+        items_count: items.length
+      });
 
-      // Verify the invoice exists and belongs to the same company
-      const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
-        .select('id, customer_id, company_id')
-        .eq('id', deliveryNote.invoice_id)
-        .eq('company_id', deliveryNote.company_id)
-        .single();
+      // If invoice_id is provided, validate the invoice-backed delivery note
+      if (deliveryNote.invoice_id) {
+        console.log('📋 Validating invoice-backed delivery note...');
 
-      if (invoiceError || !invoice) {
-        throw new Error('Related invoice not found or does not belong to this company.');
-      }
+        // Verify the invoice exists and belongs to the same company
+        const { data: invoice, error: invoiceError } = await supabase
+          .from('invoices')
+          .select('id, customer_id, company_id')
+          .eq('id', deliveryNote.invoice_id)
+          .eq('company_id', deliveryNote.company_id)
+          .single();
 
-      // Verify customer matches
-      if (invoice.customer_id !== deliveryNote.customer_id) {
-        throw new Error('Delivery note customer must match the invoice customer.');
-      }
+        if (invoiceError || !invoice) {
+          throw new Error('Related invoice not found or does not belong to this company.');
+        }
 
-      // Verify delivery items correspond to invoice items
-      if (items.length > 0) {
-        const { data: invoiceItems } = await supabase
-          .from('invoice_items')
-          .select('product_id, quantity')
-          .eq('invoice_id', deliveryNote.invoice_id);
+        // Verify customer matches
+        if (invoice.customer_id !== deliveryNote.customer_id) {
+          throw new Error('Delivery note customer must match the invoice customer.');
+        }
 
-        const invoiceProductMap = new Map();
-        (invoiceItems || []).forEach((item: any) => {
-          invoiceProductMap.set(item.product_id, item.quantity);
-        });
+        // Verify delivery items correspond to invoice items
+        if (items.length > 0) {
+          const { data: invoiceItems } = await supabase
+            .from('invoice_items')
+            .select('product_id, quantity')
+            .eq('invoice_id', deliveryNote.invoice_id);
 
-        // Check that all delivery items exist in the invoice
-        for (const item of items) {
-          if (!invoiceProductMap.has(item.product_id)) {
-            throw new Error(`Product in delivery note is not included in the related invoice.`);
+          const invoiceProductMap = new Map();
+          (invoiceItems || []).forEach((item: any) => {
+            invoiceProductMap.set(item.product_id, item.quantity);
+          });
+
+          // Check that all delivery items exist in the invoice
+          for (const item of items) {
+            if (!invoiceProductMap.has(item.product_id)) {
+              throw new Error(`Product "${item.description || item.product_id}" in delivery note is not included in the related invoice.`);
+            }
+
+            const invoiceQuantity = invoiceProductMap.get(item.product_id);
+            if (item.quantity > invoiceQuantity) {
+              throw new Error(`Delivery quantity (${item.quantity}) cannot exceed invoice quantity (${invoiceQuantity}) for product "${item.description || item.product_id}".`);
+            }
           }
+        }
 
-          const invoiceQuantity = invoiceProductMap.get(item.product_id);
-          if (item.quantity > invoiceQuantity) {
-            throw new Error(`Delivery quantity cannot exceed invoice quantity for product.`);
-          }
+        console.log('✅ Invoice validation passed');
+      } else {
+        console.log('📝 Creating manual delivery note (no invoice linked)');
+
+        // For manual delivery notes, just validate basic requirements
+        if (!deliveryNote.customer_id) {
+          throw new Error('Customer is required for delivery note.');
+        }
+
+        if (!items.length) {
+          throw new Error('At least one item is required for delivery note.');
         }
       }
 
