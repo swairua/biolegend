@@ -515,6 +515,14 @@ export default function CreditNotes() {
         creditNote={selectedCreditNote}
         onSuccess={handleCreateSuccess}
       />
+
+      {/* Apply Credit Note Modal */}
+      <ApplyCreditNoteModal
+        open={showApplyModal}
+        onOpenChange={setShowApplyModal}
+        creditNote={selectedCreditNote}
+        onSuccess={handleCreateSuccess}
+      />
     </div>
   );
 }
