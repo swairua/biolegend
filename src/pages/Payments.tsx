@@ -152,8 +152,8 @@ export default function Payments() {
           </div>
         </div>
 
-        {/* Show diagnostic if there's an error */}
-        <PaymentAllocationDiagnostic />
+        {/* Show auto-fix if there's an error */}
+        <PaymentAllocationAutoFix />
       </div>
     );
   }
