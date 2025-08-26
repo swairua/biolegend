@@ -5,6 +5,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 import { AuthErrorBoundary } from '@/components/auth/AuthErrorBoundary';
 import { AuthLoadingDiagnostic } from '@/components/auth/AuthLoadingDiagnostic';
+import { AuthStatusIndicator } from '@/components/auth/AuthStatusIndicator';
 import App from './App.tsx'
 import './index.css'
 
