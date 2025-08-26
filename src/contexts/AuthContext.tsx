@@ -183,7 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuthState = async () => {
       const initStartTime = Date.now();
-      const INIT_TIMEOUT = 10000; // 10 second timeout
+      const INIT_TIMEOUT = 5000; // 5 second timeout (reduced from 10)
 
       try {
         console.log('🚀 Initializing auth state...');
@@ -204,23 +204,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
 
           if (initialSession?.user && mountedRef.current) {
-            console.log('✅ Found valid session, fetching profile...');
+            console.log('✅ Found valid session, user authenticated');
 
-            // Add timeout to profile fetching as well
-            const profilePromise = fetchProfile(initialSession.user.id);
-            const profileTimeoutPromise = new Promise<UserProfile | null>((_, reject) => {
-              setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
-            });
+            // Don't block auth initialization on profile fetching
+            // Fetch profile in background and update state when ready
+            fetchProfile(initialSession.user.id)
+              .then(userProfile => {
+                if (mountedRef.current) {
+                  setProfile(userProfile);
+                  console.log('✅ Profile loaded asynchronously');
+                }
+              })
+              .catch(profileError => {
+                console.warn('⚠️ Background profile fetch failed:', profileError);
+              });
 
-            let userProfile: UserProfile | null = null;
-            try {
-              userProfile = await Promise.race([profilePromise, profileTimeoutPromise]);
-            } catch (profileError) {
-              console.warn('⚠️ Profile fetch failed or timed out:', profileError);
-              // Continue without profile - we still have a valid session
-            }
-
-            return { session: initialSession, profile: userProfile, error: null };
+            return { session: initialSession, profile: null, error: null };
           } else {
             console.log('ℹ️ No valid session found');
             return { session: null, profile: null, error: null };
@@ -283,7 +282,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initializeAuthState();
 
-    // Safety timeout - force complete initialization after 20 seconds
+    // Safety timeout - force complete initialization after 8 seconds
     const safetyTimeout = setTimeout(() => {
       if (mountedRef.current && !initialized && !forceCompletedRef.current) {
         console.warn('🚨 Force completing auth initialization due to timeout');
@@ -291,9 +290,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setLoading(false);
         setInitialized(true);
         initializingRef.current = false;
-        toast.warning('Authentication initialization took too long and was force completed. You may need to sign in again.');
+        toast.info('Authentication check completed. Continue using the app normally.');
       }
-    }, 20000); // 20 second safety timeout
+    }, 8000); // 8 second safety timeout (reduced from 20)
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
