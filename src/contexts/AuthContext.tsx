@@ -359,17 +359,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     initializeAuthState();
 
-    // Safety timeout - force complete initialization after 8 seconds
+    // Safety timeout - force complete initialization after 20 seconds
     const safetyTimeout = setTimeout(() => {
       if (mountedRef.current && !initialized && !forceCompletedRef.current) {
-        console.warn('🚨 Force completing auth initialization due to timeout');
+        console.warn('🚨 Force completing auth initialization due to safety timeout');
         forceCompletedRef.current = true;
         setLoading(false);
         setInitialized(true);
         initializingRef.current = false;
-        toast.info('Authentication check completed. Continue using the app normally.');
+        setTimeout(() => {
+          toast.info('Authentication check completed. You can continue using the app normally.', {
+            duration: 3000
+          });
+        }, 100);
       }
-    }, 8000); // 8 second safety timeout (reduced from 20)
+    }, 20000); // 20 second safety timeout
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
