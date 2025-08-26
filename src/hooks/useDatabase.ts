@@ -552,7 +552,7 @@ export const useInvoices = (companyId?: string) => {
           .select('id, name, email, phone, address, city, country')
           .in('id', customerIds) : { data: [] };
 
-        // Step 3: Get invoice items separately
+        // Step 3: Get invoice items separately (including product details for delivery notes)
         const { data: invoiceItems } = await supabase
           .from('invoice_items')
           .select(`
@@ -567,7 +567,8 @@ export const useInvoices = (companyId?: string) => {
             tax_amount,
             tax_inclusive,
             line_total,
-            sort_order
+            sort_order,
+            products(id, name, product_code, unit_of_measure)
           `)
           .in('invoice_id', invoices.map(inv => inv.id));
 
