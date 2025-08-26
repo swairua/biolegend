@@ -48,6 +48,7 @@ export function EditRemittanceModal({ open, onOpenChange, remittance, onSuccess 
   const { profile } = useAuth();
   const { currentCompany } = useCurrentCompany();
   const updateRemittanceMutation = useUpdateRemittanceAdvice();
+  const updateItemsMutation = useUpdateRemittanceAdviceItems();
   const { data: customers = [] } = useCustomers(currentCompany?.id);
 
   const [formData, setFormData] = useState({
