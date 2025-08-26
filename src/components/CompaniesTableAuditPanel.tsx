@@ -16,14 +16,15 @@ import {
   FileText
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { 
-  auditCompaniesTable, 
-  fixCompaniesTable, 
+import {
+  auditCompaniesTable,
+  fixCompaniesTable,
   ensureCompaniesTableComplete,
   testCompaniesTable,
   MANUAL_COMPANIES_FIX_SQL,
-  type CompaniesTableAudit 
+  type CompaniesTableAudit
 } from '@/utils/auditAndFixCompaniesTable';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 
 export function CompaniesTableAuditPanel() {
   const [audit, setAudit] = useState<CompaniesTableAudit | null>(null);
@@ -45,7 +46,9 @@ export function CompaniesTableAuditPanel() {
         toast.warning(`Audit completed - ${auditResult.missingColumns.length} columns missing`);
       }
     } catch (error) {
-      toast.error('Audit failed: ' + (error instanceof Error ? error.message : String(error)));
+      const errorMessage = parseErrorMessage(error);
+      console.error('Audit failed:', error);
+      toast.error(`Audit failed: ${errorMessage}`);
     } finally {
       setIsAuditing(false);
     }
@@ -67,8 +70,9 @@ export function CompaniesTableAuditPanel() {
         toast.error(result.message);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
-      toast.error('Fix failed: ' + errorMsg);
+      const errorMsg = parseErrorMessage(error);
+      console.error('Fix failed:', error);
+      toast.error(`Fix failed: ${errorMsg}`);
       setFixResults([errorMsg]);
     } finally {
       setIsFixing(false);
@@ -89,7 +93,8 @@ export function CompaniesTableAuditPanel() {
         toast.error(`Tests failed: ${result.errors.length} issues found`);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorMsg = parseErrorMessage(error);
+      console.error('Test failed:', error);
       toast.error('Testing failed: ' + errorMsg);
       setTestResults([errorMsg]);
     } finally {

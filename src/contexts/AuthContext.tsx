@@ -14,6 +14,8 @@ export interface UserProfile {
   company_id?: string;
   department?: string;
   position?: string;
+  role?: string;
+  status?: string;
   last_login?: string;
   created_at: string;
   updated_at: string;
@@ -30,6 +32,7 @@ export interface AuthContextType {
   resetPassword: (email: string) => Promise<{ error: AuthError | null }>;
   updateProfile: (updates: Partial<UserProfile>) => Promise<{ error: Error | null }>;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   refreshProfile: () => Promise<void>;
   clearTokens: () => void;
 }
@@ -68,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const profileData = await createRetryableRequest(async () => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, email, full_name, avatar_url, phone, company_id, department, position, role, status, last_login, created_at, updated_at')
           .eq('id', userId)
           .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
 
@@ -459,8 +462,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     toast.info('Authentication tokens cleared. Please sign in again.');
   }, []);
 
-  // Compute derived state - only require user since we removed role-based system
+  // Compute derived state
   const isAuthenticated = !!user;
+  const isAdmin = profile?.role === 'admin';
 
   const value: AuthContextType = {
     user,
@@ -473,6 +477,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resetPassword,
     updateProfile,
     isAuthenticated,
+    isAdmin,
     refreshProfile,
     clearTokens,
   };

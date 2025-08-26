@@ -47,6 +47,10 @@ import useUserManagement from '@/hooks/useUserManagement';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
 import { EditUserModal } from '@/components/users/EditUserModal';
 import { InviteUserModal } from '@/components/users/InviteUserModal';
+import { UserProfileDiagnostic } from '@/components/UserProfileDiagnostic';
+import { PaymentAllocationDiagnostic } from '@/components/PaymentAllocationDiagnostic';
+import { AdminRoleDiagnostic } from '@/components/AdminRoleDiagnostic';
+import { InvitationTestDiagnostic } from '@/components/InvitationTestDiagnostic';
 import { toast } from 'sonner';
 
 function getRoleColor(role: string) {
@@ -114,19 +118,36 @@ export default function UserManagement() {
     user.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Redirect if not admin
+  // Show admin role diagnostic if not admin
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-6">
-            <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">User Management</h1>
             <p className="text-muted-foreground">
-              You need administrator privileges to access user management.
+              Manage user accounts, roles, and permissions
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center">
+          <Card className="w-full max-w-md text-center">
+            <CardContent className="pt-6">
+              <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+              <p className="text-muted-foreground mb-4">
+                You need administrator privileges to access user management.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Admin Role Diagnostic */}
+        <AdminRoleDiagnostic />
+
+        {/* Invitation Test Diagnostic */}
+        <InvitationTestDiagnostic />
       </div>
     );
   }
@@ -187,6 +208,15 @@ export default function UserManagement() {
           </Button>
         </div>
       </div>
+
+      {/* User Profile Diagnostic */}
+      <UserProfileDiagnostic />
+
+      {/* Payment Allocation Diagnostic */}
+      <PaymentAllocationDiagnostic />
+
+      {/* Invitation Test Diagnostic */}
+      <InvitationTestDiagnostic />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">

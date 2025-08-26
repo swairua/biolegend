@@ -27,38 +27,38 @@ CREATE INDEX IF NOT EXISTS idx_payment_allocations_invoice_id ON payment_allocat
 ALTER TABLE payment_allocations ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS policies (adjust these based on your security requirements)
-CREATE POLICY "Users can view allocations in their company" ON payment_allocations 
+CREATE POLICY "Users can view allocations in their company" ON payment_allocations
 FOR SELECT USING (
     payment_id IN (
         SELECT id FROM payments WHERE company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM profiles WHERE id = auth.uid()
         )
     )
 );
 
-CREATE POLICY "Users can insert allocations in their company" ON payment_allocations 
+CREATE POLICY "Users can insert allocations in their company" ON payment_allocations
 FOR INSERT WITH CHECK (
     payment_id IN (
         SELECT id FROM payments WHERE company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM profiles WHERE id = auth.uid()
         )
     )
 );
 
-CREATE POLICY "Users can update allocations in their company" ON payment_allocations 
+CREATE POLICY "Users can update allocations in their company" ON payment_allocations
 FOR UPDATE USING (
     payment_id IN (
         SELECT id FROM payments WHERE company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM profiles WHERE id = auth.uid()
         )
     )
 );
 
-CREATE POLICY "Users can delete allocations in their company" ON payment_allocations 
+CREATE POLICY "Users can delete allocations in their company" ON payment_allocations
 FOR DELETE USING (
     payment_id IN (
         SELECT id FROM payments WHERE company_id IN (
-            SELECT company_id FROM user_profiles WHERE user_id = auth.uid()
+            SELECT company_id FROM profiles WHERE id = auth.uid()
         )
     )
 );`;

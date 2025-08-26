@@ -53,9 +53,9 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Fetch all available invoices for selection
-  const { data: invoices = [] } = useInvoices();
-  const createPaymentMutation = useCreatePayment();
   const { currentCompany } = useCurrentCompany();
+  const { data: invoices = [] } = useInvoices(currentCompany?.id);
+  const createPaymentMutation = useCreatePayment();
   
   // Include all invoices for manual payment adjustments (including fully paid ones)
   const availableInvoices = invoices.filter(inv =>
@@ -136,8 +136,15 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       };
 
       const result = await createPaymentMutation.mutateAsync(paymentRecord);
-      
-      toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
+
+      // Check if payment was recorded but allocation might have failed
+      if (result.fallback_used) {
+        toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
+          description: "Payment allocation may require manual setup. Check the payments list."
+        });
+      } else {
+        toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
+      }
       onSuccess();
       onOpenChange(false);
       resetForm();
