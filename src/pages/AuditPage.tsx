@@ -2,6 +2,7 @@ import { QuickAuditRunner } from '@/components/QuickAuditRunner';
 import { CreditNoteSchemaTest } from '@/components/debug/CreditNoteSchemaTest';
 import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/ForceCreditNoteCorrectMigration';
 import { InvoiceErrorTest } from '@/components/debug/InvoiceErrorTest';
+import { MigrationErrorTest } from '@/components/debug/MigrationErrorTest';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
