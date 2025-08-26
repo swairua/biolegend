@@ -492,15 +492,26 @@ export const CreateDeliveryNoteModal = ({
                 <div className="text-center py-8 text-muted-foreground">
                   {formData.invoice_id
                     ? (
-                        <div className="space-y-2">
-                          <p>No items found in selected invoice.</p>
-                          <p className="text-xs">The invoice may not have any items or they failed to load.</p>
+                        <div className="space-y-3">
+                          <p>⚠️ No items loaded from selected invoice.</p>
+                          <p className="text-xs">This could mean:</p>
+                          <ul className="text-xs space-y-1 max-w-md mx-auto">
+                            <li>• The invoice has no line items</li>
+                            <li>• There was a data loading issue</li>
+                            <li>• The invoice items are in an unexpected format</li>
+                          </ul>
+                          <p className="text-xs mt-3">
+                            Check the browser console for detailed error information.
+                          </p>
                         </div>
                       )
                     : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <p>📋 Select an invoice above to automatically load items for delivery.</p>
-                          <p className="text-xs">Items from the selected invoice will appear here automatically.</p>
+                          <p className="text-xs">Or add items manually using the "Add Item" button.</p>
+                          <p className="text-xs text-success">
+                            💡 Tip: Selecting an invoice will auto-populate customer details and items.
+                          </p>
                         </div>
                       )
                   }
