@@ -468,12 +468,12 @@ export const useUpdateInvoiceWithItems = () => {
         .eq('reference_type', 'INVOICE');
 
       if (existingMovements && existingMovements.length > 0) {
-        // Create reverse movements
+        // Create reverse movements with exact string values
         const reverseMovements = existingMovements.map(movement => ({
           company_id: movement.company_id,
           product_id: movement.product_id,
-          movement_type: movement.movement_type === 'OUT' ? 'IN' : 'OUT' as const,
-          reference_type: 'ADJUSTMENT' as const,
+          movement_type: movement.movement_type === 'OUT' ? 'IN' : 'OUT', // Exact strings
+          reference_type: 'ADJUSTMENT', // Exact string
           reference_id: invoiceId,
           quantity: -movement.quantity,
           notes: `Reversal for updated invoice ${invoice.invoice_number}`
@@ -540,8 +540,8 @@ export const useUpdateInvoiceWithItems = () => {
             .map(item => ({
               company_id: invoice.company_id,
               product_id: item.product_id!,
-              movement_type: 'OUT' as const,
-              reference_type: 'INVOICE' as const,
+              movement_type: 'OUT', // Exact string
+              reference_type: 'INVOICE', // Exact string
               reference_id: invoiceId,
               quantity: -item.quantity,
               cost_per_unit: item.unit_price,
