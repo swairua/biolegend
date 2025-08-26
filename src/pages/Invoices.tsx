@@ -586,6 +586,9 @@ Website: www.biolegendscientific.co.ke`;
         </CardContent>
       </Card>
 
+      {/* Schema Fix for Stock Movements */}
+      <StockMovementsSchemaFix />
+
       {/* Create Invoice Modal */}
       <CreateInvoiceModal
         open={showCreateModal}
