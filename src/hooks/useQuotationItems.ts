@@ -314,19 +314,32 @@ export const useCreateInvoiceWithItems = () => {
         if (invoice.affects_inventory !== false) {
           const stockMovements = items
             .filter(item => item.product_id && item.quantity > 0)
-            .map(item => ({
-              company_id: invoice.company_id,
-              product_id: item.product_id!,
-              movement_type: 'OUT' as const,
-              reference_type: 'INVOICE' as const,
-              reference_id: invoiceData.id,
-              reference_number: invoice.invoice_number,
-              quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
-              cost_per_unit: item.unit_price,
-              movement_date: invoice.invoice_date || new Date().toISOString().split('T')[0],
-              notes: `Stock reduction for invoice ${invoice.invoice_number}`,
-              created_by: invoice.created_by
-            }));
+            .map(item => {
+              // Validate required fields
+              if (!invoice.company_id) {
+                throw new Error('Company ID is required for stock movements');
+              }
+              if (!item.product_id) {
+                throw new Error('Product ID is required for stock movements');
+              }
+              if (!item.quantity || item.quantity <= 0) {
+                throw new Error('Valid quantity is required for stock movements');
+              }
+
+              return {
+                company_id: invoice.company_id,
+                product_id: item.product_id!,
+                movement_type: 'OUT' as const,
+                reference_type: 'INVOICE' as const,
+                reference_id: invoiceData.id,
+                reference_number: invoice.invoice_number || null,
+                quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
+                cost_per_unit: item.unit_price || null,
+                movement_date: invoice.invoice_date || new Date().toISOString().split('T')[0],
+                notes: `Stock reduction for invoice ${invoice.invoice_number}`,
+                created_by: invoice.created_by || null
+              };
+            });
 
           console.log('📦 Creating stock movements for invoice:', {
             invoice_id: invoiceData.id,
