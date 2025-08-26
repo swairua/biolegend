@@ -33,8 +33,6 @@ import ProformaErrorDiagnosticPage from "./pages/ProformaErrorDiagnostic";
 import PDFDiagnostic from "./pages/PDFDiagnostic";
 
 const App = () => {
-  // Run database diagnostics safely without setState during render
-  const diagnostics = useDatabaseDiagnostics();
 
   useEffect(() => {
     // Suppress ResizeObserver loop errors
@@ -260,8 +258,6 @@ const App = () => {
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
 
-          {/* Auto Payment Sync - No protection needed for setup */}
-          <Route path="/auto-payment-sync" element={<AutoPaymentSyncPage />} />
 
           {/* Payment Synchronization - No protection needed for setup */}
           <Route path="/payment-sync" element={<PaymentSynchronizationPage />} />
