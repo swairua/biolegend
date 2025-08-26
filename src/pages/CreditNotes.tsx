@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import { CreateCreditNoteModal } from '@/components/credit-notes/CreateCreditNoteModal';
 import { ViewCreditNoteModal } from '@/components/credit-notes/ViewCreditNoteModal';
 import { EditCreditNoteModal } from '@/components/credit-notes/EditCreditNoteModal';
+import { ApplyCreditNoteModal } from '@/components/credit-notes/ApplyCreditNoteModal';
 import { CreditNotesSetupGuide } from '@/components/credit-notes/CreditNotesSetupGuide';
 import { SimpleForeignKeyPatch } from '@/components/credit-notes/SimpleForeignKeyPatch';
 import { CreditNotesConnectionStatus } from '@/components/credit-notes/CreditNotesConnectionStatus';
@@ -70,6 +71,7 @@ export default function CreditNotes() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showApplyModal, setShowApplyModal] = useState(false);
   const [selectedCreditNote, setSelectedCreditNote] = useState<CreditNote | null>(null);
 
   // Filter states
@@ -473,8 +475,8 @@ export default function CreditNotes() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              // TODO: Implement apply credit
-                              toast.info('Apply credit functionality coming soon');
+                              setSelectedCreditNote(creditNote);
+                              setShowApplyModal(true);
                             }}
                             className="bg-primary-light text-primary border-primary/20 hover:bg-primary hover:text-primary-foreground"
                           >
@@ -510,6 +512,14 @@ export default function CreditNotes() {
       <EditCreditNoteModal
         open={showEditModal}
         onOpenChange={setShowEditModal}
+        creditNote={selectedCreditNote}
+        onSuccess={handleCreateSuccess}
+      />
+
+      {/* Apply Credit Note Modal */}
+      <ApplyCreditNoteModal
+        open={showApplyModal}
+        onOpenChange={setShowApplyModal}
         creditNote={selectedCreditNote}
         onSuccess={handleCreateSuccess}
       />
