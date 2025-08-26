@@ -65,7 +65,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Fetch user profile from database with error handling and retry logic
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
-      console.log('🔍 Fetching profile for user ID:', userId);
 
       const { data: profileData, error } = await supabase
         .from('profiles')
@@ -78,20 +77,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (!profileData) {
-        console.warn('⚠️ No profile found for user ID:', userId);
         return null;
       }
 
-      console.log('✅ Profile found:', {
-        id: profileData.id,
-        email: profileData.email
-      });
 
       return profileData;
     } catch (error) {
       console.error('Exception fetching profile:', error);
 
-      console.warn(`Profile fetch failed:`, error);
 
       // Show general error message
       setTimeout(() => toast.error(
@@ -119,7 +112,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleAuthStateChange = useCallback(async (event: string, newSession: Session | null) => {
     if (!mountedRef.current || initializingRef.current) return;
 
-    console.log('Auth state changed:', event, newSession?.user?.email);
     
     try {
       // Batch state updates to prevent multiple renders
@@ -151,7 +143,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const errorMessage = (error as any).message;
         if (errorMessage?.includes('Invalid Refresh Token') || 
             errorMessage?.includes('Refresh Token Not Found')) {
-          console.warn('Clearing invalid tokens due to auth state error');
           clearAuthTokens();
         }
       }
@@ -171,7 +162,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuthState = async () => {
       const initStartTime = Date.now();
-      // Allow timeout to be configured via environment variable for debugging
       const INIT_TIMEOUT = parseInt(import.meta.env.VITE_AUTH_TIMEOUT || '15000'); // Default 15 seconds
 
       try {
