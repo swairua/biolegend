@@ -720,23 +720,89 @@ export const usePayments = (companyId?: string) => {
   return useQuery({
     queryKey: ['payments', companyId],
     queryFn: async () => {
-      let query = supabase
-        .from('payments')
-        .select(`
-          *,
-          customers:customers!customer_id(name, email),
-          payment_allocations(*, invoices(invoice_number, total_amount))
-        `)
-        .order('created_at', { ascending: false });
+      if (!companyId) return [];
 
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+      try {
+        // Step 1: Get payments without embedded relationships
+        let query = supabase
+          .from('payments')
+          .select(`
+            id,
+            company_id,
+            customer_id,
+            payment_number,
+            payment_date,
+            amount,
+            payment_method,
+            reference_number,
+            notes,
+            created_at,
+            updated_at
+          `)
+          .eq('company_id', companyId)
+          .order('created_at', { ascending: false });
+
+        const { data: payments, error: paymentsError } = await query;
+
+        if (paymentsError) throw paymentsError;
+        if (!payments || payments.length === 0) return [];
+
+        // Step 2: Get customers separately (filter out invalid UUIDs)
+        const customerIds = [...new Set(payments.map(payment => payment.customer_id).filter(id => id && typeof id === 'string' && id.length === 36))];
+        const { data: customers } = customerIds.length > 0 ? await supabase
+          .from('customers')
+          .select('id, name, email, phone, address, city, country')
+          .in('id', customerIds) : { data: [] };
+
+        // Step 3: Get payment allocations separately
+        const { data: paymentAllocations } = await supabase
+          .from('payment_allocations')
+          .select(`
+            id,
+            payment_id,
+            invoice_id,
+            amount_allocated,
+            invoices(id, invoice_number, total_amount)
+          `)
+          .in('payment_id', payments.map(payment => payment.id));
+
+        // Step 4: Create lookup maps
+        const customerMap = new Map();
+        (customers || []).forEach(customer => {
+          customerMap.set(customer.id, customer);
+        });
+
+        const allocationsMap = new Map();
+        (paymentAllocations || []).forEach(allocation => {
+          if (!allocationsMap.has(allocation.payment_id)) {
+            allocationsMap.set(allocation.payment_id, []);
+          }
+          allocationsMap.get(allocation.payment_id).push({
+            id: allocation.id,
+            invoice_number: allocation.invoices?.invoice_number || 'N/A',
+            allocated_amount: allocation.amount_allocated,
+            invoice_total: allocation.invoices?.total_amount || 0
+          });
+        });
+
+        // Step 5: Combine data
+        return payments.map(payment => ({
+          ...payment,
+          customers: customerMap.get(payment.customer_id) || {
+            name: 'Unknown Customer',
+            email: null,
+            phone: null
+          },
+          payment_allocations: allocationsMap.get(payment.id) || []
+        }));
+
+      } catch (error) {
+        console.error('Error in usePayments:', error);
+        const errorMessage = typeof error === 'string' ? error :
+                            (error as any)?.message ||
+                            'Failed to load payments';
+        throw new Error(errorMessage);
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
     },
   });
 };
