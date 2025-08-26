@@ -117,19 +117,33 @@ export default function UserManagement() {
     user.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Redirect if not admin
+  // Show admin role diagnostic if not admin
   if (!isAdmin) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Card className="w-full max-w-md text-center">
-          <CardContent className="pt-6">
-            <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">User Management</h1>
             <p className="text-muted-foreground">
-              You need administrator privileges to access user management.
+              Manage user accounts, roles, and permissions
             </p>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-center">
+          <Card className="w-full max-w-md text-center">
+            <CardContent className="pt-6">
+              <Shield className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Access Denied</h3>
+              <p className="text-muted-foreground mb-4">
+                You need administrator privileges to access user management.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Admin Role Diagnostic */}
+        <AdminRoleDiagnostic />
       </div>
     );
   }
