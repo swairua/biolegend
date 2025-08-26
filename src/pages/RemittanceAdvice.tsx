@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import { useRemittanceAdvice, useCompanies } from '@/hooks/useDatabase';
 import { CreateRemittanceModal } from '@/components/remittance/CreateRemittanceModalFixed';
 import { ViewRemittanceModal } from '@/components/remittance/ViewRemittanceModal';
+import { EditRemittanceModal } from '@/components/remittance/EditRemittanceModal';
 
 // Remittance advice page - uses real database data via useRemittanceAdvice hook
 
