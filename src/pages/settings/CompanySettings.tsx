@@ -557,9 +557,6 @@ export default function CompanySettings() {
             <Save className="h-4 w-4" />
             Save Settings
           </Button>
-          <Button variant="outline" size="lg" onClick={testCompanySave}>
-            🧪 Debug Test
-          </Button>
         </div>
       </div>
 

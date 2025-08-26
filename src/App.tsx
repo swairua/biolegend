@@ -37,8 +37,6 @@ const App = () => {
     // Suppress ResizeObserver loop errors
     enableResizeObserverErrorSuppression();
 
-    // Log successful fix
-    console.log('✅ App loaded without setState during render errors');
   }, []);
 
   return (
