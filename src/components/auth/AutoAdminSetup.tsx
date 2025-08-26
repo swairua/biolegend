@@ -234,7 +234,7 @@ export function AutoAdminSetup() {
 
         // Try to create profile
         try {
-          await supabase
+          const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
               id: data.data.user.id,
@@ -242,9 +242,18 @@ export function AutoAdminSetup() {
               full_name: ADMIN_CREDENTIALS.fullName,
               department: 'Administration',
               position: 'System Administrator',
+              role: 'admin',
+              status: 'active',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
+
+          if (profileError) {
+            console.warn('Profile creation failed:', profileError);
+            if (profileError.message.includes('relation') && profileError.message.includes('does not exist')) {
+              toast.warning('Admin user created but profiles table not found. You may need to set up the database schema.');
+            }
+          }
         } catch (profileError) {
           console.warn('Profile creation failed (table may not exist):', profileError);
         }
