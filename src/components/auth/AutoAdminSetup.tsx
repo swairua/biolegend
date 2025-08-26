@@ -391,7 +391,7 @@ export function AutoAdminSetup() {
         {!hasCheckedRef.current && !status.error && !status.checking && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              If this is your first time, we'll help you set up an admin account.
+              Need to set up or verify admin access? Click below to check or create an admin account.
             </p>
             <Button
               onClick={checkAdminExists}
