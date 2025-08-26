@@ -71,7 +71,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const profileData = await createRetryableRequest(async () => {
         const { data, error } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, email, full_name, avatar_url, phone, company_id, department, position, role, status, last_login, created_at, updated_at')
           .eq('id', userId)
           .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
 
