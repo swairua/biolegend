@@ -320,23 +320,30 @@ export const useCreateInvoiceWithItems = () => {
               movement_type: 'OUT' as const,
               reference_type: 'INVOICE' as const,
               reference_id: invoiceData.id,
-              quantity: -item.quantity, // Negative for outgoing stock
+              quantity: item.quantity, // Positive quantity, movement_type determines direction
               cost_per_unit: item.unit_price,
               notes: `Stock reduction for invoice ${invoice.invoice_number}`
             }));
 
           if (stockMovements.length > 0) {
-            const { error: stockError } = await supabase
-              .from('stock_movements')
-              .insert(stockMovements);
+            // Use the robust stock movements creation utility
+            const { createStockMovements } = await import('@/utils/initializeStockMovements');
+            const { data: stockData, error: stockError } = await createStockMovements(stockMovements);
 
-            if (stockError) throw stockError;
+            if (stockError) {
+              console.error('Failed to create stock movements:', stockError);
+              // Don't throw here - invoice was created successfully, stock inconsistency can be fixed later
+              console.warn(`Stock movements creation failed for invoice ${invoice.invoice_number}. Invoice created successfully but inventory may not be updated.`);
+            } else {
+              console.log(`Created ${stockData?.length || 0} stock movements for invoice ${invoice.invoice_number}`);
+            }
 
             // Update product stock quantities in parallel for better performance
             const stockUpdatePromises = stockMovements.map(movement =>
               supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
-                quantity_change: movement.quantity
+                movement_type: movement.movement_type,
+                quantity: movement.quantity
               })
             );
 

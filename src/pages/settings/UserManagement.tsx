@@ -47,11 +47,6 @@ import useUserManagement from '@/hooks/useUserManagement';
 import { CreateUserModal } from '@/components/users/CreateUserModal';
 import { EditUserModal } from '@/components/users/EditUserModal';
 import { InviteUserModal } from '@/components/users/InviteUserModal';
-import { UserProfileDiagnostic } from '@/components/UserProfileDiagnostic';
-import { PaymentAllocationDiagnostic } from '@/components/PaymentAllocationDiagnostic';
-import { AdminRoleDiagnostic } from '@/components/AdminRoleDiagnostic';
-import { InvitationTestDiagnostic } from '@/components/InvitationTestDiagnostic';
-import { UserInvitationsTableFix } from '@/components/UserInvitationsTableFix';
 import { toast } from 'sonner';
 
 function getRoleColor(role: string) {
@@ -145,11 +140,6 @@ export default function UserManagement() {
           </Card>
         </div>
 
-        {/* Admin Role Diagnostic */}
-        <AdminRoleDiagnostic />
-
-        {/* Invitation Test Diagnostic */}
-        <InvitationTestDiagnostic />
       </div>
     );
   }
@@ -211,19 +201,6 @@ export default function UserManagement() {
         </div>
       </div>
 
-      {/* User Profile Diagnostic */}
-      <UserProfileDiagnostic />
-
-      {/* Payment Allocation Diagnostic */}
-      <PaymentAllocationDiagnostic />
-
-      {/* Invitation Test Diagnostic */}
-      <InvitationTestDiagnostic />
-
-      {/* User Invitations Table Fix - Show when there's an error with invited_at column */}
-      {error && error.includes('invited_at does not exist') && (
-        <UserInvitationsTableFix />
-      )}
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">

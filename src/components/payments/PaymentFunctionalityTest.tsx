@@ -17,7 +17,8 @@ import {
   CreditCard
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCreatePayment, useInvoices } from '@/hooks/useDatabase';
+import { useCreatePayment } from '@/hooks/useDatabase';
+import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
 
 interface TestResults {
