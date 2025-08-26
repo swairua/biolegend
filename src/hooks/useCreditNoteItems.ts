@@ -113,7 +113,7 @@ export function useCreateCreditNoteWithItems() {
                   await supabase.rpc('update_product_stock', {
                     product_uuid: movement.product_id,
                     movement_type: movement.movement_type,
-                    quantity: movement.quantity
+                    quantity: Math.abs(movement.quantity)
                   });
                 } catch (stockUpdateError: any) {
                   console.error('Error updating product stock:', {
@@ -211,7 +211,7 @@ export function useUpdateCreditNoteWithItems() {
                   await supabase.rpc('update_product_stock', {
                     product_uuid: movement.product_id,
                     movement_type: movement.movement_type,
-                    quantity: movement.quantity
+                    quantity: Math.abs(movement.quantity)
                   });
                 } catch (stockUpdateError) {
                   console.error('Error updating product stock (reversal):', stockUpdateError);
@@ -285,7 +285,7 @@ export function useUpdateCreditNoteWithItems() {
                   await supabase.rpc('update_product_stock', {
                     product_uuid: movement.product_id,
                     movement_type: movement.movement_type,
-                    quantity: movement.quantity
+                    quantity: Math.abs(movement.quantity)
                   });
                 } catch (stockUpdateError) {
                   console.error('Error updating product stock (new):', stockUpdateError);

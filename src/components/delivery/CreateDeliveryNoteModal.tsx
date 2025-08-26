@@ -112,8 +112,8 @@ export const CreateDeliveryNoteModal = ({
             product_id: item.product_id || '',
             product_name: item.products?.name || item.description || 'Unknown Product',
             description: item.description || item.products?.name || '',
-            quantity_ordered: Number(item.quantity) || 0,
-            quantity_delivered: Number(item.quantity) || 0, // Default to full quantity
+            quantity_ordered: Math.max(Number(item.quantity) || 1, 1), // Ensure minimum quantity of 1
+            quantity_delivered: Math.max(Number(item.quantity) || 1, 1), // Default to full quantity, minimum 1
             unit_of_measure: item.products?.unit_of_measure || 'pcs',
           }));
 
@@ -151,15 +151,16 @@ export const CreateDeliveryNoteModal = ({
       id: `item-${Date.now()}`,
       product_id: product.id,
       product_name: product.name,
-      description: product.description || '',
-      quantity_ordered: 1,
-      quantity_delivered: 1,
+      description: product.description || product.name || '',
+      quantity_ordered: 1, // Default to 1 unit
+      quantity_delivered: 1, // Default to 1 unit for delivery
       unit_of_measure: product.unit_of_measure || 'pcs',
     };
 
     setItems(prev => [...prev, newItem]);
     setShowProductSearch(false);
     setSearchTerm('');
+    toast.success(`Added ${product.name} to delivery note`);
   };
 
   const updateItem = (id: string, field: keyof DeliveryItem, value: any) => {
@@ -195,6 +196,16 @@ export const CreateDeliveryNoteModal = ({
       return;
     }
 
+    // Pre-validation check for quantities
+    const invalidItems = items.filter(item =>
+      !item.quantity_delivered || item.quantity_delivered <= 0
+    );
+
+    if (invalidItems.length > 0) {
+      toast.error(`Please ensure all items have valid delivery quantities greater than 0`);
+      return;
+    }
+
     try {
       const deliveryNoteData = mapDeliveryNoteForDatabase({
         company_id: companyId,
@@ -215,6 +226,7 @@ export const CreateDeliveryNoteModal = ({
       // Validate delivery note data
       const validation = validateDeliveryNoteData(deliveryNoteData, items);
       if (!validation.isValid) {
+        console.error('Delivery note validation failed:', validation.errors);
         toast.error(`Validation failed: ${validation.errors.join(', ')}`);
         return;
       }
@@ -229,7 +241,7 @@ export const CreateDeliveryNoteModal = ({
         items: items.map(item => ({
           product_id: item.product_id,
           description: item.description,
-          quantity: item.quantity_delivered,
+          quantity: Math.max(item.quantity_delivered, 0.01), // Ensure positive quantity
           unit_price: 0 // Delivery notes don't typically include pricing
         }))
       });
@@ -513,8 +525,11 @@ export const CreateDeliveryNoteModal = ({
                           <Input
                             type="number"
                             value={item.quantity_ordered}
-                            onChange={(e) => updateItem(item.id, 'quantity_ordered', parseFloat(e.target.value) || 0)}
-                            min="0"
+                            onChange={(e) => {
+                              const value = Math.max(parseFloat(e.target.value) || 1, 0.01); // Minimum 0.01
+                              updateItem(item.id, 'quantity_ordered', value);
+                            }}
+                            min="0.01"
                             step="0.01"
                             className="w-20"
                             disabled={!!formData.invoice_id} // Disable if from invoice
@@ -524,8 +539,11 @@ export const CreateDeliveryNoteModal = ({
                           <Input
                             type="number"
                             value={item.quantity_delivered}
-                            onChange={(e) => updateItem(item.id, 'quantity_delivered', parseFloat(e.target.value) || 0)}
-                            min="0"
+                            onChange={(e) => {
+                              const value = Math.max(parseFloat(e.target.value) || 1, 0.01); // Minimum 0.01
+                              updateItem(item.id, 'quantity_delivered', value);
+                            }}
+                            min="0.01"
                             max={item.quantity_ordered}
                             step="0.01"
                             className="w-20"
