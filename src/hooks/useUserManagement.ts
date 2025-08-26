@@ -307,8 +307,9 @@ export const useUserManagement = () => {
       await fetchInvitations();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to revoke invitation';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'invitation revocation');
+      console.error('Error revoking invitation:', err);
+      toast.error(`Failed to revoke invitation: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
