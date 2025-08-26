@@ -23,6 +23,7 @@ createRoot(document.getElementById("root")!).render(
     <AuthErrorBoundary>
       <AuthProvider>
         <AuthLoadingDiagnostic />
+        <AuthStatusIndicator />
         <CompanyProvider>
           <BrowserRouter>
             <App />
