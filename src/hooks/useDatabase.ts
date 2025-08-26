@@ -1016,7 +1016,7 @@ export const useRemittanceAdvice = (companyId?: string) => {
 
 export const useCreateRemittanceAdvice = () => {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (remittance: Omit<RemittanceAdvice, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
@@ -1024,7 +1024,29 @@ export const useCreateRemittanceAdvice = () => {
         .insert([remittance])
         .select()
         .single();
-      
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['remittance_advice'] });
+    },
+  });
+};
+
+export const useUpdateRemittanceAdvice = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (remittance: Partial<RemittanceAdvice> & { id: string }) => {
+      const { id, ...updateData } = remittance;
+      const { data, error } = await supabase
+        .from('remittance_advice')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
       if (error) throw error;
       return data;
     },
