@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Package,
   Plus,
   Warehouse,
@@ -21,6 +21,8 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useRestockProduct } from '@/hooks/useQuotationItems';
+import { useCompanies } from '@/hooks/useDatabase';
 
 interface RestockItemModalProps {
   open: boolean;
