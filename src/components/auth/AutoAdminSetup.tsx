@@ -305,8 +305,17 @@ export function AutoAdminSetup() {
     };
   }, []);
 
-  // Don't auto-check on mount to prevent rate limiting
-  // User can manually trigger the check
+  // Auto-check admin existence on mount
+  useEffect(() => {
+    if (!hasCheckedRef.current && !status.rateLimited) {
+      // Delay slightly to avoid immediate rate limiting
+      const timer = setTimeout(() => {
+        checkAdminExists();
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, []); // Only run once on mount
 
   // Show rate limited state
   if (status.rateLimited && status.rateLimitRemaining > 0) {
@@ -362,10 +371,10 @@ export function AutoAdminSetup() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {!hasCheckedRef.current && !status.error && (
+        {!hasCheckedRef.current && !status.error && !status.checking && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Check if admin user exists or create a new one.
+              If this is your first time, we'll help you set up an admin account.
             </p>
             <Button
               onClick={checkAdminExists}
@@ -373,14 +382,7 @@ export function AutoAdminSetup() {
               variant="outline"
               className="w-full"
             >
-              {status.checking ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Checking Admin...
-                </>
-              ) : (
-                'Check Admin User'
-              )}
+              Check Admin User
             </Button>
           </div>
         )}
