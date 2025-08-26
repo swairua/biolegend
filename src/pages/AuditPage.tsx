@@ -5,6 +5,7 @@ import { InvoiceErrorTest } from '@/components/debug/InvoiceErrorTest';
 import { MigrationErrorTest } from '@/components/debug/MigrationErrorTest';
 import { SupabaseConnectionTest } from '@/components/debug/SupabaseConnectionTest';
 import { AuthFlowTest } from '@/components/debug/AuthFlowTest';
+import { MigrationStepErrorTest } from '@/components/debug/MigrationStepErrorTest';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -46,6 +47,9 @@ export default function AuditPage() {
 
       {/* Connection Test - Priority for resolving current issue */}
       <SupabaseConnectionTest />
+
+      {/* Comprehensive Migration Error Test */}
+      <MigrationStepErrorTest />
 
       {/* Error Handling & Auth Tests */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
