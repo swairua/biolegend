@@ -459,6 +459,11 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
           </Card>
         </div>
 
+        {/* Show quick fix if allocation failed */}
+        {allocationFailed && (
+          <PaymentAllocationQuickFix className="mt-4" />
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
