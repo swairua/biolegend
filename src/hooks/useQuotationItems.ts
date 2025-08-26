@@ -348,7 +348,41 @@ export const useCreateInvoiceWithItems = () => {
             movements: stockMovements
           });
 
+          // Detailed validation of each movement before sending to database
+          stockMovements.forEach((movement, index) => {
+            console.log(`🔍 Validating movement ${index + 1}:`, {
+              movement_type: movement.movement_type,
+              movement_type_length: movement.movement_type?.length,
+              movement_type_exact: JSON.stringify(movement.movement_type),
+              reference_type: movement.reference_type,
+              reference_type_length: movement.reference_type?.length,
+              reference_type_exact: JSON.stringify(movement.reference_type),
+              quantity: movement.quantity,
+              quantity_type: typeof movement.quantity,
+              company_id: movement.company_id,
+              product_id: movement.product_id,
+              all_fields: Object.keys(movement)
+            });
+
+            // Validate movement_type
+            if (!['IN', 'OUT', 'ADJUSTMENT'].includes(movement.movement_type)) {
+              throw new Error(`Invalid movement_type: "${movement.movement_type}". Must be exactly 'IN', 'OUT', or 'ADJUSTMENT'`);
+            }
+
+            // Validate reference_type
+            if (movement.reference_type && !['INVOICE', 'DELIVERY_NOTE', 'RESTOCK', 'ADJUSTMENT'].includes(movement.reference_type)) {
+              throw new Error(`Invalid reference_type: "${movement.reference_type}". Must be 'INVOICE', 'DELIVERY_NOTE', 'RESTOCK', or 'ADJUSTMENT'`);
+            }
+
+            // Validate required fields
+            if (!movement.company_id) throw new Error('company_id is required');
+            if (!movement.product_id) throw new Error('product_id is required');
+            if (!movement.quantity || movement.quantity <= 0) throw new Error('positive quantity is required');
+          });
+
           if (stockMovements.length > 0) {
+            console.log('🚀 Sending movements to database:', JSON.stringify(stockMovements, null, 2));
+
             const { error: stockError } = await supabase
               .from('stock_movements')
               .insert(stockMovements);
@@ -356,8 +390,13 @@ export const useCreateInvoiceWithItems = () => {
             if (stockError) {
               console.error('❌ Stock movement insert failed:', {
                 error: stockError,
-                error_details: JSON.stringify(stockError, null, 2),
-                movements_attempted: stockMovements
+                error_code: stockError.code,
+                error_message: stockError.message,
+                error_details: stockError.details,
+                error_hint: stockError.hint,
+                constraint_name: stockError.constraint,
+                movements_attempted: stockMovements,
+                full_error: JSON.stringify(stockError, null, 2)
               });
               throw new Error(`Failed to create stock movements: ${stockError.message || stockError.details || 'Unknown database error'}`);
             }
