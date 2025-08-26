@@ -92,9 +92,21 @@ export default function CustomerStatementPreviewModal({
         customer_code: customer.customer_id
       };
       
+      // Get current company details for PDF
+      const companyDetails = companies?.[0] ? {
+        name: companies[0].name,
+        address: companies[0].address,
+        city: companies[0].city,
+        country: companies[0].country,
+        phone: companies[0].phone,
+        email: companies[0].email,
+        tax_number: companies[0].tax_number,
+        logo_url: companies[0].logo_url
+      } : undefined;
+
       await generateCustomerStatementPDF(customerData, customerInvoices, customerPayments, {
         statement_date: statementDate
-      });
+      }, companyDetails);
       
       toast.success('Statement PDF generated successfully!');
     } catch (error) {

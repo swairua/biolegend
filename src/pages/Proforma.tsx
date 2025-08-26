@@ -105,7 +105,19 @@ export default function Proforma() {
         terms_and_conditions: proforma.terms_and_conditions || 'Payment required before goods are delivered.',
       };
 
-      await downloadInvoicePDF(invoiceData, 'PROFORMA');
+      // Get current company details for PDF
+      const companyDetails = currentCompany ? {
+        name: currentCompany.name,
+        address: currentCompany.address,
+        city: currentCompany.city,
+        country: currentCompany.country,
+        phone: currentCompany.phone,
+        email: currentCompany.email,
+        tax_number: currentCompany.tax_number,
+        logo_url: currentCompany.logo_url
+      } : undefined;
+
+      await downloadInvoicePDF(invoiceData, 'PROFORMA', companyDetails);
       toast.success('Proforma PDF downloaded successfully!');
     } catch (error) {
       console.error('Error downloading PDF:', error);
