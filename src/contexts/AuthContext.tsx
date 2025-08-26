@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { createRetryableRequest, analyzeNetworkError } from '@/utils/networkDiagnostics';
 import { initializeAuth, clearAuthTokens, safeAuthOperation } from '@/utils/authHelpers';
 
 export interface UserProfile {
@@ -68,19 +67,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('🔍 Fetching profile for user ID:', userId);
 
-      const profileData = await createRetryableRequest(async () => {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, avatar_url, phone, company_id, department, position, role, status, last_login, created_at, updated_at')
-          .eq('id', userId)
-          .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, avatar_url, phone, company_id, department, position, role, status, last_login, created_at, updated_at')
+        .eq('id', userId)
+        .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
 
-        if (error) {
-          throw error;
-        }
-
-        return data;
-      }, 2, 1000); // Retry up to 2 times with 1 second delay
+      if (error) {
+        throw error;
+      }
 
       if (!profileData) {
         console.warn('⚠️ No profile found for user ID:', userId);
@@ -96,23 +91,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error('Exception fetching profile:', error);
 
-      // Analyze the error for better user feedback
-      const diagnostic = analyzeNetworkError(error);
+      console.warn(`Profile fetch failed:`, error);
 
-      console.warn(`Profile fetch failed: ${diagnostic.type} - ${diagnostic.message}`);
-
-      // Only show toast for certain error types to avoid spam
-      if (diagnostic.type === 'browser_extension') {
-        setTimeout(() => toast.error(
-          'Browser extension is blocking the request. Try disabling extensions or use incognito mode.',
-          { duration: 6000 }
-        ), 0);
-      } else if (diagnostic.type === 'network') {
-        setTimeout(() => toast.error(
-          'Network connection failed. Please check your internet connection.',
-          { duration: 4000 }
-        ), 0);
-      }
+      // Show general error message
+      setTimeout(() => toast.error(
+        'Failed to load user profile. Please try again.',
+        { duration: 4000 }
+      ), 0);
 
       return null;
     }
