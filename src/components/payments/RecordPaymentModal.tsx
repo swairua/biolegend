@@ -52,6 +52,7 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
     customer_name: invoice?.customers?.name || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allocationFailed, setAllocationFailed] = useState(false);
 
   // Fetch all available invoices for selection
   const { currentCompany } = useCurrentCompany();
