@@ -150,7 +150,7 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
 
         if (productsError) {
           console.error('Error fetching products:', productsError);
-          throw new Error(`Failed to fetch products: ${productsError.message}`);
+          throw new Error(`Failed to fetch products: ${productsError.message || 'Unknown error'}`);
         }
 
         console.log('Products fetched successfully:', products?.length || 0);
