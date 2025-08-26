@@ -241,7 +241,7 @@ export const CreateDeliveryNoteModal = ({
         items: items.map(item => ({
           product_id: item.product_id,
           description: item.description,
-          quantity: item.quantity_delivered,
+          quantity: Math.max(item.quantity_delivered, 0.01), // Ensure positive quantity
           unit_price: 0 // Delivery notes don't typically include pricing
         }))
       });
