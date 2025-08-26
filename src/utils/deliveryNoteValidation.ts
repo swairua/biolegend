@@ -43,13 +43,22 @@ export const validateDeliveryNoteData = (
     if (!item.product_id) {
       errors.push(`Item ${index + 1}: Product ID is required`);
     }
-    
-    if (!item.quantity || item.quantity <= 0) {
+
+    // Check quantity - support both quantity and quantity_delivered fields
+    const quantity = item.quantity || item.quantity_delivered;
+    if (!quantity || quantity <= 0) {
       errors.push(`Item ${index + 1}: Quantity must be greater than 0`);
     }
 
-    if (item.quantity_delivered > item.quantity_ordered) {
-      errors.push(`Item ${index + 1}: Delivered quantity cannot exceed ordered quantity`);
+    // Additional validation for delivery notes with ordered vs delivered quantities
+    if (item.quantity_delivered !== undefined && item.quantity_ordered !== undefined) {
+      if (item.quantity_delivered > item.quantity_ordered) {
+        warnings.push(`Item ${index + 1}: Delivered quantity (${item.quantity_delivered}) exceeds ordered quantity (${item.quantity_ordered})`);
+      }
+
+      if (item.quantity_delivered <= 0) {
+        errors.push(`Item ${index + 1}: Delivered quantity must be greater than 0`);
+      }
     }
   });
 
