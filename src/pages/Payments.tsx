@@ -150,6 +150,9 @@ export default function Payments() {
             <p className="text-destructive">Error loading payments: {parseErrorMessage(error)}</p>
           </div>
         </div>
+
+        {/* Show diagnostic if there's an error */}
+        <PaymentAllocationDiagnostic />
       </div>
     );
   }
