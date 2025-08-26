@@ -64,9 +64,10 @@ export const useUserManagement = () => {
 
       setUsers(data || []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch users';
-      setError(errorMessage);
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessage(err);
+      console.error('Error fetching users:', err);
+      setError(`Failed to fetch users: ${errorMessage}`);
+      toast.error(`Error fetching users: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
