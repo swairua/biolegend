@@ -2,7 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
-import { useInvoices, usePayments, useRemittanceAdvice, useCompanies } from '@/hooks/useDatabase';
+import { usePayments, useRemittanceAdvice, useCompanies } from '@/hooks/useDatabase';
+import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Activity {
