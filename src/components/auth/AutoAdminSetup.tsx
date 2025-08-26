@@ -76,6 +76,24 @@ export function AutoAdminSetup() {
     try {
       setStatus(prev => ({ ...prev, checking: true, error: null }));
 
+      // First, test basic database connectivity
+      try {
+        const { error: dbError } = await supabase.from('profiles').select('count').limit(1).single();
+        if (dbError && !dbError.message.includes('PGRST116')) { // PGRST116 is "no rows returned" which is ok
+          console.warn('Database connectivity issue:', dbError);
+          setStatus(prev => ({
+            ...prev,
+            checking: false,
+            error: 'Database connection issue. Please check your Supabase configuration.',
+            canCreateAdmin: false
+          }));
+          return;
+        }
+      } catch (dbError) {
+        console.warn('Database check failed:', dbError);
+        // Continue anyway - the error might be table doesn't exist yet
+      }
+
       // Use safe auth operation to check admin
       const { data, error } = await safeAuthOperation(async () => {
         console.log('Attempting admin sign-in check...');
