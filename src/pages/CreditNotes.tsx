@@ -46,6 +46,7 @@ import { ViewCreditNoteModal } from '@/components/credit-notes/ViewCreditNoteMod
 import { EditCreditNoteModal } from '@/components/credit-notes/EditCreditNoteModal';
 import { CreditNotesSetupGuide } from '@/components/credit-notes/CreditNotesSetupGuide';
 import { CreditNoteRelationshipFix } from '@/components/credit-notes/CreditNoteRelationshipFix';
+import { CreditNotesConnectionStatus } from '@/components/credit-notes/CreditNotesConnectionStatus';
 import { useCreditNotePDFDownload } from '@/hooks/useCreditNotePDF';
 import type { CreditNote } from '@/hooks/useCreditNotes';
 
@@ -228,6 +229,9 @@ export default function CreditNotes() {
           New Credit Note
         </Button>
       </div>
+
+      {/* Connection Status Check */}
+      <CreditNotesConnectionStatus />
 
       {/* Filters and Search */}
       <Card className="shadow-card">

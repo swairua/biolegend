@@ -118,28 +118,28 @@ export function SupabaseConnectionTest() {
         });
       }
 
-      // Test 5: Information schema access (the failing one)
+      // Test 5: Information schema access (expected to fail in Supabase)
       try {
         const { data: schemaTest, error: schemaError } = await supabase
           .from('information_schema.tables')
           .select('table_name')
           .eq('table_schema', 'public')
           .limit(1);
-        
+
         results.push({
           name: 'Information Schema Access',
-          status: schemaError ? 'fail' : 'pass',
-          message: schemaError 
-            ? `Schema access failed: ${parseErrorMessage(schemaError)}`
+          status: schemaError ? 'warning' : 'pass',
+          message: schemaError
+            ? `Expected: information_schema not accessible via Supabase API (normal)`
             : 'Successfully accessed information_schema',
-          details: { error: schemaError }
+          details: { error: schemaError, expected: true }
         });
       } catch (err: any) {
         results.push({
           name: 'Information Schema Access',
-          status: 'fail',
-          message: `Schema access error: ${parseErrorMessage(err)}`,
-          details: { error: err }
+          status: 'warning',
+          message: `Expected: information_schema not accessible via Supabase API (this is normal)`,
+          details: { error: err, expected: true }
         });
       }
 
