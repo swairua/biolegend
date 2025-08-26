@@ -880,19 +880,43 @@ export const useCreatePayment = () => {
 
         if (paymentError) throw paymentError;
 
-        // 2. Create payment allocation
-        const { error: allocationError } = await supabase
-          .from('payment_allocations')
-          .insert([{
-            payment_id: paymentResult.id,
-            invoice_id: invoice_id,
-            amount_allocated: paymentData.amount
-          }]);
+        // 2. Create payment allocation with enhanced error handling
+        let allocationError: any = null;
+        try {
+          // First check if payment_allocations table exists
+          const { error: tableCheckError } = await supabase
+            .from('payment_allocations')
+            .select('id')
+            .limit(1);
+
+          if (tableCheckError && tableCheckError.message.includes('relation') && tableCheckError.message.includes('does not exist')) {
+            allocationError = new Error('payment_allocations table does not exist. Please run the table setup SQL.');
+          } else {
+            // Table exists, try to insert allocation
+            const { error: insertError } = await supabase
+              .from('payment_allocations')
+              .insert([{
+                payment_id: paymentResult.id,
+                invoice_id: invoice_id,
+                amount_allocated: paymentData.amount
+              }]);
+
+            allocationError = insertError;
+          }
+        } catch (err) {
+          allocationError = err;
+        }
 
         if (allocationError) {
           console.error('Failed to create allocation:', allocationError);
           console.error('Allocation error details:', JSON.stringify(allocationError, null, 2));
           console.error('Payment was recorded successfully, but allocation failed');
+
+          // If it's an RLS error, provide specific guidance
+          if (allocationError.message?.includes('row-level security') || allocationError.message?.includes('permission denied')) {
+            console.error('RLS Error: User profile may not be linked to a company or RLS policies are blocking the insert');
+          }
+
           // Continue anyway - payment was recorded
           // The UI should show this as a warning, not a complete failure
         }
