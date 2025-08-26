@@ -68,33 +68,33 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
       return;
     }
 
+    if (!currentCompany?.id) {
+      toast.error('No company selected. Please ensure you are associated with a company.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      // TODO: Implement actual restock API call
-      // const restockRecord = {
-      //   item_id: item.id,
-      //   quantity: restockData.quantity,
-      //   cost_per_unit: restockData.cost_per_unit,
-      //   total_cost: totalCost,
-      //   supplier: restockData.supplier,
-      //   restock_date: restockData.restock_date,
-      //   reference_number: restockData.reference_number,
-      //   notes: restockData.notes,
-      //   created_by: 'current-user-id'
-      // };
-      
-      // await restockInventoryItem(restockRecord);
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Create restock record with stock movement and product update
+      await restockProduct.mutateAsync({
+        productId: item.id,
+        quantity: restockData.quantity,
+        costPerUnit: restockData.cost_per_unit,
+        companyId: currentCompany.id,
+        supplier: restockData.supplier,
+        notes: restockData.notes ?
+          `${restockData.notes}${restockData.reference_number ? ` (Ref: ${restockData.reference_number})` : ''}` :
+          `Restock from ${restockData.supplier}${restockData.reference_number ? ` (Ref: ${restockData.reference_number})` : ''}`
+      });
+
       toast.success(`${item?.name} restocked with ${restockData.quantity} units successfully!`);
       onSuccess();
       onOpenChange(false);
       resetForm();
     } catch (error) {
       console.error('Error restocking item:', error);
-      toast.error('Failed to restock item. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      toast.error(`Failed to restock item: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
