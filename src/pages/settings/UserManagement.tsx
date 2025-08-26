@@ -92,6 +92,7 @@ export default function UserManagement() {
     users,
     invitations,
     loading,
+    error,
     createUser,
     updateUser,
     deleteUser,
