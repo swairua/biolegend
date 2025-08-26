@@ -16,18 +16,31 @@ export default function PDFLineItemsDiagnostic() {
   const { data: quotations, isLoading: quotationsLoading } = useQuotations(currentCompany?.id);
   const { data: invoices, isLoading: invoicesLoading } = useInvoices(currentCompany?.id);
 
-  const testQuotationPDF = (quotation: any) => {
+  const testQuotationPDF = (quotation: any, testLogo = false) => {
     console.log('Testing quotation PDF with data:', quotation);
     console.log('Quotation items:', quotation.quotation_items);
-    
-    if (!quotation.quotation_items || quotation.quotation_items.length === 0) {
+
+    if (!testLogo && (!quotation.quotation_items || quotation.quotation_items.length === 0)) {
       toast.error(`No line items found in quotation ${quotation.quotation_number}!`);
       return;
     }
-    
+
     try {
-      downloadQuotationPDF(quotation);
-      toast.success(`PDF generated for quotation ${quotation.quotation_number} with ${quotation.quotation_items.length} line items`);
+      // Add company details with logo for testing
+      const companyWithLogo = {
+        name: 'Biolegend Scientific Ltd',
+        address: 'P.O. Box 85988-00200, Nairobi\nAlpha Center, Eastern Bypass, Membley',
+        city: 'Nairobi',
+        country: 'Kenya',
+        phone: '0741207690/0780165490',
+        email: 'biolegend@biolegendscientific.co.ke',
+        tax_number: 'P051701091X',
+        logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800'
+      };
+
+      downloadQuotationPDF(quotation, companyWithLogo);
+      const itemCount = quotation.quotation_items?.length || 0;
+      toast.success(`PDF generated for quotation ${quotation.quotation_number} with ${itemCount} line items ${testLogo ? '+ LOGO TEST' : ''}`);
     } catch (error) {
       console.error('PDF generation error:', error);
       toast.error('PDF generation failed');
