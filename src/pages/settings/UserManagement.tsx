@@ -193,6 +193,9 @@ export default function UserManagement() {
       {/* User Profile Diagnostic */}
       <UserProfileDiagnostic />
 
+      {/* Payment Allocation Diagnostic */}
+      <PaymentAllocationDiagnostic />
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card className="shadow-card">
