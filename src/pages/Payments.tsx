@@ -353,8 +353,9 @@ export default function Payments() {
         invoice={undefined} // For standalone payment recording
       />
 
-      {/* System Diagnostics */}
+      {/* System Diagnostics and Testing */}
       <PaymentAllocationAutoFix />
+      <PaymentAllocationTest />
 
       {/* View Payment Modal */}
       <ViewPaymentModal
