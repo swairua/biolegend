@@ -105,6 +105,18 @@ export async function createStockMovements(movements: Array<{
       throw initResult.error;
     }
 
+    // Validate movement data before inserting
+    const { validateStockMovementData } = await import('./fixStockMovementsConstraints');
+
+    for (const movement of movements) {
+      try {
+        validateStockMovementData(movement);
+      } catch (validationError) {
+        console.error('Movement data validation failed:', validationError);
+        throw validationError;
+      }
+    }
+
     // Prepare all movement data
     const movementData = movements.map(movement => ({
       company_id: movement.company_id,
@@ -128,10 +140,12 @@ export async function createStockMovements(movements: Array<{
     if (error) {
       console.error('Batch stock movements insert error:', error);
       console.error('Movement data sample:', movementData[0]);
-      
+
       // Provide more specific error messages
       if (error.code === '23514') {
-        throw new Error(`Invalid data: Check constraint violation. ${error.message}. Please check that movement_type is one of: IN, OUT, ADJUSTMENT and reference_type is one of: INVOICE, DELIVERY_NOTE, RESTOCK, ADJUSTMENT, CREDIT_NOTE, PURCHASE`);
+        const constraintError = new Error(`Check constraint violation: ${error.message}. The database constraints need to be fixed. Please use the StockMovementsConstraintFix component to resolve this issue.`);
+        constraintError.name = 'ConstraintViolationError';
+        throw constraintError;
       } else if (error.code === '42P01') {
         throw new Error('Stock movements table not found. Please contact system administrator.');
       } else {
