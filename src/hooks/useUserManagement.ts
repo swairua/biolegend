@@ -355,7 +355,8 @@ export const useUserManagement = () => {
 
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to accept invitation';
+      const errorMessage = parseErrorMessageWithCodes(err, 'invitation acceptance');
+      console.error('Error accepting invitation:', err);
       return { success: false, error: errorMessage };
     }
   };
