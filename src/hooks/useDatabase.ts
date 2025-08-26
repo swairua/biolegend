@@ -936,7 +936,9 @@ export const useCreatePayment = () => {
           payment_id: paymentResult.id,
           invoice_id: invoice_id,
           amount_allocated: paymentData.amount,
-          fallback_used: true
+          fallback_used: true,
+          allocation_failed: !!allocationError,
+          allocation_error: allocationError ? JSON.stringify(allocationError) : null
         };
       }
 
