@@ -365,7 +365,7 @@ export default function Payments() {
       <PaymentAllocationAutoFix />
 
       {/* Test Data Creation (if needed) */}
-      {availableInvoices.length === 0 && (
+      {invoices.length === 0 && (
         <TestInvoiceCreator />
       )}
 
