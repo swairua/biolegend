@@ -198,6 +198,9 @@ export default function Payments() {
         </Button>
       </div>
 
+      {/* System Status Check */}
+      <PaymentAllocationStatus />
+
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="shadow-card">
