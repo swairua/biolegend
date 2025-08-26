@@ -1,6 +1,7 @@
 import { QuickAuditRunner } from '@/components/QuickAuditRunner';
 import { CreditNoteSchemaTest } from '@/components/debug/CreditNoteSchemaTest';
 import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/ForceCreditNoteCorrectMigration';
+import { InvoiceErrorTest } from '@/components/debug/InvoiceErrorTest';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -39,6 +40,9 @@ export default function AuditPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Invoice Error Handling Test */}
+      <InvoiceErrorTest />
 
       {/* Credit Note Schema Verification - Critical for recent fixes */}
       <CreditNoteSchemaTest />
