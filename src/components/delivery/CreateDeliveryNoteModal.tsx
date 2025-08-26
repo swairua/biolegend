@@ -196,6 +196,16 @@ export const CreateDeliveryNoteModal = ({
       return;
     }
 
+    // Pre-validation check for quantities
+    const invalidItems = items.filter(item =>
+      !item.quantity_delivered || item.quantity_delivered <= 0
+    );
+
+    if (invalidItems.length > 0) {
+      toast.error(`Please ensure all items have valid delivery quantities greater than 0`);
+      return;
+    }
+
     try {
       const deliveryNoteData = mapDeliveryNoteForDatabase({
         company_id: companyId,
@@ -216,6 +226,7 @@ export const CreateDeliveryNoteModal = ({
       // Validate delivery note data
       const validation = validateDeliveryNoteData(deliveryNoteData, items);
       if (!validation.isValid) {
+        console.error('Delivery note validation failed:', validation.errors);
         toast.error(`Validation failed: ${validation.errors.join(', ')}`);
         return;
       }
