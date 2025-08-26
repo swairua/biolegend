@@ -29,7 +29,7 @@ import {
 import { toast } from 'sonner';
 import { useInvoices } from '@/hooks/useDatabase';
 import { useApplyCreditNoteToInvoice, type CreditNote } from '@/hooks/useCreditNotes';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ApplyCreditNoteModalProps {
   open: boolean;
