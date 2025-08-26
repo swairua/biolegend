@@ -24,7 +24,7 @@ import { Plus, Minus, Edit3, FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUpdateRemittanceAdvice, useCustomers } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCurrentCompany } from '@/hooks/useCurrentCompany';
+import { useCurrentCompany } from '@/contexts/CompanyContext';
 import type { RemittanceAdvice, RemittanceAdviceItem } from '@/types/remittance';
 
 interface EditRemittanceModalProps {
