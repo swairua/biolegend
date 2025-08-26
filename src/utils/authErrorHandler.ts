@@ -9,7 +9,26 @@ export interface AuthErrorInfo {
 }
 
 export function analyzeAuthError(error: AuthError | Error): AuthErrorInfo {
-  const message = error.message.toLowerCase();
+  // Safely extract error message with fallback
+  let errorMessage = '';
+
+  if (error && typeof error === 'object') {
+    if ('message' in error && typeof error.message === 'string') {
+      errorMessage = error.message;
+    } else if ('error_description' in error && typeof (error as any).error_description === 'string') {
+      errorMessage = (error as any).error_description;
+    } else if ('details' in error && typeof (error as any).details === 'string') {
+      errorMessage = (error as any).details;
+    } else {
+      errorMessage = 'An authentication error occurred';
+    }
+  } else if (typeof error === 'string') {
+    errorMessage = error;
+  } else {
+    errorMessage = 'An unexpected authentication error occurred';
+  }
+
+  const message = errorMessage.toLowerCase();
 
   if (message.includes('invalid login credentials')) {
     return {
@@ -56,7 +75,7 @@ export function analyzeAuthError(error: AuthError | Error): AuthErrorInfo {
 
   return {
     type: 'unknown',
-    message: error.message || 'An unexpected error occurred',
+    message: errorMessage || 'An unexpected error occurred',
     action: 'Please try again or contact support if the problem persists',
     retry: true
   };

@@ -180,15 +180,6 @@ export function EnhancedLogin() {
           <AutoAdminSetup />
 
           <div className="text-center space-y-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/auth-test')}
-              className="w-full"
-            >
-              <Shield className="mr-2 h-4 w-4" />
-              Authentication Diagnostics
-            </Button>
             <p className="text-xs text-muted-foreground">
               Contact your administrator if you need account access.
             </p>

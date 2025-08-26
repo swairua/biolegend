@@ -191,7 +191,7 @@ export function PaymentAllocationStatus() {
             <AlertDescription className="text-warning">
               <strong>⚠️ Some Issues Detected</strong>
               <br />
-              Payment allocation may not work correctly. Use the diagnostic tools below to investigate.
+              Payment allocation may not work correctly. Please check the system configuration.
             </AlertDescription>
           </Alert>
         )}

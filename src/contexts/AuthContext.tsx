@@ -2,7 +2,6 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { createRetryableRequest, analyzeNetworkError } from '@/utils/networkDiagnostics';
 import { initializeAuth, clearAuthTokens, safeAuthOperation } from '@/utils/authHelpers';
 
 export interface UserProfile {
@@ -66,53 +65,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Fetch user profile from database with error handling and retry logic
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
-      console.log('🔍 Fetching profile for user ID:', userId);
 
-      const profileData = await createRetryableRequest(async () => {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('id, email, full_name, avatar_url, phone, company_id, department, position, role, status, last_login, created_at, updated_at')
-          .eq('id', userId)
-          .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, avatar_url, phone, company_id, department, position, role, status, last_login, created_at, updated_at')
+        .eq('id', userId)
+        .maybeSingle(); // Use maybeSingle to handle 0 results gracefully
 
-        if (error) {
-          throw error;
-        }
-
-        return data;
-      }, 2, 1000); // Retry up to 2 times with 1 second delay
+      if (error) {
+        throw error;
+      }
 
       if (!profileData) {
-        console.warn('⚠️ No profile found for user ID:', userId);
         return null;
       }
 
-      console.log('✅ Profile found:', {
-        id: profileData.id,
-        email: profileData.email
-      });
 
       return profileData;
     } catch (error) {
       console.error('Exception fetching profile:', error);
 
-      // Analyze the error for better user feedback
-      const diagnostic = analyzeNetworkError(error);
 
-      console.warn(`Profile fetch failed: ${diagnostic.type} - ${diagnostic.message}`);
-
-      // Only show toast for certain error types to avoid spam
-      if (diagnostic.type === 'browser_extension') {
-        setTimeout(() => toast.error(
-          'Browser extension is blocking the request. Try disabling extensions or use incognito mode.',
-          { duration: 6000 }
-        ), 0);
-      } else if (diagnostic.type === 'network') {
-        setTimeout(() => toast.error(
-          'Network connection failed. Please check your internet connection.',
-          { duration: 4000 }
-        ), 0);
-      }
+      // Show general error message
+      setTimeout(() => toast.error(
+        'Failed to load user profile. Please try again.',
+        { duration: 4000 }
+      ), 0);
 
       return null;
     }
@@ -134,7 +112,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleAuthStateChange = useCallback(async (event: string, newSession: Session | null) => {
     if (!mountedRef.current || initializingRef.current) return;
 
-    console.log('Auth state changed:', event, newSession?.user?.email);
     
     try {
       // Batch state updates to prevent multiple renders
@@ -166,7 +143,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const errorMessage = (error as any).message;
         if (errorMessage?.includes('Invalid Refresh Token') || 
             errorMessage?.includes('Refresh Token Not Found')) {
-          console.warn('Clearing invalid tokens due to auth state error');
           clearAuthTokens();
         }
       }
@@ -186,7 +162,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const initializeAuthState = async () => {
       const initStartTime = Date.now();
-      // Allow timeout to be configured via environment variable for debugging
       const INIT_TIMEOUT = parseInt(import.meta.env.VITE_AUTH_TIMEOUT || '15000'); // Default 15 seconds
 
       try {
@@ -396,14 +371,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 'signIn');
 
     if (error) {
-      setTimeout(() => toast.error(error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: error as AuthError };
     }
 
     if (data?.error) {
-      setTimeout(() => toast.error(data.error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: data.error };
     }
 
@@ -426,14 +401,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 'signUp');
 
     if (error) {
-      setTimeout(() => toast.error(error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: error as AuthError };
     }
 
     if (data?.error) {
-      setTimeout(() => toast.error(data.error.message), 0);
       setLoading(false);
+      // Return error without showing toast - let the component handle it
       return { error: data.error };
     }
 
@@ -482,12 +457,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 'resetPassword');
 
     if (error) {
-      setTimeout(() => toast.error(error.message), 0);
+      // Return error without showing toast - let the component handle it
       return { error: error as AuthError };
     }
 
     if (data?.error) {
-      setTimeout(() => toast.error(data.error.message), 0);
+      // Return error without showing toast - let the component handle it
       return { error: data.error };
     }
 

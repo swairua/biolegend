@@ -332,7 +332,14 @@ export const useCreateInvoiceWithItems = () => {
 
             if (stockError) {
               console.error('Failed to create stock movements:', stockError);
-              // Don't throw here - invoice was created successfully, stock inconsistency can be fixed later
+
+              // Check if this is a constraint violation error
+              if (stockError.message && stockError.message.includes('check constraint violation')) {
+                console.error('Stock movements constraint error detected. The database constraints may need to be fixed.');
+                throw new Error('Invoice creation failed due to stock movements constraint error. Please contact your system administrator to fix the database constraints.');
+              }
+
+              // Don't throw for other errors - invoice was created successfully, stock inconsistency can be fixed later
               console.warn(`Stock movements creation failed for invoice ${invoice.invoice_number}. Invoice created successfully but inventory may not be updated.`);
             } else {
               console.log(`Created ${stockData?.length || 0} stock movements for invoice ${invoice.invoice_number}`);
