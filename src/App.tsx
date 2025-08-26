@@ -246,17 +246,7 @@ const App = () => {
             }
           />
 
-          <Route
-            path="/setup-test"
-            element={
-              <ProtectedRoute>
-                <SetupAndTest />
-              </ProtectedRoute>
-            }
-          />
 
-          {/* Authentication Test - No protection needed */}
-          <Route path="/auth-test" element={<AuthTest />} />
 
 
           {/* Payment Synchronization - No protection needed for setup */}
