@@ -183,6 +183,7 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       notes: '',
       customer_name: invoice?.customers?.name || ''
     });
+    setAllocationFailed(false);
   };
 
   const getMethodIcon = (method: string) => {
