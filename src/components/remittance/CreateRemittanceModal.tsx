@@ -35,34 +35,40 @@ interface CreateRemittanceModalProps {
 interface RemittanceItem {
   id: string;
   date: string;
-  invoiceNumber?: string;
-  creditNote?: string;
-  invoiceAmount?: number;
-  creditAmount?: number;
+  invoiceNumber: string;
+  creditNote: string;
+  invoiceAmount: number;
+  creditAmount: number;
   payment: number;
 }
 
 export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateRemittanceModalProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { profile } = useAuth();
+  const { currentCompany } = useCurrentCompany();
+  const createRemittanceMutation = useCreateRemittanceAdvice();
+  const { data: customers = [] } = useCustomers(currentCompany?.id);
+  const generateNumberMutation = useGenerateDocumentNumber();
+
   const [formData, setFormData] = useState({
-    adviceNumber: `RA-${new Date().getFullYear()}-${String(Date.now()).slice(-3)}`,
+    adviceNumber: '',
+    customerId: '',
     customerName: '',
     customerAddress: '',
     date: new Date().toISOString().split('T')[0],
     notes: '',
   });
 
-  const [items, setItems] = useState<RemittanceItem[]>([
-    {
-      id: '1',
-      date: new Date().toISOString().split('T')[0],
-      invoiceNumber: '',
-      creditNote: '',
-      invoiceAmount: 0,
-      creditAmount: 0,
-      payment: 0,
-    }
-  ]);
+  const [items, setItems] = useState<RemittanceItem[]>([{
+    id: '1',
+    date: new Date().toISOString().split('T')[0],
+    invoiceNumber: '',
+    creditNote: '',
+    invoiceAmount: 0,
+    creditAmount: 0,
+    payment: 0,
+  }]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const addItem = () => {
     const newItem: RemittanceItem = {
