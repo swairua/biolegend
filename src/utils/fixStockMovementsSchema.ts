@@ -27,42 +27,71 @@ export async function fixStockMovementsSchema() {
     if (columnCheckError && columnCheckError.message.includes('updated_at')) {
       console.log('updated_at column missing, adding it...');
 
-      // Add the missing updated_at column
-      const { error: addColumnError } = await supabase.rpc('exec_sql', {
-        sql: `
-          -- Add updated_at column if it doesn't exist
-          DO $$
-          BEGIN
-            IF NOT EXISTS (
-              SELECT 1 FROM information_schema.columns 
-              WHERE table_name = 'stock_movements' 
-              AND column_name = 'updated_at'
-            ) THEN
-              ALTER TABLE stock_movements 
-              ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
-              
-              -- Update existing rows to have updated_at = created_at
-              UPDATE stock_movements 
-              SET updated_at = COALESCE(created_at, NOW()) 
-              WHERE updated_at IS NULL;
-              
-              -- Create trigger for automatic updated_at updates
-              CREATE OR REPLACE FUNCTION update_stock_movements_updated_at()
-              RETURNS TRIGGER AS $func$
-              BEGIN
-                NEW.updated_at = NOW();
-                RETURN NEW;
-              END;
-              $func$ LANGUAGE plpgsql;
-              
-              DROP TRIGGER IF EXISTS trigger_update_stock_movements_updated_at ON stock_movements;
-              CREATE TRIGGER trigger_update_stock_movements_updated_at
-                BEFORE UPDATE ON stock_movements
-                FOR EACH ROW EXECUTE FUNCTION update_stock_movements_updated_at();
-            END IF;
-          END $$;
-        `
-      });
+      // Try to add the missing updated_at column using direct SQL execution
+      // First try individual SQL statements which are more compatible
+      try {
+        // Step 1: Add the column
+        const { error: addColumnError } = await supabase.rpc('exec_sql', {
+          sql: `ALTER TABLE stock_movements ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();`
+        });
+
+        if (addColumnError) {
+          throw new Error(`Failed to add column: ${addColumnError.message}`);
+        }
+
+        // Step 2: Update existing rows
+        const { error: updateError } = await supabase.rpc('exec_sql', {
+          sql: `UPDATE stock_movements SET updated_at = COALESCE(created_at, NOW()) WHERE updated_at IS NULL;`
+        });
+
+        if (updateError) {
+          console.warn('Failed to update existing rows, but column was added successfully:', updateError);
+        }
+
+        // Step 3: Create trigger function
+        const { error: functionError } = await supabase.rpc('exec_sql', {
+          sql: `
+            CREATE OR REPLACE FUNCTION update_stock_movements_updated_at()
+            RETURNS TRIGGER AS $$
+            BEGIN
+              NEW.updated_at = NOW();
+              RETURN NEW;
+            END;
+            $$ LANGUAGE plpgsql;
+          `
+        });
+
+        if (functionError) {
+          console.warn('Failed to create trigger function:', functionError);
+        }
+
+        // Step 4: Create trigger
+        const { error: triggerError } = await supabase.rpc('exec_sql', {
+          sql: `
+            DROP TRIGGER IF EXISTS trigger_update_stock_movements_updated_at ON stock_movements;
+            CREATE TRIGGER trigger_update_stock_movements_updated_at
+              BEFORE UPDATE ON stock_movements
+              FOR EACH ROW EXECUTE FUNCTION update_stock_movements_updated_at();
+          `
+        });
+
+        if (triggerError) {
+          console.warn('Failed to create trigger:', triggerError);
+        }
+
+      } catch (rpcError) {
+        console.error('RPC method failed, trying alternative approach:', rpcError);
+
+        // Fallback: Try using the supabase client directly with simpler SQL
+        const { error: directError } = await supabase
+          .rpc('exec_sql', {
+            sql: 'ALTER TABLE stock_movements ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();'
+          });
+
+        if (directError) {
+          throw new Error(`All methods failed. Last error: ${directError.message}. Please use the manual SQL approach.`);
+        }
+      }
 
       if (addColumnError) {
         console.error('Error adding updated_at column:', addColumnError);
