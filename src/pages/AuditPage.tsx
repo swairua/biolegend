@@ -42,8 +42,11 @@ export default function AuditPage() {
         </CardContent>
       </Card>
 
-      {/* Invoice Error Handling Test */}
-      <InvoiceErrorTest />
+      {/* Error Handling Tests */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <InvoiceErrorTest />
+        <MigrationErrorTest />
+      </div>
 
       {/* Credit Note Schema Verification - Critical for recent fixes */}
       <CreditNoteSchemaTest />
