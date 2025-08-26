@@ -3,12 +3,7 @@ import { toast } from 'sonner';
 import { parseErrorMessage } from '@/utils/errorHelpers';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { ViewPaymentModal } from '@/components/payments/ViewPaymentModal';
-import { PaymentAllocationAutoFix } from '@/components/payments/PaymentAllocationAutoFix';
-import { PaymentAllocationTest } from '@/components/payments/PaymentAllocationTest';
 import { PaymentAllocationStatus } from '@/components/payments/PaymentAllocationStatus';
-import { PaymentSystemTest } from '@/components/payments/PaymentSystemTest';
-import { PaymentFunctionalityTest } from '@/components/payments/PaymentFunctionalityTest';
-import { TestInvoiceCreator } from '@/components/payments/TestInvoiceCreator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -361,20 +356,7 @@ export default function Payments() {
         invoice={undefined} // For standalone payment recording
       />
 
-      {/* System Diagnostics and Testing */}
-      <PaymentAllocationAutoFix />
 
-      {/* Test Data Creation (if needed) */}
-      {invoices.length === 0 && (
-        <TestInvoiceCreator />
-      )}
-
-      {/* Quick Functionality Test */}
-      <PaymentFunctionalityTest />
-
-      {/* Detailed System Tests */}
-      <PaymentAllocationTest />
-      <PaymentSystemTest />
 
       {/* View Payment Modal */}
       <ViewPaymentModal

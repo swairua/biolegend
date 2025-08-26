@@ -215,87 +215,6 @@ export default function CompanySettings() {
     return errors;
   };
 
-  const testCompanySave = async () => {
-    console.log('🧪 Testing company save with detailed logging...');
-    console.log('Current company data:', JSON.stringify(companyData, null, 2));
-    console.log('Current company:', JSON.stringify(currentCompany, null, 2));
-
-    try {
-      // Test direct Supabase call first - Include fiscal_year_start to test the specific error
-      const testData = {
-        name: companyData.name || 'Test Company',
-        email: companyData.email || 'test@example.com',
-        phone: companyData.phone,
-        address: companyData.address,
-        city: companyData.city,
-        country: companyData.country || 'Kenya',
-        currency: companyData.currency || 'KES',
-        fiscal_year_start: companyData.fiscal_year_start || 1,
-        registration_number: companyData.registration_number,
-        tax_number: companyData.tax_number
-      };
-
-      console.log('Test data to be saved:', JSON.stringify(testData, null, 2));
-
-      if (!currentCompany) {
-        console.log('Creating new company directly...');
-        const { data, error } = await supabase
-          .from('companies')
-          .insert([testData])
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Direct Supabase creation error (detailed):', {
-            error,
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-            jsonError: JSON.stringify(error, null, 2)
-          });
-          throw error;
-        }
-        console.log('Direct creation success:', data);
-      } else {
-        console.log('Updating company directly...');
-        const { data, error } = await supabase
-          .from('companies')
-          .update(testData)
-          .eq('id', currentCompany.id)
-          .select()
-          .single();
-
-        if (error) {
-          console.error('Direct Supabase update error (detailed):', {
-            error,
-            message: error.message,
-            details: error.details,
-            hint: error.hint,
-            code: error.code,
-            jsonError: JSON.stringify(error, null, 2)
-          });
-          throw error;
-        }
-        console.log('Direct update success:', data);
-      }
-
-      toast.success('🧪 Test save successful!');
-
-    } catch (error) {
-      // Use centralized error parsing and logging for test function
-      logError(error, '🧪 Test Save');
-      const userMessage = getUserFriendlyMessage(error, '🧪 Test failed');
-
-      // Check if this is a schema error
-      const errorString = parseErrorMessage(error);
-      if (errorString.includes('currency') && (errorString.includes('column') || errorString.includes('schema cache'))) {
-        setSchemaError('currency column missing');
-      }
-
-      toast.error(userMessage);
-    }
-  };
 
   const fixCurrencyColumn = async () => {
     setFixingCurrency(true);
@@ -318,14 +237,11 @@ export default function CompanySettings() {
   };
 
   const handleSaveCompany = async () => {
-    console.log('Saving company with data:', companyData);
-    console.log('Current company:', currentCompany);
 
     // Comprehensive validation
     const validationErrors = validateCompanyData(companyData);
     if (validationErrors.length > 0) {
       toast.error(`Validation failed: ${validationErrors[0]}`);
-      console.error('Validation errors:', validationErrors);
       return;
     }
 
@@ -365,16 +281,13 @@ export default function CompanySettings() {
         }
       });
 
-      console.log('Sanitized company data:', JSON.stringify(sanitizedData, null, 2));
 
       if (!currentCompany) {
         // Create a new company if none exists
-        console.log('No company found, creating new one');
         await createCompany.mutateAsync(sanitizedData);
         toast.success('Company created successfully');
       } else {
         // Update existing company
-        console.log('Updating existing company with ID:', currentCompany.id);
         await updateCompany.mutateAsync({
           id: currentCompany.id,
           ...sanitizedData
@@ -416,12 +329,6 @@ export default function CompanySettings() {
       return;
     }
 
-    console.log('Creating tax:', {
-      company_id: currentCompany.id,
-      name: newTax.name,
-      rate: newTax.rate,
-      is_default: newTax.is_default
-    });
 
     try {
       await createTaxSetting.mutateAsync({
@@ -556,9 +463,6 @@ export default function CompanySettings() {
           <Button variant="primary-gradient" size="lg" onClick={handleSaveCompany}>
             <Save className="h-4 w-4" />
             Save Settings
-          </Button>
-          <Button variant="outline" size="lg" onClick={testCompanySave}>
-            🧪 Debug Test
           </Button>
         </div>
       </div>

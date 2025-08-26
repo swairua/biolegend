@@ -43,7 +43,7 @@ export function SetupAndTest() {
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground mb-4">
-              Run diagnostic tests on system functionality
+              Run tests on system functionality
             </p>
             <Button variant="outline" className="w-full">
               <AlertTriangle className="h-4 w-4 mr-2" />

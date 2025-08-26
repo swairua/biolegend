@@ -76,6 +76,24 @@ export function AutoAdminSetup() {
     try {
       setStatus(prev => ({ ...prev, checking: true, error: null }));
 
+      // First, test basic database connectivity
+      try {
+        const { error: dbError } = await supabase.from('profiles').select('count').limit(1).single();
+        if (dbError && !dbError.message.includes('PGRST116')) { // PGRST116 is "no rows returned" which is ok
+          console.warn('Database connectivity issue:', dbError);
+          setStatus(prev => ({
+            ...prev,
+            checking: false,
+            error: 'Database connection issue. Please check your Supabase configuration.',
+            canCreateAdmin: false
+          }));
+          return;
+        }
+      } catch (dbError) {
+        console.warn('Database check failed:', dbError);
+        // Continue anyway - the error might be table doesn't exist yet
+      }
+
       // Use safe auth operation to check admin
       const { data, error } = await safeAuthOperation(async () => {
         console.log('Attempting admin sign-in check...');
@@ -216,7 +234,7 @@ export function AutoAdminSetup() {
 
         // Try to create profile
         try {
-          await supabase
+          const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
               id: data.data.user.id,
@@ -224,9 +242,18 @@ export function AutoAdminSetup() {
               full_name: ADMIN_CREDENTIALS.fullName,
               department: 'Administration',
               position: 'System Administrator',
+              role: 'admin',
+              status: 'active',
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
+
+          if (profileError) {
+            console.warn('Profile creation failed:', profileError);
+            if (profileError.message.includes('relation') && profileError.message.includes('does not exist')) {
+              toast.warning('Admin user created but profiles table not found. You may need to set up the database schema.');
+            }
+          }
         } catch (profileError) {
           console.warn('Profile creation failed (table may not exist):', profileError);
         }
@@ -305,8 +332,7 @@ export function AutoAdminSetup() {
     };
   }, []);
 
-  // Don't auto-check on mount to prevent rate limiting
-  // User can manually trigger the check
+  // Auto-check removed - users can manually check admin existence if needed
 
   // Show rate limited state
   if (status.rateLimited && status.rateLimitRemaining > 0) {
@@ -362,10 +388,10 @@ export function AutoAdminSetup() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {!hasCheckedRef.current && !status.error && (
+        {!hasCheckedRef.current && !status.error && !status.checking && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Check if admin user exists or create a new one.
+              Need to set up or verify admin access? Click below to check or create an admin account.
             </p>
             <Button
               onClick={checkAdminExists}
@@ -373,64 +399,72 @@ export function AutoAdminSetup() {
               variant="outline"
               className="w-full"
             >
-              {status.checking ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Checking Admin...
-                </>
-              ) : (
-                'Check Admin User'
-              )}
+              Check Admin User
             </Button>
           </div>
         )}
 
         {(status.error || status.canCreateAdmin) && (
           <>
-            <p className="text-sm text-muted-foreground">
-              {status.error || 'Create the admin account to access the system.'}
-            </p>
-            
-            {status.error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {status.error}
-                  {status.error.includes('token') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearTokensAndRetry}
-                      className="ml-2"
-                    >
-                      Clear Tokens
-                    </Button>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Button
-              onClick={createAdmin}
-              disabled={status.creating || status.rateLimited}
-              className="w-full"
-            >
-              {status.creating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Admin User...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Create Admin User
-                </>
+            <div className="space-y-3">
+              {status.canCreateAdmin && !status.error && (
+                <p className="text-sm text-muted-foreground">
+                  No admin account found. Create one to get started.
+                </p>
               )}
-            </Button>
 
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p><strong>Email:</strong> admin@biolegendscientific.co.ke</p>
-              <p><strong>Password:</strong> Biolegend2024!Admin</p>
+              {status.error && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    There was an issue checking for the admin account:
+                  </p>
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {status.error}
+                      {status.error.includes('token') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearTokensAndRetry}
+                          className="ml-2"
+                        >
+                          Clear Tokens
+                        </Button>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                  <p className="text-xs text-muted-foreground">
+                    You can still try creating an admin account below.
+                  </p>
+                </div>
+              )}
+
+              <Button
+                onClick={createAdmin}
+                disabled={status.creating || status.rateLimited}
+                className="w-full"
+              >
+                {status.creating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Admin User...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create Admin User
+                  </>
+                )}
+              </Button>
+
+              <div className="bg-muted/50 p-3 rounded-md">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Default Admin Credentials:</p>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p><strong>Email:</strong> admin@biolegendscientific.co.ke</p>
+                  <p><strong>Password:</strong> Biolegend2024!Admin</p>
+                </div>
+              </div>
             </div>
           </>
         )}
