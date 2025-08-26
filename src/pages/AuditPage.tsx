@@ -25,10 +25,25 @@ export default function AuditPage() {
         </Badge>
       </div>
 
+      {/* Migration Status Notice */}
+      <Card className="border-success/50 bg-success-light">
+        <CardContent className="pt-6">
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="h-5 w-5 text-success" />
+            <div>
+              <h3 className="font-medium text-success-foreground">Credit Note Migration Completed</h3>
+              <p className="text-sm text-success-foreground/80">
+                The credit note schema patch has been applied manually. You can now test the functionality below.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Credit Note Schema Verification - Critical for recent fixes */}
       <CreditNoteSchemaTest />
 
-      {/* Force Correct Credit Note Migration */}
+      {/* Force Correct Credit Note Migration - Keep available for reference */}
       <ForceCreditNoteCorrectMigration />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
