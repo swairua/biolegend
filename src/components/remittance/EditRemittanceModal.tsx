@@ -22,7 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Plus, Minus, Edit3, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { useUpdateRemittanceAdvice, useCustomers } from '@/hooks/useDatabase';
+import { useUpdateRemittanceAdvice, useUpdateRemittanceAdviceItems, useCustomers } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
 import type { RemittanceAdvice, RemittanceAdviceItem } from '@/types/remittance';
