@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { parseErrorMessageWithCodes } from '@/utils/errorHelpers';
 import { useInvoices, useCreatePayment } from '@/hooks/useDatabase';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
+import { PaymentAllocationQuickFix } from './PaymentAllocationQuickFix';
 
 interface RecordPaymentModalProps {
   open: boolean;
