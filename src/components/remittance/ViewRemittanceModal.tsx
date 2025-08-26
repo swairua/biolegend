@@ -175,7 +175,8 @@ export function ViewRemittanceModal({
           </Card>
 
           {/* Payment Items */}
-          {(remittance.items || []).length > 0 && (
+          {((remittance.remittance_advice_items && remittance.remittance_advice_items.length > 0) ||
+            (remittance.items && remittance.items.length > 0)) && (
             <Card>
               <CardHeader>
                 <CardTitle>Payment Details</CardTitle>
@@ -185,18 +186,46 @@ export function ViewRemittanceModal({
                   <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
-                      <TableHead>Invoice/Credit Note</TableHead>
+                      <TableHead>Document Number</TableHead>
+                      <TableHead>Document Type</TableHead>
                       <TableHead className="text-right">Invoice Amount</TableHead>
-                      <TableHead className="text-right">Credit Note</TableHead>
+                      <TableHead className="text-right">Credit Amount</TableHead>
                       <TableHead className="text-right">Payment</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {(remittance.items || []).map((item: any, index: number) => (
+                    {/* Display database items (remittance_advice_items) if available */}
+                    {(remittance.remittance_advice_items || []).map((item: any, index: number) => (
+                      <TableRow key={item.id || index}>
+                        <TableCell>{formatDate(item.document_date)}</TableCell>
+                        <TableCell>{item.document_number || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {item.document_type?.charAt(0).toUpperCase() + item.document_type?.slice(1) || 'Payment'}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {item.invoice_amount ? formatCurrency(item.invoice_amount) : ''}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {item.credit_amount ? formatCurrency(item.credit_amount) : ''}
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(item.payment_amount || 0)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+
+                    {/* Fallback to legacy items format if no database items */}
+                    {(!remittance.remittance_advice_items || remittance.remittance_advice_items.length === 0) &&
+                     (remittance.items || []).map((item: any, index: number) => (
                       <TableRow key={index}>
                         <TableCell>{formatDate(item.date)}</TableCell>
+                        <TableCell>{item.invoiceNumber || item.creditNote || 'N/A'}</TableCell>
                         <TableCell>
-                          {item.invoiceNumber || item.creditNote || 'N/A'}
+                          <Badge variant="outline">
+                            {item.invoiceNumber ? 'Invoice' : item.creditNote ? 'Credit Note' : 'Payment'}
+                          </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           {item.invoiceAmount ? formatCurrency(item.invoiceAmount) : ''}
@@ -209,8 +238,9 @@ export function ViewRemittanceModal({
                         </TableCell>
                       </TableRow>
                     ))}
+
                     <TableRow className="border-t-2">
-                      <TableCell colSpan={4} className="font-semibold">Total Payment</TableCell>
+                      <TableCell colSpan={5} className="font-semibold">Total Payment</TableCell>
                       <TableCell className="text-right font-bold text-lg">
                         {formatCurrency(remittance.total_payment || remittance.totalPayment || 0)}
                       </TableCell>
