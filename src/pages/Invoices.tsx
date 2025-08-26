@@ -236,6 +236,22 @@ Website: www.biolegendscientific.co.ke`;
     setShowPaymentModal(true);
   };
 
+  const handleCreateDeliveryNote = (invoice: Invoice) => {
+    if (!invoice) {
+      toast.error('Invoice not found');
+      return;
+    }
+
+    if (!invoice.invoice_items || invoice.invoice_items.length === 0) {
+      toast.error('Cannot create delivery note: Invoice has no items');
+      return;
+    }
+
+    setSelectedInvoice(invoice);
+    setShowDeliveryNoteModal(true);
+    toast.info(`Creating delivery note for invoice ${invoice.invoice_number}`);
+  };
+
   const handleClearFilters = () => {
     setStatusFilter('all');
     setDateFromFilter('');
