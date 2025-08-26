@@ -58,16 +58,16 @@ END $$;
 NOTIFY pgrst, 'reload schema';
 
 -- Verify the constraints were added
-SELECT 
-    constraint_name, 
-    table_name, 
-    column_name, 
-    foreign_table_name, 
-    foreign_column_name
+SELECT
+    tc.constraint_name,
+    kcu.table_name,
+    kcu.column_name,
+    ccu.table_name as foreign_table_name,
+    ccu.column_name as foreign_column_name
 FROM information_schema.key_column_usage kcu
 JOIN information_schema.table_constraints tc ON kcu.constraint_name = tc.constraint_name
 JOIN information_schema.constraint_column_usage ccu ON tc.constraint_name = ccu.constraint_name
-WHERE tc.constraint_type = 'FOREIGN KEY' 
+WHERE tc.constraint_type = 'FOREIGN KEY'
 AND kcu.table_name = 'credit_notes';`;
 
   const copyToClipboard = async () => {
