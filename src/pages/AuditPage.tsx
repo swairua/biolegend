@@ -4,6 +4,7 @@ import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/Force
 import { InvoiceErrorTest } from '@/components/debug/InvoiceErrorTest';
 import { MigrationErrorTest } from '@/components/debug/MigrationErrorTest';
 import { SupabaseConnectionTest } from '@/components/debug/SupabaseConnectionTest';
+import { AuthFlowTest } from '@/components/debug/AuthFlowTest';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -46,10 +47,11 @@ export default function AuditPage() {
       {/* Connection Test - Priority for resolving current issue */}
       <SupabaseConnectionTest />
 
-      {/* Error Handling Tests */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Error Handling & Auth Tests */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <InvoiceErrorTest />
         <MigrationErrorTest />
+        <AuthFlowTest />
       </div>
 
       {/* Credit Note Schema Verification - Critical for recent fixes */}
