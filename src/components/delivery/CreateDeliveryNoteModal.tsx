@@ -105,7 +105,15 @@ export const CreateDeliveryNoteModal = ({
         }));
 
         // Populate items from invoice
-        if (selectedInvoice.invoice_items && selectedInvoice.invoice_items.length > 0) {
+        console.log('🔍 Selected invoice data:', {
+          id: selectedInvoice.id,
+          invoice_number: selectedInvoice.invoice_number,
+          invoice_items_exists: !!selectedInvoice.invoice_items,
+          invoice_items_length: selectedInvoice.invoice_items?.length || 0,
+          invoice_items: selectedInvoice.invoice_items
+        });
+
+        if (selectedInvoice.invoice_items && Array.isArray(selectedInvoice.invoice_items) && selectedInvoice.invoice_items.length > 0) {
           const deliveryItems: DeliveryItem[] = selectedInvoice.invoice_items.map((item: any) => ({
             id: `item-${item.id}`,
             product_id: item.product_id || '',
@@ -120,9 +128,22 @@ export const CreateDeliveryNoteModal = ({
           console.log(`✅ Loaded ${deliveryItems.length} items from invoice ${selectedInvoice.invoice_number}`);
           toast.success(`Loaded ${deliveryItems.length} items from invoice ${selectedInvoice.invoice_number}`);
         } else {
-          console.warn('⚠️ No items found in selected invoice');
+          console.warn('⚠️ Invoice items issue:', {
+            invoice_number: selectedInvoice.invoice_number,
+            invoice_items_exists: !!selectedInvoice.invoice_items,
+            is_array: Array.isArray(selectedInvoice.invoice_items),
+            length: selectedInvoice.invoice_items?.length || 0
+          });
           setItems([]);
-          toast.info('Selected invoice has no items');
+
+          // Better error message based on the actual issue
+          if (!selectedInvoice.invoice_items) {
+            toast.error('Invoice data is incomplete - items not loaded. Please try refreshing the page.');
+          } else if (!Array.isArray(selectedInvoice.invoice_items)) {
+            toast.error('Invoice items data format error. Please contact support.');
+          } else {
+            toast.info(`Invoice ${selectedInvoice.invoice_number} has no items to deliver.`);
+          }
         }
       } else {
         console.warn('⚠️ Invoice not found:', formData.invoice_id);
