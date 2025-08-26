@@ -475,8 +475,8 @@ export default function CreditNotes() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
-                              // TODO: Implement apply credit
-                              toast.info('Apply credit functionality coming soon');
+                              setSelectedCreditNote(creditNote);
+                              setShowApplyModal(true);
                             }}
                             className="bg-primary-light text-primary border-primary/20 hover:bg-primary hover:text-primary-foreground"
                           >
