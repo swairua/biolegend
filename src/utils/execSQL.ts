@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 
 /**
  * Execute SQL statements in Supabase
@@ -16,13 +17,16 @@ export async function executeSQL(sql: string): Promise<{ error?: any; data?: any
       if (error.message?.includes('function exec_sql') || error.code === '42883') {
         throw new Error('exec_sql function not available - using alternative method');
       }
-      return { error };
+      // Convert error object to proper error message
+      const errorMessage = parseErrorMessage(error);
+      return { error: new Error(errorMessage) };
     }
     
     return { data };
   } catch (rpcError: any) {
     // Alternative method: try to execute statements using schema introspection
-    console.log('RPC method failed, trying alternative execution:', rpcError.message);
+    const rpcErrorMessage = parseErrorMessage(rpcError);
+    console.log('RPC method failed, trying alternative execution:', rpcErrorMessage);
     
     try {
       // Split SQL into individual statements
@@ -79,8 +83,9 @@ export async function executeSQL(sql: string): Promise<{ error?: any; data?: any
       };
       
     } catch (altError: any) {
-      return { 
-        error: altError,
+      const errorMessage = parseErrorMessage(altError);
+      return {
+        error: new Error(errorMessage),
         message: 'Could not execute SQL automatically - manual execution required'
       };
     }
