@@ -647,16 +647,22 @@ export const useCreateDeliveryNote = () => {
         
         // Create stock movements for delivered items
         const stockMovements = items
-          .filter(item => item.product_id && item.quantity > 0)
-          .map(item => ({
-            company_id: deliveryNote.company_id,
-            product_id: item.product_id,
-            movement_type: 'OUT' as const,
-            reference_type: 'DELIVERY_NOTE' as const,
-            reference_id: deliveryData.id,
-            quantity: -item.quantity,
-            notes: `Stock delivery for delivery note ${deliveryNote.delivery_number || deliveryNote.delivery_note_number}`
-          }));
+          .filter(item => {
+            const deliveredQuantity = item.quantity_delivered ?? item.quantity ?? 0;
+            return item.product_id && deliveredQuantity > 0;
+          })
+          .map(item => {
+            const deliveredQuantity = item.quantity_delivered ?? item.quantity ?? 0;
+            return {
+              company_id: deliveryNote.company_id,
+              product_id: item.product_id,
+              movement_type: 'OUT' as const,
+              reference_type: 'DELIVERY_NOTE' as const,
+              reference_id: deliveryData.id,
+              quantity: -deliveredQuantity, // Use delivered quantity for stock movement
+              notes: `Stock delivery for delivery note ${deliveryNote.delivery_number || deliveryNote.delivery_note_number}`
+            };
+          });
         
         if (stockMovements.length > 0) {
           await supabase.from('stock_movements').insert(stockMovements);
