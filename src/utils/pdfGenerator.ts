@@ -752,6 +752,13 @@ export const generatePDF = (data: DocumentData) => {
                 <th style="width: 12%;">Debit</th>
                 <th style="width: 12%;">Credit</th>
                 <th style="width: 12%;">Balance</th>
+                ` : data.type === 'remittance' ? `
+                <th style="width: 15%;">Date</th>
+                <th style="width: 15%;">Document Type</th>
+                <th style="width: 20%;">Document Number</th>
+                <th style="width: 16%;">Invoice Amount</th>
+                <th style="width: 16%;">Credit Amount</th>
+                <th style="width: 18%;">Payment Amount</th>
                 ` : `
                 <th style="width: 5%;">#</th>
                 <th style="width: ${visibleColumns.discountPercentage || visibleColumns.discountBeforeVat || visibleColumns.discountAmount || visibleColumns.taxPercentage || visibleColumns.taxAmount ? '30%' : '40%'};">Description</th>
@@ -776,6 +783,13 @@ export const generatePDF = (data: DocumentData) => {
                   <td class="amount-cell">${(item as any).debit > 0 ? formatCurrency((item as any).debit) : ''}</td>
                   <td class="amount-cell">${(item as any).credit > 0 ? formatCurrency((item as any).credit) : ''}</td>
                   <td class="amount-cell">${formatCurrency(item.line_total)}</td>
+                  ` : data.type === 'remittance' ? `
+                  <td>${formatDate((item as any).document_date)}</td>
+                  <td>${(item as any).description ? (item as any).description.split(':')[0] : 'Payment'}</td>
+                  <td>${(item as any).description ? (item as any).description.split(':')[1] || (item as any).description : ''}</td>
+                  <td class="amount-cell">${(item as any).invoice_amount ? formatCurrency((item as any).invoice_amount) : ''}</td>
+                  <td class="amount-cell">${(item as any).credit_amount ? formatCurrency((item as any).credit_amount) : ''}</td>
+                  <td class="amount-cell" style="font-weight: bold;">${formatCurrency(item.line_total)}</td>
                   ` : `
                   <td>${index + 1}</td>
                   <td class="description-cell">${item.description}</td>
