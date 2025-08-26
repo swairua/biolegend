@@ -136,8 +136,15 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       };
 
       const result = await createPaymentMutation.mutateAsync(paymentRecord);
-      
-      toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
+
+      // Check if payment was recorded but allocation might have failed
+      if (result.fallback_used) {
+        toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
+          description: "Payment allocation may require manual setup. Check the payments list."
+        });
+      } else {
+        toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
+      }
       onSuccess();
       onOpenChange(false);
       resetForm();
