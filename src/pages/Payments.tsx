@@ -357,17 +357,6 @@ export default function Payments() {
       />
 
 
-      {/* Test Data Creation (if needed) */}
-      {invoices.length === 0 && (
-        <TestInvoiceCreator />
-      )}
-
-      {/* Quick Functionality Test */}
-      <PaymentFunctionalityTest />
-
-      {/* Detailed System Tests */}
-      <PaymentAllocationTest />
-      <PaymentSystemTest />
 
       {/* View Payment Modal */}
       <ViewPaymentModal
