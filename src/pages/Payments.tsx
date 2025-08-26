@@ -5,6 +5,7 @@ import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { ViewPaymentModal } from '@/components/payments/ViewPaymentModal';
 import { PaymentAllocationDiagnostic } from '@/components/PaymentAllocationDiagnostic';
 import { PaymentAllocationAutoFix } from '@/components/payments/PaymentAllocationAutoFix';
+import { PaymentAllocationTest } from '@/components/payments/PaymentAllocationTest';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
