@@ -318,14 +318,11 @@ export default function CompanySettings() {
   };
 
   const handleSaveCompany = async () => {
-    console.log('Saving company with data:', companyData);
-    console.log('Current company:', currentCompany);
 
     // Comprehensive validation
     const validationErrors = validateCompanyData(companyData);
     if (validationErrors.length > 0) {
       toast.error(`Validation failed: ${validationErrors[0]}`);
-      console.error('Validation errors:', validationErrors);
       return;
     }
 
@@ -365,16 +362,13 @@ export default function CompanySettings() {
         }
       });
 
-      console.log('Sanitized company data:', JSON.stringify(sanitizedData, null, 2));
 
       if (!currentCompany) {
         // Create a new company if none exists
-        console.log('No company found, creating new one');
         await createCompany.mutateAsync(sanitizedData);
         toast.success('Company created successfully');
       } else {
         // Update existing company
-        console.log('Updating existing company with ID:', currentCompany.id);
         await updateCompany.mutateAsync({
           id: currentCompany.id,
           ...sanitizedData
@@ -416,12 +410,6 @@ export default function CompanySettings() {
       return;
     }
 
-    console.log('Creating tax:', {
-      company_id: currentCompany.id,
-      name: newTax.name,
-      rate: newTax.rate,
-      is_default: newTax.is_default
-    });
 
     try {
       await createTaxSetting.mutateAsync({
