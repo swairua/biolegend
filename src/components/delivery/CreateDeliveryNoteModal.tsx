@@ -112,8 +112,8 @@ export const CreateDeliveryNoteModal = ({
             product_id: item.product_id || '',
             product_name: item.products?.name || item.description || 'Unknown Product',
             description: item.description || item.products?.name || '',
-            quantity_ordered: Number(item.quantity) || 0,
-            quantity_delivered: Number(item.quantity) || 0, // Default to full quantity
+            quantity_ordered: Math.max(Number(item.quantity) || 1, 1), // Ensure minimum quantity of 1
+            quantity_delivered: Math.max(Number(item.quantity) || 1, 1), // Default to full quantity, minimum 1
             unit_of_measure: item.products?.unit_of_measure || 'pcs',
           }));
 
