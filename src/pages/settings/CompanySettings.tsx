@@ -12,12 +12,10 @@ import { useCompanies, useUpdateCompany, useCreateCompany, useTaxSettings, useCr
 import { toast } from 'sonner';
 import { ForceTaxSettings } from '@/components/ForceTaxSettings';
 import { supabase } from '@/integrations/supabase/client';
-import StorageSetup from '@/components/StorageSetup';
 import { getUserFriendlyMessage, logError } from '@/utils/errorParser';
 import { parseErrorMessage } from '@/utils/errorHelpers';
 import { QuickSchemaFix } from '@/components/QuickSchemaFix';
 import { addCurrencyColumn, ADD_CURRENCY_COLUMN_SQL } from '@/utils/addCurrencyColumn';
-import { CompaniesTableAuditPanel } from '@/components/CompaniesTableAuditPanel';
 
 export default function CompanySettings() {
   const [editingTax, setEditingTax] = useState<string | null>(null);
@@ -564,12 +562,7 @@ export default function CompanySettings() {
         </div>
       </div>
 
-      {/* Companies Table Schema Issues - Comprehensive Audit and Fix */}
-      {(schemaError || companiesError) && (
-        <CompaniesTableAuditPanel />
-      )}
-
-      {/* Simple Currency Column Fix - Show when schema errors are detected (fallback) */}
+      {/* Simple Currency Column Fix - Show when schema errors are detected */}
       {schemaError && !companiesError && (
         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
           <div className="flex items-center justify-between">
@@ -805,8 +798,6 @@ export default function CompanySettings() {
           <ForceTaxSettings companyId={currentCompany.id} />
         )}
 
-        {/* Storage Setup for Logo Upload */}
-        <StorageSetup />
       </div>
     </div>
   );
