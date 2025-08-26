@@ -326,11 +326,12 @@ export const useCreateInvoiceWithItems = () => {
                 throw new Error('Valid quantity is required for stock movements');
               }
 
-              return {
+              // Ensure exact string values for constraints
+              const movementData = {
                 company_id: invoice.company_id,
                 product_id: item.product_id!,
-                movement_type: 'OUT' as const,
-                reference_type: 'INVOICE' as const,
+                movement_type: 'OUT', // Exact string, not const assertion
+                reference_type: 'INVOICE', // Exact string, not const assertion
                 reference_id: invoiceData.id,
                 reference_number: invoice.invoice_number || null,
                 quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
@@ -339,6 +340,17 @@ export const useCreateInvoiceWithItems = () => {
                 notes: `Stock reduction for invoice ${invoice.invoice_number}`,
                 created_by: invoice.created_by || null
               };
+
+              console.log('🔧 Created movement object:', {
+                movement_type_raw: movementData.movement_type,
+                movement_type_typeof: typeof movementData.movement_type,
+                reference_type_raw: movementData.reference_type,
+                reference_type_typeof: typeof movementData.reference_type,
+                quantity_raw: movementData.quantity,
+                quantity_typeof: typeof movementData.quantity
+              });
+
+              return movementData;
             });
 
           console.log('📦 Creating stock movements for invoice:', {
@@ -725,11 +737,12 @@ export const useCreateDeliveryNote = () => {
               throw new Error('Valid quantity is required for stock movements');
             }
 
-            return {
+            // Ensure exact string values for constraints
+            const movementData = {
               company_id: deliveryNote.company_id,
               product_id: item.product_id,
-              movement_type: 'OUT' as const,
-              reference_type: 'DELIVERY_NOTE' as const,
+              movement_type: 'OUT', // Exact string, not const assertion
+              reference_type: 'DELIVERY_NOTE', // Exact string, not const assertion
               reference_id: deliveryData.id,
               reference_number: deliveryNote.delivery_number || deliveryNote.delivery_note_number || null,
               quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
@@ -738,6 +751,15 @@ export const useCreateDeliveryNote = () => {
               notes: `Stock delivery for delivery note ${deliveryNote.delivery_number || deliveryNote.delivery_note_number}`,
               created_by: deliveryNote.created_by || null
             };
+
+            console.log('🔧 Created delivery movement object:', {
+              movement_type_raw: movementData.movement_type,
+              movement_type_typeof: typeof movementData.movement_type,
+              reference_type_raw: movementData.reference_type,
+              reference_type_typeof: typeof movementData.reference_type
+            });
+
+            return movementData;
           });
 
         console.log('📦 Creating delivery note stock movements:', {
