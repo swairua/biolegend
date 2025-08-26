@@ -28,9 +28,6 @@ import OptimizedInventory from "./pages/OptimizedInventory";
 import PerformanceOptimizerPage from "./pages/PerformanceOptimizerPage";
 import OptimizedCustomers from "./pages/OptimizedCustomers";
 import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
-import ProformaNumberDiagnosticPage from "./pages/ProformaNumberDiagnostic";
-import ProformaErrorDiagnosticPage from "./pages/ProformaErrorDiagnostic";
-import PDFDiagnostic from "./pages/PDFDiagnostic";
 import SetupAndTest from "./components/SetupAndTest";
 import AuthTest from "./components/AuthTest";
 
@@ -293,16 +290,6 @@ const App = () => {
           <Route path="/customer-performance-optimizer" element={<CustomerPerformanceOptimizerPage />} />
 
 
-          {/* Proforma Number Diagnostic - Debug proforma number generation */}
-          <Route path="/proforma-number-diagnostic" element={<ProformaNumberDiagnosticPage />} />
-
-
-          {/* Proforma Error Diagnostic - Debug "[object Object]" errors */}
-          <Route path="/proforma-error-diagnostic" element={<ProformaErrorDiagnosticPage />} />
-
-
-          {/* PDF Diagnostic - Test and audit PDF generation line items */}
-          <Route path="/pdf-diagnostic" element={<PDFDiagnostic />} />
 
 
           {/* 404 Page */}
