@@ -361,9 +361,6 @@ export function ForceCreditNoteCorrectMigration() {
             setCompletedSteps(prev => [...prev, step.id]);
             toast.success(`✅ ${step.name} completed automatically`);
           }
-
-          setCompletedSteps(prev => [...prev, step.id]);
-          toast.success(`✅ ${step.name} completed`);
           
         } catch (stepError: any) {
           console.error(`Error in step ${step.name}:`, stepError);
