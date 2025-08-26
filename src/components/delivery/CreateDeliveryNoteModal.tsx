@@ -332,6 +332,16 @@ export const CreateDeliveryNoteModal = ({
               <Select value={formData.invoice_id} onValueChange={(value) => {
                 setFormData(prev => ({ ...prev, invoice_id: value }));
                 if (value) {
+                  // Debug the selected invoice
+                  const selectedInv = invoices?.find(inv => inv.id === value);
+                  console.log('🎯 Invoice selected for delivery note:', {
+                    invoice_id: value,
+                    invoice_number: selectedInv?.invoice_number,
+                    invoice_items_exists: !!selectedInv?.invoice_items,
+                    invoice_items_length: selectedInv?.invoice_items?.length || 0,
+                    invoice_items_raw: selectedInv?.invoice_items,
+                    full_invoice_data: selectedInv
+                  });
                   toast.info('Loading items from selected invoice...');
                 }
               }}>
