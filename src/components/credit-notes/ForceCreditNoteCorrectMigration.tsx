@@ -17,6 +17,7 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { parseErrorMessage } from '@/utils/errorHelpers';
 
 interface MigrationStep {
   id: string;
