@@ -46,6 +46,7 @@ import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { EditInvoiceModal } from '@/components/invoices/EditInvoiceModal';
 import { ViewInvoiceModal } from '@/components/invoices/ViewInvoiceModal';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
+import { StockMovementsSchemaFix } from '@/components/fixes/StockMovementsSchemaFix';
 import { CreateDeliveryNoteModal } from '@/components/delivery/CreateDeliveryNoteModal';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 
