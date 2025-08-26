@@ -353,7 +353,8 @@ export const useCreateInvoiceWithItems = () => {
             const stockUpdatePromises = stockMovements.map(movement =>
               supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
-                quantity_change: movement.quantity
+                movement_type: movement.movement_type,
+                quantity: movement.quantity
               })
             );
 
