@@ -155,8 +155,9 @@ export const useUserManagement = () => {
       await fetchUsers();
       return { success: true };
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to create user';
-      toast.error(errorMessage);
+      const errorMessage = parseErrorMessageWithCodes(err, 'user creation');
+      console.error('Error creating user:', err);
+      toast.error(`Failed to create user: ${errorMessage}`);
       return { success: false, error: errorMessage };
     } finally {
       setLoading(false);
