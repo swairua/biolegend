@@ -1,4 +1,4 @@
-import PDFLineItemsDiagnostic from '@/components/debug/PDFLineItemsDiagnostic';
+// Debug component removed during cleanup
 
 export default function PDFDiagnostic() {
   return (
@@ -10,7 +10,9 @@ export default function PDFDiagnostic() {
         </p>
       </div>
       
-      <PDFLineItemsDiagnostic />
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">PDF diagnostic component has been disabled in this version.</p>
+      </div>
     </div>
   );
 }

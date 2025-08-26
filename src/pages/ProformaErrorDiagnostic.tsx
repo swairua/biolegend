@@ -1,4 +1,4 @@
-import { ProformaErrorDiagnostic } from '@/components/debug/ProformaErrorDiagnostic';
+// Debug component removed during cleanup
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Home } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -33,7 +33,9 @@ export default function ProformaErrorDiagnosticPage() {
         </div>
 
         {/* Main Content */}
-        <ProformaErrorDiagnostic />
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">Proforma error diagnostic component has been disabled in this version.</p>
+        </div>
       </div>
     </div>
   );
