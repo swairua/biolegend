@@ -141,11 +141,19 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
 
       // Check if payment was recorded but allocation might have failed
       if (result.fallback_used) {
-        toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
-          description: "Payment allocation may require manual setup. Check the payments list."
-        });
+        if (result.allocation_failed) {
+          setAllocationFailed(true);
+          toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
+            description: "However, payment allocation failed. See the fix options below."
+          });
+        } else {
+          toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
+            description: "Payment allocation may require manual setup. Check the payments list."
+          });
+        }
       } else {
         toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
+        setAllocationFailed(false);
       }
       onSuccess();
       onOpenChange(false);
