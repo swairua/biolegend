@@ -25,9 +25,9 @@ import {
   TableHeader, 
   TableRow 
 } from '@/components/ui/table';
-import { 
-  Plus, 
-  Search, 
+import {
+  Plus,
+  Search,
   Filter,
   Eye,
   Edit,
@@ -35,7 +35,8 @@ import {
   Download,
   Send,
   Calendar,
-  Receipt
+  Receipt,
+  Truck
 } from 'lucide-react';
 import { useInvoices, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
@@ -44,6 +45,7 @@ import { CreateInvoiceModal } from '@/components/invoices/CreateInvoiceModal';
 import { EditInvoiceModal } from '@/components/invoices/EditInvoiceModal';
 import { ViewInvoiceModal } from '@/components/invoices/ViewInvoiceModal';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
+import { CreateDeliveryNoteModal } from '@/components/delivery/CreateDeliveryNoteModal';
 import { downloadInvoicePDF } from '@/utils/pdfGenerator';
 
 interface Invoice {
