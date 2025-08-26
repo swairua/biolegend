@@ -317,11 +317,12 @@ export const useCreateInvoiceWithItems = () => {
             .map(item => ({
               company_id: invoice.company_id,
               product_id: item.product_id!,
-              movement_type: 'OUT' as const,
-              reference_type: 'INVOICE' as const,
+              movement_type: 'OUT',
+              reference_type: 'INVOICE',
               reference_id: invoiceData.id,
               quantity: item.quantity, // Positive quantity, movement_type determines direction
               cost_per_unit: item.unit_price,
+              movement_date: new Date().toISOString().split('T')[0],
               notes: `Stock reduction for invoice ${invoice.invoice_number}`
             }));
 
@@ -330,7 +331,11 @@ export const useCreateInvoiceWithItems = () => {
               .from('stock_movements')
               .insert(stockMovements);
 
-            if (stockError) throw stockError;
+            if (stockError) {
+              console.error('Stock movements insert error:', stockError);
+              console.error('Attempted to insert:', stockMovements[0]);
+              throw new Error(`Failed to create stock movements: ${stockError.message || stockError.code || 'Unknown error'}`);
+            }
 
             // Update product stock quantities in parallel for better performance
             const stockUpdatePromises = stockMovements.map(movement =>
