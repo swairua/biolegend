@@ -42,6 +42,11 @@ export function RestockItemModal({ open, onOpenChange, onSuccess, item }: Restoc
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Get company and restock mutation
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
+  const restockProduct = useRestockProduct();
+
   const handleInputChange = (field: string, value: any) => {
     setRestockData(prev => ({
       ...prev,
