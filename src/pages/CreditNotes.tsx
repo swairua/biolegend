@@ -44,6 +44,7 @@ import { toast } from 'sonner';
 import { CreateCreditNoteModal } from '@/components/credit-notes/CreateCreditNoteModal';
 import { ViewCreditNoteModal } from '@/components/credit-notes/ViewCreditNoteModal';
 import { EditCreditNoteModal } from '@/components/credit-notes/EditCreditNoteModal';
+import { ApplyCreditNoteModal } from '@/components/credit-notes/ApplyCreditNoteModal';
 import { CreditNotesSetupGuide } from '@/components/credit-notes/CreditNotesSetupGuide';
 import { SimpleForeignKeyPatch } from '@/components/credit-notes/SimpleForeignKeyPatch';
 import { CreditNotesConnectionStatus } from '@/components/credit-notes/CreditNotesConnectionStatus';
