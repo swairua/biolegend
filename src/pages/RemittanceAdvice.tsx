@@ -49,6 +49,11 @@ const RemittanceAdvice = () => {
     setShowViewModal(true);
   };
 
+  const handleEditRemittance = (remittance: any) => {
+    setSelectedRemittance(remittance);
+    setShowEditModal(true);
+  };
+
   const handleDownloadRemittance = (remittance: any) => {
     try {
       // Use live data format
