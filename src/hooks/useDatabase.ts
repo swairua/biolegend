@@ -902,7 +902,7 @@ export const useRemittanceAdvice = (companyId?: string) => {
         .from('remittance_advice')
         .select(`
           *,
-          customers(name, email, address),
+          customers:customers!customer_id(name, email, address),
           remittance_advice_items(*, payments(payment_number), invoices(invoice_number))
         `)
         .order('created_at', { ascending: false });
@@ -948,7 +948,7 @@ export const useQuotations = (companyId?: string) => {
         .from('quotations')
         .select(`
           *,
-          customers(name, email, phone),
+          customers:customers!customer_id(name, email, phone),
           quotation_items(*, products(name, unit_of_measure))
         `)
         .order('created_at', { ascending: false });
@@ -1032,7 +1032,7 @@ export const useDeliveryNotes = (companyId?: string) => {
         .from('delivery_notes')
         .select(`
           *,
-          customers(name, email, phone, address, city, country),
+          customers:customers!customer_id(name, email, phone, address, city, country),
           delivery_note_items(*, products(name, unit_of_measure))
         `)
         .order('created_at', { ascending: false });
