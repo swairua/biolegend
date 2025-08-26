@@ -59,6 +59,16 @@ export const generateLPOPDF = (lpo: LPOPDFData, company: CompanyData) => {
   // Set font
   doc.setFont('helvetica');
 
+  // Add logo space reservation if logo URL exists
+  // Note: jsPDF image support requires loading image as base64 and using doc.addImage()
+  // For now, we reserve space and add a placeholder
+  if (company.logo_url) {
+    doc.setFontSize(8);
+    doc.setTextColor(128, 128, 128);
+    doc.text('[LOGO PLACEHOLDER - jsPDF Image Support Needed]', 20, yPosition);
+    yPosition += 20; // Reserve space for future logo implementation
+  }
+
   // Company Header
   doc.setFontSize(20);
   doc.setTextColor(40, 40, 40);
