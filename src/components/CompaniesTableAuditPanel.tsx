@@ -93,7 +93,8 @@ export function CompaniesTableAuditPanel() {
         toast.error(`Tests failed: ${result.errors.length} issues found`);
       }
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : String(error);
+      const errorMsg = parseErrorMessage(error);
+      console.error('Test failed:', error);
       toast.error('Testing failed: ' + errorMsg);
       setTestResults([errorMsg]);
     } finally {
