@@ -91,7 +91,10 @@ export const useUserManagement = () => {
 
       setInvitations(data || []);
     } catch (err) {
+      const errorMessage = parseErrorMessage(err);
       console.error('Error fetching invitations:', err);
+      setError(`Failed to fetch invitations: ${errorMessage}`);
+      toast.error(`Error fetching invitations: ${errorMessage}`);
     }
   };
 
