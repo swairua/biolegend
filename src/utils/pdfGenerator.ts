@@ -742,9 +742,11 @@ export const generatePDF = (data: DocumentData) => {
               <tr>
                 ${data.type === 'delivery' ? `
                 <th style="width: 5%;">#</th>
-                <th style="width: 65%;">Description</th>
-                <th style="width: 15%;">Qty</th>
+                <th style="width: 40%;">Item Description</th>
+                <th style="width: 15%;">Ordered Qty</th>
+                <th style="width: 15%;">Delivered Qty</th>
                 <th style="width: 15%;">Unit</th>
+                <th style="width: 10%;">Status</th>
                 ` : data.type === 'statement' ? `
                 <th style="width: 12%;">Date</th>
                 <th style="width: 25%;">Description</th>
