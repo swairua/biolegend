@@ -361,6 +361,11 @@ export default function Payments() {
 
       {/* System Diagnostics and Testing */}
       <PaymentAllocationAutoFix />
+
+      {/* Quick Functionality Test */}
+      <PaymentFunctionalityTest />
+
+      {/* Detailed System Tests */}
       <PaymentAllocationTest />
       <PaymentSystemTest />
 
