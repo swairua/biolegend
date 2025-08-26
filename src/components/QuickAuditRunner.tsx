@@ -16,7 +16,7 @@ import { alternativeDatabaseAudit, alternativeFormTest, type AlternativeAuditRes
 
 export function QuickAuditRunner() {
   const [isRunning, setIsRunning] = useState(false);
-  const [auditResult, setAuditResult] = useState<QuickAuditResult | null>(null);
+  const [auditResult, setAuditResult] = useState<QuickAuditResult | AlternativeAuditResult | null>(null);
   const [formTests, setFormTests] = useState<any[]>([]);
   const [autoRun, setAutoRun] = useState(false);
 
@@ -27,24 +27,44 @@ export function QuickAuditRunner() {
 
     try {
       console.log('🔍 Running quick database audit...');
-      
-      // Run database structure audit
-      const dbResult = await quickDatabaseAudit();
-      setAuditResult(dbResult);
 
-      // Run form functionality tests
-      const formResult = await checkFormFunctionality();
+      // Try the standard audit first
+      let dbResult = await quickDatabaseAudit();
+      let formResult = await checkFormFunctionality();
+
+      // If standard audit failed due to information_schema issues, try alternative
+      if (dbResult.status === 'error' &&
+          dbResult.criticalIssues.some(issue =>
+            issue.includes('information_schema') ||
+            issue.includes('schema cache') ||
+            issue.includes('Could not find the table')
+          )) {
+
+        console.log('📋 Standard audit failed, trying alternative method...');
+
+        // Use alternative audit method
+        dbResult = await alternativeDatabaseAudit();
+        formResult = await alternativeFormTest();
+
+        // Add note about method used
+        if (dbResult.details) {
+          dbResult.details.auditMethod = 'alternative';
+          dbResult.details.fallbackReason = 'information_schema_access_failed';
+        }
+      }
+
+      setAuditResult(dbResult);
       setFormTests(formResult);
 
     } catch (error: any) {
-      console.error('Audit failed:', error);
+      console.error('Both audit methods failed:', error);
       setAuditResult({
         tablesChecked: 0,
         columnsVerified: 0,
         missingColumns: [],
-        criticalIssues: [`Audit failed: ${error.message}`],
+        criticalIssues: [`All audit methods failed: ${error.message}`],
         status: 'error',
-        details: { error }
+        details: { error, auditMethod: 'failed' }
       });
     } finally {
       setIsRunning(false);
