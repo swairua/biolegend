@@ -609,8 +609,15 @@ export const useCreateDeliveryNote = () => {
           }
 
           const invoiceQuantity = invoiceProductMap.get(item.product_id);
-          if (item.quantity > invoiceQuantity) {
-            throw new Error(`Delivery quantity cannot exceed invoice quantity for product.`);
+          const deliveredQuantity = item.quantity_delivered ?? item.quantity ?? 0;
+          const orderedQuantity = item.quantity_ordered ?? invoiceQuantity ?? item.quantity ?? 0;
+
+          if (deliveredQuantity > invoiceQuantity) {
+            throw new Error(`Delivery quantity (${deliveredQuantity}) cannot exceed invoice quantity (${invoiceQuantity}) for product.`);
+          }
+
+          if (deliveredQuantity > orderedQuantity) {
+            console.warn(`Delivery quantity (${deliveredQuantity}) exceeds ordered quantity (${orderedQuantity}) for product ${item.product_id}`);
           }
         }
       }
