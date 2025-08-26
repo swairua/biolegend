@@ -34,3 +34,18 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     autoRefreshToken: true,
   }
 });
+
+// Test connection on client initialization
+supabase.from('companies').select('count').limit(1).then(({ data, error }) => {
+  if (error) {
+    console.error('❌ Supabase connection test failed:', {
+      error,
+      message: error.message,
+      details: JSON.stringify(error, null, 2)
+    });
+  } else {
+    console.log('✅ Supabase connection test successful');
+  }
+}).catch(err => {
+  console.error('❌ Supabase connection test error:', err);
+});
