@@ -1,7 +1,6 @@
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { QuickActions } from '@/components/dashboard/QuickActions';
-import { ConstraintFixRunner } from '@/components/ConstraintFixRunner';
 import { Button } from '@/components/ui/button';
 import { FileText } from 'lucide-react';
 import { downloadQuotationPDF } from '@/utils/pdfGenerator';
