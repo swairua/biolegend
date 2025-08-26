@@ -21,7 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Minus, Calendar, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCreateRemittanceAdvice, useCustomers, useGenerateDocumentNumber } from '@/hooks/useDatabase';
+import { useCreateRemittanceAdvice, useCreateRemittanceAdviceItems, useCustomers, useGenerateDocumentNumber } from '@/hooks/useDatabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
 import type { RemittanceAdviceItemFormData } from '@/types/remittance';
@@ -46,6 +46,7 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
   const { profile } = useAuth();
   const { currentCompany } = useCurrentCompany();
   const createRemittanceMutation = useCreateRemittanceAdvice();
+  const createItemsMutation = useCreateRemittanceAdviceItems();
   const { data: customers = [] } = useCustomers(currentCompany?.id);
   const generateNumberMutation = useGenerateDocumentNumber();
 
@@ -183,12 +184,28 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
       // Create the remittance advice
       const createdRemittance = await createRemittanceMutation.mutateAsync(remittanceData);
 
-      // TODO: Create remittance advice items
-      // Note: This would require a separate hook for creating items
-      // For now, we're creating the main record
+      // Create remittance advice items
+      if (items && items.length > 0) {
+        const itemsToCreate = items
+          .filter(item => item.payment > 0) // Only save items with payment amounts
+          .map((item, index) => ({
+            remittance_advice_id: createdRemittance.id,
+            document_date: item.date,
+            document_number: item.invoiceNumber || item.creditNote || `Item ${index + 1}`,
+            document_type: (item.invoiceNumber ? 'invoice' : item.creditNote ? 'credit_note' : 'payment') as 'invoice' | 'credit_note' | 'payment',
+            invoice_amount: item.invoiceAmount || null,
+            credit_amount: item.creditAmount || null,
+            payment_amount: item.payment,
+            sort_order: index + 1,
+          }));
+
+        if (itemsToCreate.length > 0) {
+          await createItemsMutation.mutateAsync(itemsToCreate);
+          console.log('Created remittance advice items:', itemsToCreate);
+        }
+      }
 
       console.log('Created remittance advice:', createdRemittance);
-      console.log('Items to be created:', items);
 
       toast.success('Remittance advice created successfully!');
       onSuccess?.();
