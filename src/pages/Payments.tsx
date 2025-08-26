@@ -3,7 +3,6 @@ import { toast } from 'sonner';
 import { parseErrorMessage } from '@/utils/errorHelpers';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { ViewPaymentModal } from '@/components/payments/ViewPaymentModal';
-import { PaymentAllocationAutoFix } from '@/components/payments/PaymentAllocationAutoFix';
 import { PaymentAllocationTest } from '@/components/payments/PaymentAllocationTest';
 import { PaymentAllocationStatus } from '@/components/payments/PaymentAllocationStatus';
 import { PaymentSystemTest } from '@/components/payments/PaymentSystemTest';
