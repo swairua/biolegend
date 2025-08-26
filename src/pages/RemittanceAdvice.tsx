@@ -34,6 +34,7 @@ const RemittanceAdvice = () => {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedRemittance, setSelectedRemittance] = useState<any>(null);
 
   // Fetch live remittance advice data and company details
