@@ -367,13 +367,14 @@ export function ForceCreditNoteCorrectMigration() {
           
         } catch (stepError: any) {
           console.error(`Error in step ${step.name}:`, stepError);
+          const errorMessage = parseErrorMessage(stepError);
           setFailedSteps(prev => [...prev, step.id]);
-          
+
           if (step.critical) {
-            toast.error(`❌ Critical step failed: ${step.name}`);
+            toast.error(`❌ Critical step failed: ${step.name} - ${errorMessage}`);
             break;
           } else {
-            toast.warning(`⚠️ Non-critical step failed: ${step.name}`);
+            toast.warning(`⚠️ Non-critical step failed: ${step.name} - ${errorMessage}`);
           }
         }
       }
