@@ -100,6 +100,9 @@ const Index = () => {
         </Button>
       </div>
 
+      {/* Emergency Constraint Fix */}
+      <ConstraintFixRunner />
+
       {/* Dashboard Stats */}
       <DashboardStats />
 
