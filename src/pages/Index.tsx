@@ -99,9 +99,6 @@ const Index = () => {
         </Button>
       </div>
 
-      {/* Stock Function Fix */}
-      <StockFunctionFixer />
-
       {/* Dashboard Stats */}
       <DashboardStats />
 
