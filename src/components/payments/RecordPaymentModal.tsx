@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +32,7 @@ import { toast } from 'sonner';
 import { parseErrorMessageWithCodes } from '@/utils/errorHelpers';
 import { useInvoices, useCreatePayment } from '@/hooks/useDatabase';
 import { useCurrentCompany } from '@/contexts/CompanyContext';
+import { PaymentAllocationQuickFix } from './PaymentAllocationQuickFix';
 
 interface RecordPaymentModalProps {
   open: boolean;
@@ -51,6 +52,14 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
     customer_name: invoice?.customers?.name || ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [allocationFailed, setAllocationFailed] = useState(false);
+
+  // Reset allocation failed state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setAllocationFailed(false);
+    }
+  }, [open]);
 
   // Fetch all available invoices for selection
   const { currentCompany } = useCurrentCompany();
@@ -139,11 +148,19 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
 
       // Check if payment was recorded but allocation might have failed
       if (result.fallback_used) {
-        toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
-          description: "Payment allocation may require manual setup. Check the payments list."
-        });
+        if (result.allocation_failed) {
+          setAllocationFailed(true);
+          toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
+            description: "However, payment allocation failed. See the fix options below."
+          });
+        } else {
+          toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`, {
+            description: "Payment allocation may require manual setup. Check the payments list."
+          });
+        }
       } else {
         toast.success(`Payment of ${formatCurrency(paymentData.amount)} recorded successfully!`);
+        setAllocationFailed(false);
       }
       onSuccess();
       onOpenChange(false);
@@ -173,6 +190,7 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
       notes: '',
       customer_name: invoice?.customers?.name || ''
     });
+    setAllocationFailed(false);
   };
 
   const getMethodIcon = (method: string) => {
@@ -448,6 +466,11 @@ export function RecordPaymentModal({ open, onOpenChange, onSuccess, invoice }: R
             </CardContent>
           </Card>
         </div>
+
+        {/* Show quick fix if allocation failed */}
+        {allocationFailed && (
+          <PaymentAllocationQuickFix className="mt-4" />
+        )}
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>

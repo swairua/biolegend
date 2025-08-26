@@ -4,6 +4,12 @@ import { parseErrorMessage } from '@/utils/errorHelpers';
 import { RecordPaymentModal } from '@/components/payments/RecordPaymentModal';
 import { ViewPaymentModal } from '@/components/payments/ViewPaymentModal';
 import { PaymentAllocationDiagnostic } from '@/components/PaymentAllocationDiagnostic';
+import { PaymentAllocationAutoFix } from '@/components/payments/PaymentAllocationAutoFix';
+import { PaymentAllocationTest } from '@/components/payments/PaymentAllocationTest';
+import { PaymentAllocationStatus } from '@/components/payments/PaymentAllocationStatus';
+import { PaymentSystemTest } from '@/components/payments/PaymentSystemTest';
+import { PaymentFunctionalityTest } from '@/components/payments/PaymentFunctionalityTest';
+import { TestInvoiceCreator } from '@/components/payments/TestInvoiceCreator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -24,7 +30,7 @@ import {
   DollarSign,
   Download
 } from 'lucide-react';
-import { usePayments, useCompanies } from '@/hooks/useDatabase';
+import { usePayments, useCompanies, useInvoices } from '@/hooks/useDatabase';
 import { generatePaymentReceiptPDF } from '@/utils/pdfGenerator';
 
 interface Payment {
@@ -86,6 +92,7 @@ export default function Payments() {
   const { data: companies = [] } = useCompanies();
   const currentCompany = companies[0];
   const { data: payments = [], isLoading, error } = usePayments(currentCompany?.id);
+  const { data: invoices = [] } = useInvoices(currentCompany?.id);
 
 
   const handleRecordPayment = () => {
@@ -151,8 +158,8 @@ export default function Payments() {
           </div>
         </div>
 
-        {/* Show diagnostic if there's an error */}
-        <PaymentAllocationDiagnostic />
+        {/* Show auto-fix if there's an error */}
+        <PaymentAllocationAutoFix />
       </div>
     );
   }
@@ -194,6 +201,9 @@ export default function Payments() {
           Record Payment
         </Button>
       </div>
+
+      {/* System Status Check */}
+      <PaymentAllocationStatus />
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -350,6 +360,21 @@ export default function Payments() {
         }}
         invoice={undefined} // For standalone payment recording
       />
+
+      {/* System Diagnostics and Testing */}
+      <PaymentAllocationAutoFix />
+
+      {/* Test Data Creation (if needed) */}
+      {invoices.length === 0 && (
+        <TestInvoiceCreator />
+      )}
+
+      {/* Quick Functionality Test */}
+      <PaymentFunctionalityTest />
+
+      {/* Detailed System Tests */}
+      <PaymentAllocationTest />
+      <PaymentSystemTest />
 
       {/* View Payment Modal */}
       <ViewPaymentModal

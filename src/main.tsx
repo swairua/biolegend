@@ -4,6 +4,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 import { AuthErrorBoundary } from '@/components/auth/AuthErrorBoundary';
+import { AuthLoadingDiagnostic } from '@/components/auth/AuthLoadingDiagnostic';
+import { AuthStatusIndicator } from '@/components/auth/AuthStatusIndicator';
 import App from './App.tsx'
 import './index.css'
 
@@ -20,6 +22,8 @@ createRoot(document.getElementById("root")!).render(
   <QueryClientProvider client={queryClient}>
     <AuthErrorBoundary>
       <AuthProvider>
+        <AuthLoadingDiagnostic />
+        <AuthStatusIndicator />
         <CompanyProvider>
           <BrowserRouter>
             <App />
