@@ -178,11 +178,13 @@ export const ViewDeliveryNoteModal = ({
                 </div>
               </div>
 
-              {mappedDeliveryNote.invoice_number && (
+              {(mappedDeliveryNote.invoice_number || mappedDeliveryNote.invoices?.invoice_number) && (
                 <div className="mt-4 pt-4 border-t">
                   <div>
                     <p className="text-sm font-medium text-muted-foreground">Related Invoice</p>
-                    <p className="text-sm">{mappedDeliveryNote.invoice_number}</p>
+                    <p className="text-sm font-semibold text-primary">
+                      {mappedDeliveryNote.invoice_number || mappedDeliveryNote.invoices?.invoice_number}
+                    </p>
                   </div>
                 </div>
               )}
@@ -282,12 +284,12 @@ export const ViewDeliveryNoteModal = ({
                           <TableCell>{item.unit_of_measure}</TableCell>
                           <TableCell>
                             {isFullyDelivered ? (
-                              <Badge variant="destructive" className="text-xs">
+                              <Badge className="text-xs bg-success text-success-foreground">
                                 <CheckCircle className="h-3 w-3 mr-1" />
                                 Complete
                               </Badge>
                             ) : isPartiallyDelivered ? (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge className="text-xs bg-warning text-warning-foreground">
                                 <AlertTriangle className="h-3 w-3 mr-1" />
                                 Partial
                               </Badge>

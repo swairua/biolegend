@@ -135,6 +135,7 @@ export interface DeliveryNote {
   id: string;
   company_id: string;
   customer_id: string;
+  invoice_id?: string;
   delivery_number: string; // Matches database schema
   delivery_note_number?: string; // For backward compatibility
   delivery_date: string;
@@ -149,6 +150,38 @@ export interface DeliveryNote {
   invoice_number?: string;
   created_at?: string;
   updated_at?: string;
+  // Related data
+  customers?: {
+    name: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+  };
+  invoices?: {
+    invoice_number: string;
+    total_amount: number;
+  };
+  delivery_note_items?: DeliveryNoteItem[];
+}
+
+export interface DeliveryNoteItem {
+  id: string;
+  delivery_note_id: string;
+  product_id?: string;
+  description: string;
+  quantity_ordered: number;
+  quantity_delivered: number;
+  unit_price?: number;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+  // Related data
+  products?: {
+    name: string;
+    unit_of_measure?: string;
+  };
 }
 
 export interface LPO {
@@ -1329,6 +1362,7 @@ export const useDeliveryNotes = (companyId?: string) => {
         .select(`
           *,
           customers:customers!customer_id(name, email, phone, address, city, country),
+          invoices:invoices!invoice_id(invoice_number, total_amount),
           delivery_note_items(*, products(name, unit_of_measure))
         `)
         .order('created_at', { ascending: false });

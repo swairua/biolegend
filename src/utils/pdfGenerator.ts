@@ -742,9 +742,11 @@ export const generatePDF = (data: DocumentData) => {
               <tr>
                 ${data.type === 'delivery' ? `
                 <th style="width: 5%;">#</th>
-                <th style="width: 65%;">Description</th>
-                <th style="width: 15%;">Qty</th>
+                <th style="width: 40%;">Item Description</th>
+                <th style="width: 15%;">Ordered Qty</th>
+                <th style="width: 15%;">Delivered Qty</th>
                 <th style="width: 15%;">Unit</th>
+                <th style="width: 10%;">Status</th>
                 ` : data.type === 'statement' ? `
                 <th style="width: 12%;">Date</th>
                 <th style="width: 25%;">Description</th>
@@ -794,8 +796,15 @@ export const generatePDF = (data: DocumentData) => {
                   <td>${index + 1}</td>
                   <td class="description-cell">${item.description}</td>
                   ${data.type === 'delivery' ? `
-                  <td>${item.quantity}</td>
+                  <td>${(item as any).quantity_ordered || item.quantity}</td>
+                  <td style="font-weight: bold; color: ${(item as any).quantity_delivered >= (item as any).quantity_ordered ? '#10B981' : '#F59E0B'};">${(item as any).quantity_delivered || item.quantity}</td>
                   <td>${(item as any).unit_of_measure || 'pcs'}</td>
+                  <td style="font-size: 10px;">
+                    ${(item as any).quantity_delivered >= (item as any).quantity_ordered ?
+                      '<span style="color: #10B981; font-weight: bold;">✓ Complete</span>' :
+                      '<span style="color: #F59E0B; font-weight: bold;">⚠ Partial</span>'
+                    }
+                  </td>
                   ` : `
                   <td>${item.quantity}</td>
                   <td class="amount-cell">${formatCurrency(item.unit_price)}</td>
@@ -1200,9 +1209,14 @@ export const downloadRemittancePDF = async (remittance: any, company?: CompanyDe
 
 // Function for delivery note PDF generation
 export const downloadDeliveryNotePDF = async (deliveryNote: any, company?: CompanyDetails) => {
+  // Get invoice information for reference
+  const invoiceNumber = deliveryNote.invoice_number ||
+                       deliveryNote.invoices?.invoice_number ||
+                       (deliveryNote.invoice_id ? `INV-${deliveryNote.invoice_id.slice(-8)}` : 'N/A');
+
   const documentData: DocumentData = {
     type: 'delivery',
-    number: deliveryNote.delivery_note_number,
+    number: deliveryNote.delivery_note_number || deliveryNote.delivery_number,
     date: deliveryNote.delivery_date,
     delivery_date: deliveryNote.delivery_date,
     delivery_address: deliveryNote.delivery_address,
@@ -1211,6 +1225,8 @@ export const downloadDeliveryNotePDF = async (deliveryNote: any, company?: Compa
     tracking_number: deliveryNote.tracking_number,
     delivered_by: deliveryNote.delivered_by,
     received_by: deliveryNote.received_by,
+    // Add invoice reference for delivery notes
+    lpo_number: `Related Invoice: ${invoiceNumber}`,
     company: company, // Pass company details
     customer: {
       name: deliveryNote.customers?.name || 'Unknown Customer',
@@ -1220,18 +1236,21 @@ export const downloadDeliveryNotePDF = async (deliveryNote: any, company?: Compa
       city: deliveryNote.customers?.city,
       country: deliveryNote.customers?.country,
     },
-    items: (deliveryNote.delivery_note_items || deliveryNote.delivery_items)?.map((item: any) => ({
-      description: item.products?.name || item.product_name || item.description || 'Unknown Item',
-      quantity: item.quantity || item.quantity_delivered || item.quantity_ordered || 0,
+    items: (deliveryNote.delivery_note_items || deliveryNote.delivery_items)?.map((item: any, index: number) => ({
+      description: `${item.products?.name || item.product_name || item.description || 'Unknown Item'}${invoiceNumber !== 'N/A' ? ` (From Invoice: ${invoiceNumber})` : ''}`,
+      quantity: item.quantity_delivered || item.quantity || 0,
       unit_price: 0, // Not relevant for delivery notes
       tax_percentage: 0,
       tax_amount: 0,
       tax_inclusive: false,
       line_total: 0,
       unit_of_measure: item.products?.unit_of_measure || item.unit_of_measure || 'pcs',
+      // Add delivery-specific details
+      quantity_ordered: item.quantity_ordered || item.quantity || 0,
+      quantity_delivered: item.quantity_delivered || item.quantity || 0,
     })) || [],
     total_amount: 0, // Not relevant for delivery notes
-    notes: deliveryNote.notes,
+    notes: deliveryNote.notes || `Items delivered as per Invoice ${invoiceNumber}`,
   };
 
   return generatePDF(documentData);
