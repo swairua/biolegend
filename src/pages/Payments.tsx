@@ -352,6 +352,9 @@ export default function Payments() {
         invoice={undefined} // For standalone payment recording
       />
 
+      {/* System Diagnostics */}
+      <PaymentAllocationAutoFix />
+
       {/* View Payment Modal */}
       <ViewPaymentModal
         open={showViewModal}
