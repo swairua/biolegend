@@ -78,7 +78,10 @@ export function ViewRemittanceModal({
           city: remittance.customers?.city || 'Nairobi',
           country: remittance.customers?.country || 'Kenya'
         },
-        notes: remittance.notes || `Remittance advice for ${remittance.customers?.name || remittance.customerName}`
+        notes: remittance.notes || `Remittance advice for ${remittance.customers?.name || remittance.customerName}`,
+        // Include line items for PDF generation
+        remittance_advice_items: remittance.remittance_advice_items || [],
+        items: remittance.items || [] // Fallback for legacy format
       };
 
       downloadRemittancePDF(remittanceData);
