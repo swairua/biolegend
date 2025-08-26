@@ -3,6 +3,7 @@ import { CreditNoteSchemaTest } from '@/components/debug/CreditNoteSchemaTest';
 import { ForceCreditNoteCorrectMigration } from '@/components/credit-notes/ForceCreditNoteCorrectMigration';
 import { InvoiceErrorTest } from '@/components/debug/InvoiceErrorTest';
 import { MigrationErrorTest } from '@/components/debug/MigrationErrorTest';
+import { SupabaseConnectionTest } from '@/components/debug/SupabaseConnectionTest';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -41,6 +42,9 @@ export default function AuditPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Connection Test - Priority for resolving current issue */}
+      <SupabaseConnectionTest />
 
       {/* Error Handling Tests */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -81,6 +85,7 @@ export default function AuditPage() {
                   <div>• Tax columns on item tables</div>
                   <div>• Stock level naming fixes</div>
                   <div>• Customer address fields</div>
+                  <div className="text-orange-600">• Auto-fallback if schema access fails</div>
                 </div>
               </div>
             </CardContent>
