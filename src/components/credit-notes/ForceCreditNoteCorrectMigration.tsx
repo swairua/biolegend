@@ -400,7 +400,8 @@ export function ForceCreditNoteCorrectMigration() {
 
     } catch (error: any) {
       console.error('Migration failed:', error);
-      toast.error(`Migration failed: ${error.message}`);
+      const errorMessage = parseErrorMessage(error);
+      toast.error(`Migration failed: ${errorMessage}`);
     } finally {
       setIsRunning(false);
     }
