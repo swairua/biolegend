@@ -343,6 +343,9 @@ const App = () => {
           {/* Proforma Creation Test - Test complete proforma creation flow */}
           <Route path="/proforma-creation-test" element={<ProformaCreationTestPage />} />
 
+          {/* PDF Diagnostic - Test and audit PDF generation line items */}
+          <Route path="/pdf-diagnostic" element={<PDFDiagnostic />} />
+
           {/* Manual Database Setup - No protection needed */}
           <Route path="/manual-setup" element={<ManualDatabaseSetup />} />
 
