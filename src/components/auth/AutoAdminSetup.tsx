@@ -416,50 +416,65 @@ export function AutoAdminSetup() {
 
         {(status.error || status.canCreateAdmin) && (
           <>
-            <p className="text-sm text-muted-foreground">
-              {status.error || 'Create the admin account to access the system.'}
-            </p>
-            
-            {status.error && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>
-                  {status.error}
-                  {status.error.includes('token') && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={clearTokensAndRetry}
-                      className="ml-2"
-                    >
-                      Clear Tokens
-                    </Button>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Button
-              onClick={createAdmin}
-              disabled={status.creating || status.rateLimited}
-              className="w-full"
-            >
-              {status.creating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Admin User...
-                </>
-              ) : (
-                <>
-                  <UserPlus className="mr-2 h-4 w-4" />
-                  Create Admin User
-                </>
+            <div className="space-y-3">
+              {status.canCreateAdmin && !status.error && (
+                <p className="text-sm text-muted-foreground">
+                  No admin account found. Create one to get started.
+                </p>
               )}
-            </Button>
 
-            <div className="text-xs text-muted-foreground space-y-1">
-              <p><strong>Email:</strong> admin@biolegendscientific.co.ke</p>
-              <p><strong>Password:</strong> Biolegend2024!Admin</p>
+              {status.error && (
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    There was an issue checking for the admin account:
+                  </p>
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription>
+                      {status.error}
+                      {status.error.includes('token') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={clearTokensAndRetry}
+                          className="ml-2"
+                        >
+                          Clear Tokens
+                        </Button>
+                      )}
+                    </AlertDescription>
+                  </Alert>
+                  <p className="text-xs text-muted-foreground">
+                    You can still try creating an admin account below.
+                  </p>
+                </div>
+              )}
+
+              <Button
+                onClick={createAdmin}
+                disabled={status.creating || status.rateLimited}
+                className="w-full"
+              >
+                {status.creating ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating Admin User...
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Create Admin User
+                  </>
+                )}
+              </Button>
+
+              <div className="bg-muted/50 p-3 rounded-md">
+                <p className="text-xs font-medium text-muted-foreground mb-1">Default Admin Credentials:</p>
+                <div className="text-xs text-muted-foreground space-y-1">
+                  <p><strong>Email:</strong> admin@biolegendscientific.co.ke</p>
+                  <p><strong>Password:</strong> Biolegend2024!Admin</p>
+                </div>
+              </div>
             </div>
           </>
         )}
