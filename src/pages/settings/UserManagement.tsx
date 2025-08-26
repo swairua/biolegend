@@ -145,6 +145,9 @@ export default function UserManagement() {
 
         {/* Admin Role Diagnostic */}
         <AdminRoleDiagnostic />
+
+        {/* Invitation Test Diagnostic */}
+        <InvitationTestDiagnostic />
       </div>
     );
   }
