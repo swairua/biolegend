@@ -50,6 +50,7 @@ export interface CompanyData {
   country?: string;
   registration_number?: string;
   tax_number?: string;
+  logo_url?: string;
 }
 
 export const generateLPOPDF = (lpo: LPOPDFData, company: CompanyData) => {
