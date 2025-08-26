@@ -462,8 +462,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     toast.info('Authentication tokens cleared. Please sign in again.');
   }, []);
 
-  // Compute derived state - only require user since we removed role-based system
+  // Compute derived state
   const isAuthenticated = !!user;
+  const isAdmin = profile?.role === 'admin';
 
   const value: AuthContextType = {
     user,
@@ -476,6 +477,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     resetPassword,
     updateProfile,
     isAuthenticated,
+    isAdmin,
     refreshProfile,
     clearTokens,
   };
