@@ -1,8 +1,15 @@
 import { QuickAuditRunner } from '@/components/QuickAuditRunner';
+import { CreditNoteSchemaTest } from '@/components/debug/CreditNoteSchemaTest';
+import { CreditNoteMigrationSQL } from '@/components/credit-notes/CreditNoteMigrationSQL';
+import { InvoiceErrorTest } from '@/components/debug/InvoiceErrorTest';
+import { MigrationErrorTest } from '@/components/debug/MigrationErrorTest';
+import { SupabaseConnectionTest } from '@/components/debug/SupabaseConnectionTest';
+import { AuthFlowTest } from '@/components/debug/AuthFlowTest';
+import { MigrationStepErrorTest } from '@/components/debug/MigrationStepErrorTest';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Database, 
+import {
+  Database,
   FileText,
   CheckCircle
 } from 'lucide-react';
@@ -23,6 +30,40 @@ export default function AuditPage() {
         </Badge>
       </div>
 
+      {/* Migration Status Notice */}
+      <Card className="border-success/50 bg-success-light">
+        <CardContent className="pt-6">
+          <div className="flex items-center space-x-3">
+            <CheckCircle className="h-5 w-5 text-success" />
+            <div>
+              <h3 className="font-medium text-success-foreground">Credit Note Migration Completed</h3>
+              <p className="text-sm text-success-foreground/80">
+                The credit note schema patch has been applied manually. You can now test the functionality below.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Connection Test - Priority for resolving current issue */}
+      <SupabaseConnectionTest />
+
+      {/* Comprehensive Migration Error Test */}
+      <MigrationStepErrorTest />
+
+      {/* Error Handling & Auth Tests */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <InvoiceErrorTest />
+        <MigrationErrorTest />
+        <AuthFlowTest />
+      </div>
+
+      {/* Credit Note Schema Verification - Critical for recent fixes */}
+      <CreditNoteSchemaTest />
+
+      {/* Simple Credit Note Migration SQL - Just copy and paste */}
+      <CreditNoteMigrationSQL />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <QuickAuditRunner />
@@ -40,6 +81,9 @@ export default function AuditPage() {
               <div className="text-sm space-y-2">
                 <div className="font-medium">Critical Columns:</div>
                 <div className="text-muted-foreground text-xs space-y-1">
+                  <div>• credit_note_items.tax_percentage</div>
+                  <div>• credit_note_items.tax_inclusive</div>
+                  <div>• credit_note_items.tax_setting_id</div>
                   <div>• lpo_items.unit_of_measure</div>
                   <div>• delivery_note_items.unit_of_measure</div>
                   <div>• invoices.lpo_number</div>
@@ -47,6 +91,7 @@ export default function AuditPage() {
                   <div>• Tax columns on item tables</div>
                   <div>• Stock level naming fixes</div>
                   <div>• Customer address fields</div>
+                  <div className="text-orange-600">• Auto-fallback if schema access fails</div>
                 </div>
               </div>
             </CardContent>

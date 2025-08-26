@@ -598,7 +598,11 @@ export const useInvoices = (companyId?: string) => {
 
       } catch (error) {
         console.error('Error in useInvoices:', error);
-        throw error;
+        // Import parseErrorMessage at the top if not already imported
+        const errorMessage = typeof error === 'string' ? error :
+                            (error as any)?.message ||
+                            'Failed to load invoices';
+        throw new Error(errorMessage);
       }
     },
   });
@@ -681,7 +685,10 @@ export const useCustomerInvoices = (customerId?: string, companyId?: string) => 
 
       } catch (error) {
         console.error('Error in useCustomerInvoices:', error);
-        throw error;
+        const errorMessage = typeof error === 'string' ? error :
+                            (error as any)?.message ||
+                            'Failed to load customer invoices';
+        throw new Error(errorMessage);
       }
     },
     enabled: !!customerId,

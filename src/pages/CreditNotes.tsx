@@ -45,7 +45,8 @@ import { CreateCreditNoteModal } from '@/components/credit-notes/CreateCreditNot
 import { ViewCreditNoteModal } from '@/components/credit-notes/ViewCreditNoteModal';
 import { EditCreditNoteModal } from '@/components/credit-notes/EditCreditNoteModal';
 import { CreditNotesSetupGuide } from '@/components/credit-notes/CreditNotesSetupGuide';
-import { CreditNoteRelationshipFix } from '@/components/credit-notes/CreditNoteRelationshipFix';
+import { SimpleForeignKeyPatch } from '@/components/credit-notes/SimpleForeignKeyPatch';
+import { CreditNotesConnectionStatus } from '@/components/credit-notes/CreditNotesConnectionStatus';
 import { useCreditNotePDFDownload } from '@/hooks/useCreditNotePDF';
 import type { CreditNote } from '@/hooks/useCreditNotes';
 
@@ -172,7 +173,7 @@ export default function CreditNotes() {
           </div>
         </div>
 
-        <CreditNoteRelationshipFix />
+        <SimpleForeignKeyPatch />
       </div>
     );
   }
@@ -186,10 +187,15 @@ export default function CreditNotes() {
             <p className="text-muted-foreground">Manage customer credit notes and refunds</p>
           </div>
         </div>
+
+
         <Card className="shadow-card">
           <CardContent className="pt-6">
             <div className="text-center py-8">
               <p className="text-destructive">Error loading credit notes: {error.message}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                If the error persists, please contact support or check the audit page.
+              </p>
               <Button
                 variant="outline"
                 onClick={() => window.location.reload()}
@@ -223,6 +229,9 @@ export default function CreditNotes() {
           New Credit Note
         </Button>
       </div>
+
+      {/* Connection Status Check */}
+      <CreditNotesConnectionStatus />
 
       {/* Filters and Search */}
       <Card className="shadow-card">
