@@ -35,7 +35,7 @@ import { useOptimizedProductSearch, usePopularProducts } from '@/hooks/useOptimi
 import { useCreateInvoiceWithItems } from '@/hooks/useQuotationItems';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
-import { InventoryDebug } from '@/components/debug/InventoryDebug';
+// Debug component removed during cleanup
 
 interface InvoiceItem {
   id: string;
@@ -784,8 +784,7 @@ export function CreateInvoiceModal({ open, onOpenChange, onSuccess, preSelectedC
         </DialogFooter>
       </DialogContent>
 
-      {/* Debug Component - only show when modal is open */}
-      {open && <InventoryDebug />}
+      {/* Debug component removed during cleanup */}
     </Dialog>
   );
 }
