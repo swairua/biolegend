@@ -685,7 +685,10 @@ export const useCustomerInvoices = (customerId?: string, companyId?: string) => 
 
       } catch (error) {
         console.error('Error in useCustomerInvoices:', error);
-        throw error;
+        const errorMessage = typeof error === 'string' ? error :
+                            (error as any)?.message ||
+                            'Failed to load customer invoices';
+        throw new Error(errorMessage);
       }
     },
     enabled: !!customerId,
