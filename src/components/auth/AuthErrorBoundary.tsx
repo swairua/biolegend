@@ -100,7 +100,9 @@ export class AuthErrorBoundary extends Component<Props, State> {
 
                 {this.state.showDiagnostics && (
                   <div className="mt-4">
-                    <NetworkDiagnostics />
+                    <p className="text-sm text-muted-foreground">
+                      Network diagnostics have been disabled in this version.
+                    </p>
                   </div>
                 )}
 
