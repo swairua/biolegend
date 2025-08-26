@@ -361,8 +361,6 @@ export default function Payments() {
         invoice={undefined} // For standalone payment recording
       />
 
-      {/* System Diagnostics and Testing */}
-      <PaymentAllocationAutoFix />
 
       {/* Test Data Creation (if needed) */}
       {invoices.length === 0 && (
