@@ -193,7 +193,7 @@ export default function CreditNotes() {
             <div className="text-center py-8">
               <p className="text-destructive">Error loading credit notes: {error.message}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                If the error persists, try the migration above to fix schema issues.
+                If the error persists, please contact support or check the audit page.
               </p>
               <Button
                 variant="outline"
