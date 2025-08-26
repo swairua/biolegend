@@ -200,19 +200,19 @@ export const CreateDeliveryNoteModal = ({
       return;
     }
 
-    if (!formData.invoice_id) {
-      toast.error('Please select an invoice. Delivery notes must be linked to an invoice to auto-populate items.');
-      return;
-    }
-
     if (!formData.customer_id) {
       toast.error('Please select a customer');
       return;
     }
 
     if (items.length === 0) {
-      toast.error('Please add at least one item');
+      toast.error('Please add at least one item to deliver');
       return;
+    }
+
+    // Warn if no invoice is linked (but allow it)
+    if (!formData.invoice_id) {
+      console.log('⚠️ Creating delivery note without linked invoice - manual entry mode');
     }
 
     try {
@@ -608,7 +608,7 @@ export const CreateDeliveryNoteModal = ({
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!companyId || !formData.invoice_id || !formData.customer_id || items.length === 0}>
+            <Button type="submit" disabled={!companyId || !formData.customer_id || items.length === 0}>
               Create Delivery Note
             </Button>
           </DialogFooter>
