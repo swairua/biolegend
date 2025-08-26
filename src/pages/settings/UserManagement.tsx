@@ -115,7 +115,6 @@ export default function UserManagement() {
     user.department?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Show admin role diagnostic if not admin
   if (!isAdmin) {
     return (
       <div className="space-y-6">
