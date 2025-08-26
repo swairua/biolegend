@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { quickDatabaseAudit, checkFormFunctionality, type QuickAuditResult } from '@/utils/quickDatabaseAudit';
+import { alternativeDatabaseAudit, alternativeFormTest, type AlternativeAuditResult } from '@/utils/alternativeAudit';
 
 export function QuickAuditRunner() {
   const [isRunning, setIsRunning] = useState(false);
