@@ -320,7 +320,7 @@ export const useCreateInvoiceWithItems = () => {
               movement_type: 'OUT' as const,
               reference_type: 'INVOICE' as const,
               reference_id: invoiceData.id,
-              quantity: -item.quantity, // Negative for outgoing stock
+              quantity: item.quantity, // Positive quantity, movement_type determines direction
               cost_per_unit: item.unit_price,
               notes: `Stock reduction for invoice ${invoice.invoice_number}`
             }));
@@ -336,7 +336,8 @@ export const useCreateInvoiceWithItems = () => {
             const stockUpdatePromises = stockMovements.map(movement =>
               supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
-                quantity_change: movement.quantity
+                movement_type: movement.movement_type,
+                quantity: movement.quantity
               })
             );
 
