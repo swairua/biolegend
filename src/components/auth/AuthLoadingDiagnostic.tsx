@@ -288,13 +288,17 @@ export function AuthLoadingDiagnostic() {
           </div>
 
           {currentDuration > 15000 && (
-            <Alert className="border-warning/20 bg-warning-light">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              <AlertDescription className="text-warning">
-                <strong>Taking too long?</strong> You can close this dialog and continue using the app. 
-                You may need to sign in manually.
-              </AlertDescription>
-            </Alert>
+            <div className="space-y-3">
+              <Alert className="border-warning/20 bg-warning-light">
+                <AlertTriangle className="h-4 w-4 text-warning" />
+                <AlertDescription className="text-warning">
+                  <strong>Taking too long?</strong> Authentication has been stuck for over 15 seconds.
+                  Try the emergency fixes below.
+                </AlertDescription>
+              </Alert>
+
+              <EmergencyAuthFix />
+            </div>
           )}
         </CardContent>
       </Card>
