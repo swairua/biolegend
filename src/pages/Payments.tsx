@@ -86,8 +86,6 @@ export default function Payments() {
   const currentCompany = companies[0];
   const { data: payments = [], isLoading, error } = usePayments(currentCompany?.id);
 
-  // Get the current company (assuming first company for now)
-  const currentCompany = companies[0];
 
   const handleRecordPayment = () => {
     setShowRecordModal(true);
