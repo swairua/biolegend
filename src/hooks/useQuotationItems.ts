@@ -106,7 +106,8 @@ export const useRestockProduct = () => {
       // Update product stock quantity
       const { error: stockError } = await supabase.rpc('update_product_stock', {
         product_uuid: productId,
-        quantity_change: quantity
+        movement_type: 'IN',
+        quantity: quantity
       });
       
       if (stockError) throw stockError;
@@ -227,16 +228,16 @@ export const useConvertQuotationToInvoice = () => {
         
         if (itemsError) throw itemsError;
         
-        // Create stock movements
+        // Create stock movements with exact string values
         const stockMovements = invoiceItems
           .filter(item => item.product_id && item.quantity > 0)
           .map(item => ({
             company_id: invoice.company_id,
             product_id: item.product_id,
-            movement_type: 'OUT' as const,
-            reference_type: 'INVOICE' as const,
+            movement_type: 'OUT', // Exact string, not const assertion
+            reference_type: 'INVOICE', // Exact string, not const assertion
             reference_id: invoice.id,
-            quantity: -item.quantity,
+            quantity: Math.abs(item.quantity), // Ensure positive quantity
             cost_per_unit: item.unit_price,
             notes: `Stock reduction for invoice ${invoice.invoice_number} (converted from quotation ${quotation.quotation_number})`
           }));
@@ -248,7 +249,8 @@ export const useConvertQuotationToInvoice = () => {
           const stockUpdatePromises = stockMovements.map(movement =>
             supabase.rpc('update_product_stock', {
               product_uuid: movement.product_id,
-              quantity_change: movement.quantity
+              movement_type: movement.movement_type,
+              quantity: movement.quantity
             })
           );
 
@@ -314,29 +316,111 @@ export const useCreateInvoiceWithItems = () => {
         if (invoice.affects_inventory !== false) {
           const stockMovements = items
             .filter(item => item.product_id && item.quantity > 0)
-            .map(item => ({
-              company_id: invoice.company_id,
-              product_id: item.product_id!,
-              movement_type: 'OUT' as const,
-              reference_type: 'INVOICE' as const,
-              reference_id: invoiceData.id,
-              quantity: -item.quantity, // Negative for outgoing stock
-              cost_per_unit: item.unit_price,
-              notes: `Stock reduction for invoice ${invoice.invoice_number}`
-            }));
+            .map(item => {
+              // Validate required fields
+              if (!invoice.company_id) {
+                throw new Error('Company ID is required for stock movements');
+              }
+              if (!item.product_id) {
+                throw new Error('Product ID is required for stock movements');
+              }
+              if (!item.quantity || item.quantity <= 0) {
+                throw new Error('Valid quantity is required for stock movements');
+              }
+
+              // Ensure exact string values for constraints
+              const movementData = {
+                company_id: invoice.company_id,
+                product_id: item.product_id!,
+                movement_type: 'OUT', // Exact string, not const assertion
+                reference_type: 'INVOICE', // Exact string, not const assertion
+                reference_id: invoiceData.id,
+                reference_number: invoice.invoice_number || null,
+                quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
+                cost_per_unit: item.unit_price || null,
+                movement_date: invoice.invoice_date || new Date().toISOString().split('T')[0],
+                notes: `Stock reduction for invoice ${invoice.invoice_number}`,
+                created_by: invoice.created_by || null
+              };
+
+              console.log('🔧 Created movement object:', {
+                movement_type_raw: movementData.movement_type,
+                movement_type_typeof: typeof movementData.movement_type,
+                reference_type_raw: movementData.reference_type,
+                reference_type_typeof: typeof movementData.reference_type,
+                quantity_raw: movementData.quantity,
+                quantity_typeof: typeof movementData.quantity
+              });
+
+              return movementData;
+            });
+
+          console.log('📦 Creating stock movements for invoice:', {
+            invoice_id: invoiceData.id,
+            invoice_number: invoice.invoice_number,
+            movements_count: stockMovements.length,
+            movements: stockMovements
+          });
+
+          // Detailed validation of each movement before sending to database
+          stockMovements.forEach((movement, index) => {
+            console.log(`🔍 Validating movement ${index + 1}:`, {
+              movement_type: movement.movement_type,
+              movement_type_length: movement.movement_type?.length,
+              movement_type_exact: JSON.stringify(movement.movement_type),
+              reference_type: movement.reference_type,
+              reference_type_length: movement.reference_type?.length,
+              reference_type_exact: JSON.stringify(movement.reference_type),
+              quantity: movement.quantity,
+              quantity_type: typeof movement.quantity,
+              company_id: movement.company_id,
+              product_id: movement.product_id,
+              all_fields: Object.keys(movement)
+            });
+
+            // Validate movement_type
+            if (!['IN', 'OUT', 'ADJUSTMENT'].includes(movement.movement_type)) {
+              throw new Error(`Invalid movement_type: "${movement.movement_type}". Must be exactly 'IN', 'OUT', or 'ADJUSTMENT'`);
+            }
+
+            // Validate reference_type
+            if (movement.reference_type && !['INVOICE', 'DELIVERY_NOTE', 'RESTOCK', 'ADJUSTMENT'].includes(movement.reference_type)) {
+              throw new Error(`Invalid reference_type: "${movement.reference_type}". Must be 'INVOICE', 'DELIVERY_NOTE', 'RESTOCK', or 'ADJUSTMENT'`);
+            }
+
+            // Validate required fields
+            if (!movement.company_id) throw new Error('company_id is required');
+            if (!movement.product_id) throw new Error('product_id is required');
+            if (!movement.quantity || movement.quantity <= 0) throw new Error('positive quantity is required');
+          });
 
           if (stockMovements.length > 0) {
+            console.log('🚀 Sending movements to database:', JSON.stringify(stockMovements, null, 2));
+
             const { error: stockError } = await supabase
               .from('stock_movements')
               .insert(stockMovements);
 
-            if (stockError) throw stockError;
+            if (stockError) {
+              console.error('❌ Stock movement insert failed:', {
+                error: stockError,
+                error_code: stockError.code,
+                error_message: stockError.message,
+                error_details: stockError.details,
+                error_hint: stockError.hint,
+                constraint_name: stockError.constraint,
+                movements_attempted: stockMovements,
+                full_error: JSON.stringify(stockError, null, 2)
+              });
+              throw new Error(`Failed to create stock movements: ${stockError.message || stockError.details || 'Unknown database error'}`);
+            }
 
             // Update product stock quantities in parallel for better performance
             const stockUpdatePromises = stockMovements.map(movement =>
               supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
-                quantity_change: movement.quantity
+                movement_type: movement.movement_type,
+                quantity: movement.quantity
               })
             );
 
@@ -386,12 +470,12 @@ export const useUpdateInvoiceWithItems = () => {
         .eq('reference_type', 'INVOICE');
 
       if (existingMovements && existingMovements.length > 0) {
-        // Create reverse movements
+        // Create reverse movements with exact string values
         const reverseMovements = existingMovements.map(movement => ({
           company_id: movement.company_id,
           product_id: movement.product_id,
-          movement_type: movement.movement_type === 'OUT' ? 'IN' : 'OUT' as const,
-          reference_type: 'ADJUSTMENT' as const,
+          movement_type: movement.movement_type === 'OUT' ? 'IN' : 'OUT', // Exact strings
+          reference_type: 'ADJUSTMENT', // Exact string
           reference_id: invoiceId,
           quantity: -movement.quantity,
           notes: `Reversal for updated invoice ${invoice.invoice_number}`
@@ -403,7 +487,8 @@ export const useUpdateInvoiceWithItems = () => {
         const reverseUpdatePromises = reverseMovements.map(movement =>
           supabase.rpc('update_product_stock', {
             product_uuid: movement.product_id,
-            quantity_change: movement.quantity
+            movement_type: movement.movement_type,
+            quantity: movement.quantity
           })
         );
 
@@ -458,8 +543,8 @@ export const useUpdateInvoiceWithItems = () => {
             .map(item => ({
               company_id: invoice.company_id,
               product_id: item.product_id!,
-              movement_type: 'OUT' as const,
-              reference_type: 'INVOICE' as const,
+              movement_type: 'OUT', // Exact string
+              reference_type: 'INVOICE', // Exact string
               reference_id: invoiceId,
               quantity: -item.quantity,
               cost_per_unit: item.unit_price,
@@ -473,7 +558,8 @@ export const useUpdateInvoiceWithItems = () => {
             const newStockUpdatePromises = stockMovements.map(movement =>
               supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
-                quantity_change: movement.quantity
+                movement_type: movement.movement_type,
+                quantity: movement.quantity
               })
             );
 
@@ -550,50 +636,70 @@ export const useCreateDeliveryNote = () => {
   
   return useMutation({
     mutationFn: async ({ deliveryNote, items }: { deliveryNote: any; items: any[] }) => {
-      // Validate that delivery note is backed by a sale (invoice)
-      if (!deliveryNote.invoice_id) {
-        throw new Error('Delivery note must be linked to an existing invoice or sale.');
-      }
+      console.log('🚚 Creating delivery note:', {
+        has_invoice: !!deliveryNote.invoice_id,
+        invoice_id: deliveryNote.invoice_id,
+        customer_id: deliveryNote.customer_id,
+        items_count: items.length
+      });
 
-      // Verify the invoice exists and belongs to the same company
-      const { data: invoice, error: invoiceError } = await supabase
-        .from('invoices')
-        .select('id, customer_id, company_id')
-        .eq('id', deliveryNote.invoice_id)
-        .eq('company_id', deliveryNote.company_id)
-        .single();
+      // If invoice_id is provided, validate the invoice-backed delivery note
+      if (deliveryNote.invoice_id) {
+        console.log('📋 Validating invoice-backed delivery note...');
 
-      if (invoiceError || !invoice) {
-        throw new Error('Related invoice not found or does not belong to this company.');
-      }
+        // Verify the invoice exists and belongs to the same company
+        const { data: invoice, error: invoiceError } = await supabase
+          .from('invoices')
+          .select('id, customer_id, company_id')
+          .eq('id', deliveryNote.invoice_id)
+          .eq('company_id', deliveryNote.company_id)
+          .single();
 
-      // Verify customer matches
-      if (invoice.customer_id !== deliveryNote.customer_id) {
-        throw new Error('Delivery note customer must match the invoice customer.');
-      }
+        if (invoiceError || !invoice) {
+          throw new Error('Related invoice not found or does not belong to this company.');
+        }
 
-      // Verify delivery items correspond to invoice items
-      if (items.length > 0) {
-        const { data: invoiceItems } = await supabase
-          .from('invoice_items')
-          .select('product_id, quantity')
-          .eq('invoice_id', deliveryNote.invoice_id);
+        // Verify customer matches
+        if (invoice.customer_id !== deliveryNote.customer_id) {
+          throw new Error('Delivery note customer must match the invoice customer.');
+        }
 
-        const invoiceProductMap = new Map();
-        (invoiceItems || []).forEach((item: any) => {
-          invoiceProductMap.set(item.product_id, item.quantity);
-        });
+        // Verify delivery items correspond to invoice items
+        if (items.length > 0) {
+          const { data: invoiceItems } = await supabase
+            .from('invoice_items')
+            .select('product_id, quantity')
+            .eq('invoice_id', deliveryNote.invoice_id);
 
-        // Check that all delivery items exist in the invoice
-        for (const item of items) {
-          if (!invoiceProductMap.has(item.product_id)) {
-            throw new Error(`Product in delivery note is not included in the related invoice.`);
+          const invoiceProductMap = new Map();
+          (invoiceItems || []).forEach((item: any) => {
+            invoiceProductMap.set(item.product_id, item.quantity);
+          });
+
+          // Check that all delivery items exist in the invoice
+          for (const item of items) {
+            if (!invoiceProductMap.has(item.product_id)) {
+              throw new Error(`Product "${item.description || item.product_id}" in delivery note is not included in the related invoice.`);
+            }
+
+            const invoiceQuantity = invoiceProductMap.get(item.product_id);
+            if (item.quantity > invoiceQuantity) {
+              throw new Error(`Delivery quantity (${item.quantity}) cannot exceed invoice quantity (${invoiceQuantity}) for product "${item.description || item.product_id}".`);
+            }
           }
+        }
 
-          const invoiceQuantity = invoiceProductMap.get(item.product_id);
-          if (item.quantity > invoiceQuantity) {
-            throw new Error(`Delivery quantity cannot exceed invoice quantity for product.`);
-          }
+        console.log('✅ Invoice validation passed');
+      } else {
+        console.log('📝 Creating manual delivery note (no invoice linked)');
+
+        // For manual delivery notes, just validate basic requirements
+        if (!deliveryNote.customer_id) {
+          throw new Error('Customer is required for delivery note.');
+        }
+
+        if (!items.length) {
+          throw new Error('At least one item is required for delivery note.');
         }
       }
 
@@ -623,25 +729,74 @@ export const useCreateDeliveryNote = () => {
         // Create stock movements for delivered items
         const stockMovements = items
           .filter(item => item.product_id && item.quantity > 0)
-          .map(item => ({
-            company_id: deliveryNote.company_id,
-            product_id: item.product_id,
-            movement_type: 'OUT' as const,
-            reference_type: 'DELIVERY_NOTE' as const,
-            reference_id: deliveryData.id,
-            quantity: -item.quantity,
-            notes: `Stock delivery for delivery note ${deliveryNote.delivery_number || deliveryNote.delivery_note_number}`
-          }));
-        
+          .map(item => {
+            // Validate required fields
+            if (!deliveryNote.company_id) {
+              throw new Error('Company ID is required for stock movements');
+            }
+            if (!item.product_id) {
+              throw new Error('Product ID is required for stock movements');
+            }
+            if (!item.quantity || item.quantity <= 0) {
+              throw new Error('Valid quantity is required for stock movements');
+            }
+
+            // Ensure exact string values for constraints
+            const movementData = {
+              company_id: deliveryNote.company_id,
+              product_id: item.product_id,
+              movement_type: 'OUT', // Exact string, not const assertion
+              reference_type: 'DELIVERY_NOTE', // Exact string, not const assertion
+              reference_id: deliveryData.id,
+              reference_number: deliveryNote.delivery_number || deliveryNote.delivery_note_number || null,
+              quantity: Math.abs(item.quantity), // Ensure positive quantity for OUT movements
+              cost_per_unit: item.unit_price || null,
+              movement_date: deliveryNote.delivery_date || new Date().toISOString().split('T')[0],
+              notes: `Stock delivery for delivery note ${deliveryNote.delivery_number || deliveryNote.delivery_note_number}`,
+              created_by: deliveryNote.created_by || null
+            };
+
+            console.log('🔧 Created delivery movement object:', {
+              movement_type_raw: movementData.movement_type,
+              movement_type_typeof: typeof movementData.movement_type,
+              reference_type_raw: movementData.reference_type,
+              reference_type_typeof: typeof movementData.reference_type
+            });
+
+            return movementData;
+          });
+
+        console.log('📦 Creating delivery note stock movements:', {
+          delivery_note_id: deliveryData.id,
+          movements_count: stockMovements.length,
+          movements: stockMovements
+        });
+
         if (stockMovements.length > 0) {
-          await supabase.from('stock_movements').insert(stockMovements);
-          
+          const { error: stockError } = await supabase
+            .from('stock_movements')
+            .insert(stockMovements);
+
+          if (stockError) {
+            console.error('❌ Delivery note stock movement insert failed:', {
+              error: stockError,
+              error_details: JSON.stringify(stockError, null, 2),
+              movements_attempted: stockMovements
+            });
+            throw new Error(`Failed to create delivery note stock movements: ${stockError.message || stockError.details || 'Unknown database error'}`);
+          }
+
           // Update product stock quantities
           for (const movement of stockMovements) {
-            await supabase.rpc('update_product_stock', {
+            const { error: updateError } = await supabase.rpc('update_product_stock', {
               product_uuid: movement.product_id,
-              quantity_change: movement.quantity
+              movement_type: movement.movement_type,
+              quantity: movement.quantity
             });
+
+            if (updateError) {
+              console.error('Failed to update stock for delivery note product:', movement.product_id, updateError);
+            }
           }
         }
       }

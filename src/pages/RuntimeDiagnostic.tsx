@@ -1,4 +1,4 @@
-import { RuntimeErrorDiagnostic } from '@/components/debug/RuntimeErrorDiagnostic';
+// Debug component removed during cleanup
 
 const RuntimeDiagnosticPage = () => {
   return (
@@ -10,7 +10,9 @@ const RuntimeDiagnosticPage = () => {
         </p>
       </div>
       
-      <RuntimeErrorDiagnostic />
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Runtime diagnostic component has been disabled in this version.</p>
+      </div>
     </div>
   );
 };

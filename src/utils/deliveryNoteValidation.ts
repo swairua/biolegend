@@ -23,7 +23,7 @@ export const validateDeliveryNoteData = (
   }
 
   if (!deliveryNote.invoice_id) {
-    errors.push('Invoice ID is required - delivery notes must be backed by a sale');
+    warnings.push('No invoice linked - this delivery note will be created as a manual entry');
   }
 
   if (!deliveryNote.delivery_date) {

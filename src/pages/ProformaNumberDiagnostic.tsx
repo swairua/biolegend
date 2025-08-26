@@ -1,4 +1,4 @@
-import { ProformaNumberDiagnostic } from '@/components/debug/ProformaNumberDiagnostic';
+// Debug component removed during cleanup
 
 const ProformaNumberDiagnosticPage = () => {
   return (
@@ -10,7 +10,9 @@ const ProformaNumberDiagnosticPage = () => {
         </p>
       </div>
       
-      <ProformaNumberDiagnostic />
+      <div className="text-center py-8">
+        <p className="text-muted-foreground">Proforma number diagnostic component has been disabled in this version.</p>
+      </div>
     </div>
   );
 };

@@ -149,8 +149,13 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
           .limit(limit);
 
         if (productsError) {
-          console.error('Error fetching products:', productsError);
-          throw new Error(`Failed to fetch products: ${productsError.message}`);
+          console.error('Error fetching products:', {
+            error: productsError,
+            message: productsError.message || 'Unknown database error',
+            details: JSON.stringify(productsError, null, 2),
+            companyId
+          });
+          throw new Error(`Failed to fetch products: ${productsError.message || 'Database connection error'}`);
         }
 
         console.log('Products fetched successfully:', products?.length || 0);
@@ -190,8 +195,25 @@ export const usePopularProducts = (companyId?: string, limit: number = 20) => {
         console.log('Popular products transformed successfully:', transformedData.length);
         return transformedData;
       } catch (error) {
-        console.error('Error in usePopularProducts:', error);
-        throw error;
+        console.error('Error in usePopularProducts:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          details: JSON.stringify(error, null, 2),
+          companyId
+        });
+
+        // Check if it's a network error
+        if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+          throw new Error('Network connection error: Unable to reach the database. Please check your internet connection and try again.');
+        }
+
+        // Re-throw with better error message
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          throw new Error(`Database error: ${JSON.stringify(error)}`);
+        }
       }
     },
     enabled: !!companyId,

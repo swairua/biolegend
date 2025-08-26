@@ -4,7 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { EnhancedLogin } from '@/components/auth/EnhancedLogin';
-import { AuthStateDebugWithNetwork } from '@/components/debug/AuthStateDebug';
+// Debug component removed during cleanup
 import { EmergencyAuthReset } from '@/components/auth/EmergencyAuthReset';
 
 interface LayoutProps {
@@ -53,7 +53,11 @@ export function Layout({ children }: LayoutProps) {
           <h2 className="text-lg font-semibold mb-2">Loading Debug</h2>
           <p className="text-muted-foreground">App appears to be stuck in loading state...</p>
         </div>
-        <AuthStateDebugWithNetwork />
+        <div className="text-center">
+          <p className="text-sm text-muted-foreground">
+            Debug component has been disabled. Please refresh the page.
+          </p>
+        </div>
       </div>
     );
   }

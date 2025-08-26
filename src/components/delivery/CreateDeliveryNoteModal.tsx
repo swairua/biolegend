@@ -105,7 +105,15 @@ export const CreateDeliveryNoteModal = ({
         }));
 
         // Populate items from invoice
-        if (selectedInvoice.invoice_items && selectedInvoice.invoice_items.length > 0) {
+        console.log('🔍 Selected invoice data:', {
+          id: selectedInvoice.id,
+          invoice_number: selectedInvoice.invoice_number,
+          invoice_items_exists: !!selectedInvoice.invoice_items,
+          invoice_items_length: selectedInvoice.invoice_items?.length || 0,
+          invoice_items: selectedInvoice.invoice_items
+        });
+
+        if (selectedInvoice.invoice_items && Array.isArray(selectedInvoice.invoice_items) && selectedInvoice.invoice_items.length > 0) {
           const deliveryItems: DeliveryItem[] = selectedInvoice.invoice_items.map((item: any) => ({
             id: `item-${item.id}`,
             product_id: item.product_id || '',
@@ -120,9 +128,22 @@ export const CreateDeliveryNoteModal = ({
           console.log(`✅ Loaded ${deliveryItems.length} items from invoice ${selectedInvoice.invoice_number}`);
           toast.success(`Loaded ${deliveryItems.length} items from invoice ${selectedInvoice.invoice_number}`);
         } else {
-          console.warn('⚠️ No items found in selected invoice');
+          console.warn('⚠️ Invoice items issue:', {
+            invoice_number: selectedInvoice.invoice_number,
+            invoice_items_exists: !!selectedInvoice.invoice_items,
+            is_array: Array.isArray(selectedInvoice.invoice_items),
+            length: selectedInvoice.invoice_items?.length || 0
+          });
           setItems([]);
-          toast.info('Selected invoice has no items');
+
+          // Better error message based on the actual issue
+          if (!selectedInvoice.invoice_items) {
+            toast.error('Invoice data is incomplete - items not loaded. Please try refreshing the page.');
+          } else if (!Array.isArray(selectedInvoice.invoice_items)) {
+            toast.error('Invoice items data format error. Please contact support.');
+          } else {
+            toast.info(`Invoice ${selectedInvoice.invoice_number} has no items to deliver.`);
+          }
         }
       } else {
         console.warn('⚠️ Invoice not found:', formData.invoice_id);
@@ -179,19 +200,19 @@ export const CreateDeliveryNoteModal = ({
       return;
     }
 
-    if (!formData.invoice_id) {
-      toast.error('Please select an invoice. Delivery notes must be linked to an invoice to auto-populate items.');
-      return;
-    }
-
     if (!formData.customer_id) {
       toast.error('Please select a customer');
       return;
     }
 
     if (items.length === 0) {
-      toast.error('Please add at least one item');
+      toast.error('Please add at least one item to deliver');
       return;
+    }
+
+    // Warn if no invoice is linked (but allow it)
+    if (!formData.invoice_id) {
+      console.log('⚠️ Creating delivery note without linked invoice - manual entry mode');
     }
 
     try {
@@ -311,6 +332,16 @@ export const CreateDeliveryNoteModal = ({
               <Select value={formData.invoice_id} onValueChange={(value) => {
                 setFormData(prev => ({ ...prev, invoice_id: value }));
                 if (value) {
+                  // Debug the selected invoice
+                  const selectedInv = invoices?.find(inv => inv.id === value);
+                  console.log('🎯 Invoice selected for delivery note:', {
+                    invoice_id: value,
+                    invoice_number: selectedInv?.invoice_number,
+                    invoice_items_exists: !!selectedInv?.invoice_items,
+                    invoice_items_length: selectedInv?.invoice_items?.length || 0,
+                    invoice_items_raw: selectedInv?.invoice_items,
+                    full_invoice_data: selectedInv
+                  });
                   toast.info('Loading items from selected invoice...');
                 }
               }}>
@@ -330,8 +361,12 @@ export const CreateDeliveryNoteModal = ({
                   ))}
                 </SelectContent>
               </Select>
-              {formData.invoice_id && (
-                <p className="text-xs text-success">✅ Invoice selected - items will be auto-populated</p>
+              {formData.invoice_id ? (
+                <p className="text-xs text-success">✅ Invoice selected - items will be auto-populated from invoice</p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  💡 Select an invoice to auto-load items, or leave blank to add items manually
+                </p>
               )}
             </div>
           </div>
@@ -471,15 +506,26 @@ export const CreateDeliveryNoteModal = ({
                 <div className="text-center py-8 text-muted-foreground">
                   {formData.invoice_id
                     ? (
-                        <div className="space-y-2">
-                          <p>No items found in selected invoice.</p>
-                          <p className="text-xs">The invoice may not have any items or they failed to load.</p>
+                        <div className="space-y-3">
+                          <p>⚠️ No items loaded from selected invoice.</p>
+                          <p className="text-xs">This could mean:</p>
+                          <ul className="text-xs space-y-1 max-w-md mx-auto">
+                            <li>• The invoice has no line items</li>
+                            <li>• There was a data loading issue</li>
+                            <li>• The invoice items are in an unexpected format</li>
+                          </ul>
+                          <p className="text-xs mt-3">
+                            Check the browser console for detailed error information.
+                          </p>
                         </div>
                       )
                     : (
-                        <div className="space-y-2">
+                        <div className="space-y-3">
                           <p>📋 Select an invoice above to automatically load items for delivery.</p>
-                          <p className="text-xs">Items from the selected invoice will appear here automatically.</p>
+                          <p className="text-xs">Or add items manually using the "Add Item" button.</p>
+                          <p className="text-xs text-success">
+                            💡 Tip: Selecting an invoice will auto-populate customer details and items.
+                          </p>
                         </div>
                       )
                   }
@@ -587,7 +633,7 @@ export const CreateDeliveryNoteModal = ({
             <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!companyId || !formData.invoice_id || !formData.customer_id || items.length === 0}>
+            <Button type="submit" disabled={!companyId || !formData.customer_id || items.length === 0}>
               Create Delivery Note
             </Button>
           </DialogFooter>

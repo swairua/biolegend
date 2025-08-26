@@ -598,8 +598,19 @@ export const useInvoices = (companyId?: string) => {
         }));
 
       } catch (error) {
-        console.error('Error in useInvoices:', error);
-        // Import parseErrorMessage at the top if not already imported
+        console.error('Error in useInvoices:', {
+          error,
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          details: JSON.stringify(error, null, 2)
+        });
+
+        // Re-throw with better error message
+        if (error instanceof Error) {
+          throw error;
+        } else {
+          throw new Error(`Database error: ${JSON.stringify(error)}`);
+        }
         const errorMessage = typeof error === 'string' ? error :
                             (error as any)?.message ||
                             'Failed to load invoices';

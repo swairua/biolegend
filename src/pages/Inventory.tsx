@@ -6,7 +6,7 @@ import { RestockItemModal } from '@/components/inventory/RestockItemModal';
 import { StockAdjustmentModal } from '@/components/inventory/StockAdjustmentModal';
 import { useProducts, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
-import { InventoryDebug } from '@/components/debug/InventoryDebug';
+// Debug component removed during cleanup
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -436,8 +436,7 @@ export default function Inventory() {
         />
       )}
 
-      {/* Debug Component */}
-      <InventoryDebug />
+      {/* Debug component removed during cleanup */}
     </div>
   );
 }
