@@ -46,7 +46,9 @@ export function CompaniesTableAuditPanel() {
         toast.warning(`Audit completed - ${auditResult.missingColumns.length} columns missing`);
       }
     } catch (error) {
-      toast.error('Audit failed: ' + (error instanceof Error ? error.message : String(error)));
+      const errorMessage = parseErrorMessage(error);
+      console.error('Audit failed:', error);
+      toast.error(`Audit failed: ${errorMessage}`);
     } finally {
       setIsAuditing(false);
     }
