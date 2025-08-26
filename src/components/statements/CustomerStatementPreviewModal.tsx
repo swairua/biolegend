@@ -33,6 +33,7 @@ export default function CustomerStatementPreviewModal({
   customer,
   statementDate = new Date().toISOString().split('T')[0]
 }: CustomerStatementPreviewModalProps) {
+  const { data: companies } = useCompanies();
   const { data: invoices } = useInvoices();
   const { data: payments } = usePayments();
 
