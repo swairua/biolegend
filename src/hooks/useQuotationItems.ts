@@ -106,7 +106,8 @@ export const useRestockProduct = () => {
       // Update product stock quantity
       const { error: stockError } = await supabase.rpc('update_product_stock', {
         product_uuid: productId,
-        quantity_change: quantity
+        movement_type: 'IN',
+        quantity: quantity
       });
       
       if (stockError) throw stockError;
@@ -248,7 +249,8 @@ export const useConvertQuotationToInvoice = () => {
           const stockUpdatePromises = stockMovements.map(movement =>
             supabase.rpc('update_product_stock', {
               product_uuid: movement.product_id,
-              quantity_change: movement.quantity
+              movement_type: movement.movement_type,
+              quantity: Math.abs(movement.quantity)
             })
           );
 
@@ -417,7 +419,8 @@ export const useUpdateInvoiceWithItems = () => {
         const reverseUpdatePromises = reverseMovements.map(movement =>
           supabase.rpc('update_product_stock', {
             product_uuid: movement.product_id,
-            quantity_change: movement.quantity
+            movement_type: movement.movement_type,
+            quantity: Math.abs(movement.quantity)
           })
         );
 
@@ -487,7 +490,8 @@ export const useUpdateInvoiceWithItems = () => {
             const newStockUpdatePromises = stockMovements.map(movement =>
               supabase.rpc('update_product_stock', {
                 product_uuid: movement.product_id,
-                quantity_change: movement.quantity
+                movement_type: movement.movement_type,
+                quantity: Math.abs(movement.quantity)
               })
             );
 
@@ -654,7 +658,8 @@ export const useCreateDeliveryNote = () => {
           for (const movement of stockMovements) {
             await supabase.rpc('update_product_stock', {
               product_uuid: movement.product_id,
-              quantity_change: movement.quantity
+              movement_type: movement.movement_type,
+              quantity: Math.abs(movement.quantity)
             });
           }
         }
