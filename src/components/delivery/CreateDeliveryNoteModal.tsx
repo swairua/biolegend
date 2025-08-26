@@ -514,8 +514,11 @@ export const CreateDeliveryNoteModal = ({
                           <Input
                             type="number"
                             value={item.quantity_ordered}
-                            onChange={(e) => updateItem(item.id, 'quantity_ordered', parseFloat(e.target.value) || 0)}
-                            min="0"
+                            onChange={(e) => {
+                              const value = Math.max(parseFloat(e.target.value) || 1, 0.01); // Minimum 0.01
+                              updateItem(item.id, 'quantity_ordered', value);
+                            }}
+                            min="0.01"
                             step="0.01"
                             className="w-20"
                             disabled={!!formData.invoice_id} // Disable if from invoice
@@ -525,8 +528,11 @@ export const CreateDeliveryNoteModal = ({
                           <Input
                             type="number"
                             value={item.quantity_delivered}
-                            onChange={(e) => updateItem(item.id, 'quantity_delivered', parseFloat(e.target.value) || 0)}
-                            min="0"
+                            onChange={(e) => {
+                              const value = Math.max(parseFloat(e.target.value) || 1, 0.01); // Minimum 0.01
+                              updateItem(item.id, 'quantity_delivered', value);
+                            }}
+                            min="0.01"
                             max={item.quantity_ordered}
                             step="0.01"
                             className="w-20"
