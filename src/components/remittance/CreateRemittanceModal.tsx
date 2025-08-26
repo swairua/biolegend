@@ -235,32 +235,48 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Information */}
+          {/* Header Information */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Basic Information</CardTitle>
+              <CardTitle className="text-lg">Remittance Details</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="adviceNumber">Advice Number</Label>
-                  <Input
-                    id="adviceNumber"
-                    value={formData.adviceNumber}
-                    onChange={(e) => setFormData({ ...formData, adviceNumber: e.target.value })}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    required
-                  />
-                </div>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="adviceNumber">Advice Number</Label>
+                <Input
+                  id="adviceNumber"
+                  value={formData.adviceNumber}
+                  onChange={(e) => handleInputChange('adviceNumber', e.target.value)}
+                  placeholder="Auto-generated"
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => handleInputChange('date', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="customer">Customer</Label>
+                <Select value={formData.customerId} onValueChange={(value) => handleInputChange('customerId', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select customer" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
@@ -268,19 +284,30 @@ export function CreateRemittanceModal({ open, onOpenChange, onSuccess }: CreateR
                 <Input
                   id="customerName"
                   value={formData.customerName}
-                  onChange={(e) => setFormData({ ...formData, customerName: e.target.value })}
-                  placeholder="Enter customer name"
+                  onChange={(e) => handleInputChange('customerName', e.target.value)}
+                  placeholder="Customer name"
                   required
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="customerAddress">Customer Address</Label>
                 <Textarea
                   id="customerAddress"
                   value={formData.customerAddress}
-                  onChange={(e) => setFormData({ ...formData, customerAddress: e.target.value })}
-                  placeholder="Enter customer address"
+                  onChange={(e) => handleInputChange('customerAddress', e.target.value)}
+                  placeholder="Customer address"
+                  rows={2}
+                />
+              </div>
+
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="notes">Notes</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
+                  placeholder="Additional notes or comments"
                   rows={3}
                 />
               </div>
