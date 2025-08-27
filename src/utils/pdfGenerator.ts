@@ -614,16 +614,16 @@ export const generatePDF = (data: DocumentData) => {
             <div class="document-details">
               <table>
                 <tr>
-                  <td class="label">${data.type === 'receipt' ? 'Receipt #' : data.type === 'remittance' ? 'Advice #' : documentTitle + ' #'}:</td>
+                  <td class="label">${data.type === 'receipt' ? 'Receipt #' : data.type === 'remittance' ? 'Advice #' : data.type === 'lpo' ? 'LPO #' : documentTitle + ' #'}:</td>
                   <td class="value">${data.number}</td>
                 </tr>
                 <tr>
-                  <td class="label">Date:</td>
+                  <td class="label">${data.type === 'lpo' ? 'Order Date' : 'Date'}:</td>
                   <td class="value">${formatDate(data.date)}</td>
                 </tr>
                 ${data.due_date ? `
                 <tr>
-                  <td class="label">Due Date:</td>
+                  <td class="label">${data.type === 'lpo' ? 'Expected Delivery' : 'Due Date'}:</td>
                   <td class="value">${formatDate(data.due_date)}</td>
                 </tr>
                 ` : ''}
@@ -633,14 +633,14 @@ export const generatePDF = (data: DocumentData) => {
                   <td class="value">${formatDate(data.valid_until)}</td>
                 </tr>
                 ` : ''}
-                ${data.lpo_number ? `
+                ${data.lpo_number && data.type !== 'lpo' ? `
                 <tr>
                   <td class="label">LPO Number:</td>
                   <td class="value">${data.lpo_number}</td>
                 </tr>
                 ` : ''}
                 <tr>
-                  <td class="label">${data.type === 'receipt' ? 'Amount Paid' : data.type === 'remittance' ? 'Total Payment' : 'Amount'}:</td>
+                  <td class="label">${data.type === 'receipt' ? 'Amount Paid' : data.type === 'remittance' ? 'Total Payment' : data.type === 'lpo' ? 'Order Total' : 'Amount'}:</td>
                   <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#7C3AED'};">${formatCurrency(data.total_amount)}</td>
                 </tr>
               </table>
