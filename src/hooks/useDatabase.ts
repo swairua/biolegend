@@ -1702,6 +1702,107 @@ export const useSuppliers = (companyId?: string) => {
   });
 };
 
+// Get potential suppliers (customers that haven't been used as suppliers yet)
+export const usePotentialSuppliers = (companyId?: string) => {
+  return useQuery({
+    queryKey: ['potential_suppliers', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
+
+      try {
+        // Get all customers for this company
+        const { data: allCustomers, error: customersError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('company_id', companyId)
+          .eq('is_active', true)
+          .order('name', { ascending: true });
+
+        if (customersError) throw customersError;
+
+        // Get existing supplier IDs from LPOs
+        const { data: lpoSuppliers, error: lpoError } = await supabase
+          .from('lpos')
+          .select('supplier_id')
+          .eq('company_id', companyId)
+          .not('supplier_id', 'is', null);
+
+        if (lpoError) throw lpoError;
+
+        const existingSupplierIds = new Set(lpoSuppliers?.map(lpo => lpo.supplier_id).filter(Boolean) || []);
+
+        // Return customers that are NOT already suppliers
+        return allCustomers?.filter(customer => !existingSupplierIds.has(customer.id)) || [];
+
+      } catch (error) {
+        console.error('Error fetching potential suppliers:', error);
+        throw error;
+      }
+    },
+    enabled: !!companyId,
+  });
+};
+
+// Get all suppliers (existing + potential) - for comprehensive supplier selection
+export const useAllSuppliersAndCustomers = (companyId?: string) => {
+  return useQuery({
+    queryKey: ['all_suppliers_customers', companyId],
+    queryFn: async () => {
+      if (!companyId) return { existing: [], potential: [], all: [] };
+
+      try {
+        // Get all customers for this company
+        const { data: allCustomers, error: customersError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('company_id', companyId)
+          .eq('is_active', true)
+          .order('name', { ascending: true });
+
+        if (customersError) throw customersError;
+
+        // Get existing supplier IDs from LPOs
+        const { data: lpoSuppliers, error: lpoError } = await supabase
+          .from('lpos')
+          .select('supplier_id')
+          .eq('company_id', companyId)
+          .not('supplier_id', 'is', null);
+
+        if (lpoError) throw lpoError;
+
+        const existingSupplierIds = new Set(lpoSuppliers?.map(lpo => lpo.supplier_id).filter(Boolean) || []);
+
+        const existing = allCustomers?.filter(customer => existingSupplierIds.has(customer.id)) || [];
+        const potential = allCustomers?.filter(customer => !existingSupplierIds.has(customer.id)) || [];
+
+        // Add labels to distinguish them
+        const existingWithLabels = existing.map(supplier => ({
+          ...supplier,
+          display_name: `${supplier.name} (Current Supplier)`,
+          is_existing_supplier: true
+        }));
+
+        const potentialWithLabels = potential.map(customer => ({
+          ...customer,
+          display_name: `${customer.name} (Customer)`,
+          is_existing_supplier: false
+        }));
+
+        return {
+          existing: existingWithLabels,
+          potential: potentialWithLabels,
+          all: [...existingWithLabels, ...potentialWithLabels]
+        };
+
+      } catch (error) {
+        console.error('Error fetching all suppliers and customers:', error);
+        throw error;
+      }
+    },
+    enabled: !!companyId,
+  });
+};
+
 // LPO Items Management Hooks
 
 // Create LPO Item
