@@ -370,6 +370,15 @@ export const CreateLPOModal = ({
     setSearchTerm('');
     setShowProductSearch(false);
     setSupplierValidation(null);
+    setShowCreateSupplier(false);
+    setNewSupplierData({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      country: ''
+    });
     onOpenChange(false);
   };
 
