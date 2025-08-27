@@ -827,7 +827,8 @@ export const CreateLPOModal = ({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <Table>
+                  <div className="overflow-x-auto">
+                    <Table className="table-fixed min-w-full">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Product</TableHead>
@@ -901,7 +902,8 @@ export const CreateLPOModal = ({
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
+                    </Table>
+                  </div>
 
                   {/* Totals */}
                   <div className="flex justify-end">
