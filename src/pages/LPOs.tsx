@@ -342,6 +342,15 @@ export default function LPOs() {
                 <Database className="h-4 w-4 mr-2" />
                 Database Audit
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCustomerSupplierAudit(!showCustomerSupplierAudit)}
+                className="border-orange-500 text-orange-600 hover:bg-orange-50"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Customer/Supplier Audit
+              </Button>
             </div>
           </div>
         </CardHeader>
