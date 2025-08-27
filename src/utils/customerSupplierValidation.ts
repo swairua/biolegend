@@ -18,7 +18,8 @@ export interface ValidationResult {
 export const validateSupplierSelection = async (
   supplierId: string,
   companyId: string,
-  supplierName?: string
+  supplierName?: string,
+  isNewlyCreated?: boolean
 ): Promise<ValidationResult> => {
   const warnings: string[] = [];
   const errors: string[] = [];
@@ -54,7 +55,8 @@ export const validateSupplierSelection = async (
     const supplierLPOCount = existingLPOs?.length || 0;
 
     // If this entity has invoices as customer, flag as potential conflict
-    if (customerInvoiceCount > 0) {
+    // Skip warnings for newly created suppliers in the same session
+    if (customerInvoiceCount > 0 && !isNewlyCreated) {
       warnings.push(
         `⚠️ CONFLICT DETECTED: This entity "${supplierName || 'Selected entity'}" already has ${customerInvoiceCount} invoice(s) as a CUSTOMER. ` +
         `Using the same entity as both customer and supplier can cause business relationship confusion and data integrity issues.`
@@ -64,20 +66,22 @@ export const validateSupplierSelection = async (
         `📋 Recommendation: Consider creating separate supplier records for entities that are also customers, or review your business relationship with this entity.`
       );
 
-      // If there are many conflicts, make it an error
-      if (customerInvoiceCount >= 10) {
+      // Only make it an error if there are many conflicts AND it's not a new supplier
+      if (customerInvoiceCount >= 25) {
         errors.push(
           `🚫 CRITICAL CONFLICT: This entity has ${customerInvoiceCount} invoices as a customer. ` +
-          `Please review this business relationship before proceeding.`
+          `Please review this business relationship before proceeding or create a separate supplier record.`
         );
       }
     }
 
-    // Informational warning about the underlying data model issue
-    warnings.push(
-      `ℹ️ DATA MODEL NOTICE: Currently, suppliers are stored in the same table as customers. ` +
-      `Consider implementing a separate suppliers table for better data organization.`
-    );
+    // Only show data model notice if there are actual conflicts or it's not a new supplier
+    if ((customerInvoiceCount > 0 && !isNewlyCreated) || supplierLPOCount > 0) {
+      warnings.push(
+        `ℹ️ DATA MODEL NOTICE: Currently, suppliers are stored in the same table as customers. ` +
+        `Consider implementing a separate suppliers table for better data organization.`
+      );
+    }
 
     const conflictData = {
       entityId: supplierId,
