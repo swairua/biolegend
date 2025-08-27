@@ -123,6 +123,64 @@ export const CreateLPOModal = ({
   );
 
   // Validate supplier selection for customer/supplier conflicts
+  // Create new supplier (customer) function
+  const handleCreateNewSupplier = async () => {
+    if (!currentCompany?.id) {
+      toast.error('Company not found');
+      return;
+    }
+
+    if (!newSupplierData.name.trim()) {
+      toast.error('Supplier name is required');
+      return;
+    }
+
+    setIsCreatingSupplier(true);
+    try {
+      // Generate customer code
+      const customerCode = `SUP-${newSupplierData.name.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+
+      const customerData = {
+        company_id: currentCompany.id,
+        customer_code: customerCode,
+        name: newSupplierData.name.trim(),
+        email: newSupplierData.email.trim() || null,
+        phone: newSupplierData.phone.trim() || null,
+        address: newSupplierData.address.trim() || null,
+        city: newSupplierData.city.trim() || null,
+        country: newSupplierData.country.trim() || null,
+        is_active: true
+      };
+
+      const newCustomer = await createCustomer.mutateAsync(customerData);
+
+      // Set as selected supplier
+      setFormData(prev => ({ ...prev, supplier_id: newCustomer.id }));
+
+      // Reset form
+      setNewSupplierData({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        country: ''
+      });
+      setShowCreateSupplier(false);
+
+      toast.success(`Supplier "${newCustomer.name}" created and selected!`);
+
+      // Validate the new supplier selection
+      await validateSupplier(newCustomer.id);
+
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+      toast.error('Failed to create supplier. Please try again.');
+    } finally {
+      setIsCreatingSupplier(false);
+    }
+  };
+
   const validateSupplier = async (supplierId: string) => {
     if (!supplierId || !currentCompany?.id) return;
 
