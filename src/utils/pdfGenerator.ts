@@ -648,10 +648,10 @@ export const generatePDF = (data: DocumentData) => {
           </div>
         </div>
         
-        <!-- Customer Section -->
+        <!-- Customer/Supplier Section -->
         <div class="customer-section">
           <div class="bill-to">
-            <div class="section-title">Bill To</div>
+            <div class="section-title">${data.type === 'lpo' ? 'Supplier' : 'Bill To'}</div>
             <div class="customer-name">${data.customer.name}</div>
             <div class="customer-details">
               ${data.customer.email ? `${data.customer.email}<br>` : ''}
@@ -661,14 +661,27 @@ export const generatePDF = (data: DocumentData) => {
               ${data.customer.country ? `, ${data.customer.country}` : ''}
             </div>
           </div>
-          
+
           <div class="ship-to">
-            <div class="section-title">Ship To</div>
-            <div class="customer-name">${data.customer.name}</div>
+            <div class="section-title">${data.type === 'lpo' ? 'Deliver To' : 'Ship To'}</div>
+            <div class="customer-name">${data.type === 'lpo' ? company.name : data.customer.name}</div>
             <div class="customer-details">
-              ${data.customer.address ? `${data.customer.address}<br>` : 'Same as billing address'}
-              ${data.customer.city ? `${data.customer.city}` : ''}
-              ${data.customer.country ? `, ${data.customer.country}` : ''}
+              ${data.type === 'lpo' ? (
+                data.delivery_address ? `${data.delivery_address}<br>` :
+                company.address ? `${company.address}<br>` : ''
+              ) : (
+                data.customer.address ? `${data.customer.address}<br>` : 'Same as billing address'
+              )}
+              ${data.type === 'lpo' ? (
+                company.city ? `${company.city}` : ''
+              ) : (
+                data.customer.city ? `${data.customer.city}` : ''
+              )}
+              ${data.type === 'lpo' ? (
+                company.country ? `, ${company.country}` : ''
+              ) : (
+                data.customer.country ? `, ${data.customer.country}` : ''
+              )}
             </div>
           </div>
         </div>
