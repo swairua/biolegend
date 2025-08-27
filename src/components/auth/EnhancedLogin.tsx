@@ -9,7 +9,7 @@ import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { AutoAdminSetup } from './AutoAdminSetup';
-import { handleAuthError, DEFAULT_ADMIN_CREDENTIALS } from '@/utils/authErrorHandler';
+import { handleAuthError } from '@/utils/authErrorHandler';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
