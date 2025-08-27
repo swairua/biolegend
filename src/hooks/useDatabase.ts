@@ -1655,25 +1655,48 @@ export const useGenerateLPONumber = () => {
   });
 };
 
-// Get suppliers (customers marked as suppliers)
+// Get suppliers (only customers that are actually used as suppliers in LPOs)
 export const useSuppliers = (companyId?: string) => {
   return useQuery({
     queryKey: ['suppliers', companyId],
     queryFn: async () => {
-      let query = supabase
-        .from('customers')
-        .select('*')
-        .eq('is_active', true)
-        .order('name', { ascending: true });
+      if (!companyId) return [];
 
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+      try {
+        // First, get unique supplier IDs from LPOs
+        const { data: lpoSuppliers, error: lpoError } = await supabase
+          .from('lpos')
+          .select('supplier_id')
+          .eq('company_id', companyId)
+          .not('supplier_id', 'is', null);
+
+        if (lpoError) throw lpoError;
+
+        // Get unique supplier IDs
+        const supplierIds = [...new Set(lpoSuppliers?.map(lpo => lpo.supplier_id).filter(Boolean))] || [];
+
+        if (supplierIds.length === 0) {
+          // No LPOs exist yet, return empty array instead of all customers
+          return [];
+        }
+
+        // Get only customers that are actually used as suppliers
+        const { data: suppliers, error: suppliersError } = await supabase
+          .from('customers')
+          .select('*')
+          .in('id', supplierIds)
+          .eq('is_active', true)
+          .eq('company_id', companyId)
+          .order('name', { ascending: true });
+
+        if (suppliersError) throw suppliersError;
+
+        return suppliers || [];
+
+      } catch (error) {
+        console.error('Error fetching suppliers:', error);
+        throw error;
       }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-      return data;
     },
     enabled: !!companyId,
   });
