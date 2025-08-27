@@ -253,6 +253,16 @@ export const CreateLPOModal = ({
     }
   };
 
+  const handleSupplierChange = (supplierId: string) => {
+    setFormData(prev => ({ ...prev, supplier_id: supplierId }));
+
+    // Clear previous validation and validate new supplier
+    setSupplierValidation(null);
+    if (supplierId) {
+      validateSupplier(supplierId);
+    }
+  };
+
   const handleClose = () => {
     setFormData({
       supplier_id: '',
@@ -267,6 +277,7 @@ export const CreateLPOModal = ({
     setItems([]);
     setSearchTerm('');
     setShowProductSearch(false);
+    setSupplierValidation(null);
     onOpenChange(false);
   };
 
