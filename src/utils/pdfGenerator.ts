@@ -607,8 +607,21 @@ export const generatePDF = (data: DocumentData) => {
               ${company.phone ? `Tel: ${company.phone}<br>` : ''}
               ${company.email ? `Email: ${company.email}` : ''}
             </div>
+
+            <!-- Client Details Section -->
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+              <div class="section-title" style="font-size: 12px; font-weight: bold; color: #0891B2; margin-bottom: 8px; text-transform: uppercase;">${data.type === 'lpo' ? 'Supplier' : 'Client'}</div>
+              <div class="customer-name" style="font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #212529;">${data.customer.name}</div>
+              <div class="customer-details" style="font-size: 10px; color: #666; line-height: 1.4;">
+                ${data.customer.email ? `${data.customer.email}<br>` : ''}
+                ${data.customer.phone ? `${data.customer.phone}<br>` : ''}
+                ${data.customer.address ? `${data.customer.address}<br>` : ''}
+                ${data.customer.city ? `${data.customer.city}` : ''}
+                ${data.customer.country ? `, ${data.customer.country}` : ''}
+              </div>
+            </div>
           </div>
-          
+
           <div class="document-info">
             <div class="document-title">${documentTitle}</div>
             <div class="document-details">
@@ -644,44 +657,6 @@ export const generatePDF = (data: DocumentData) => {
                   <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#7C3AED'};">${formatCurrency(data.total_amount)}</td>
                 </tr>
               </table>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Customer/Supplier Section -->
-        <div class="customer-section">
-          <div class="bill-to">
-            <div class="section-title">${data.type === 'lpo' ? 'Supplier' : 'Bill To'}</div>
-            <div class="customer-name">${data.customer.name}</div>
-            <div class="customer-details">
-              ${data.customer.email ? `${data.customer.email}<br>` : ''}
-              ${data.customer.phone ? `${data.customer.phone}<br>` : ''}
-              ${data.customer.address ? `${data.customer.address}<br>` : ''}
-              ${data.customer.city ? `${data.customer.city}` : ''}
-              ${data.customer.country ? `, ${data.customer.country}` : ''}
-            </div>
-          </div>
-
-          <div class="ship-to">
-            <div class="section-title">${data.type === 'lpo' ? 'Deliver To' : 'Ship To'}</div>
-            <div class="customer-name">${data.type === 'lpo' ? company.name : data.customer.name}</div>
-            <div class="customer-details">
-              ${data.type === 'lpo' ? (
-                data.delivery_address ? `${data.delivery_address}<br>` :
-                company.address ? `${company.address}<br>` : ''
-              ) : (
-                data.customer.address ? `${data.customer.address}<br>` : 'Same as billing address'
-              )}
-              ${data.type === 'lpo' ? (
-                company.city ? `${company.city}` : ''
-              ) : (
-                data.customer.city ? `${data.customer.city}` : ''
-              )}
-              ${data.type === 'lpo' ? (
-                company.country ? `, ${company.country}` : ''
-              ) : (
-                data.customer.country ? `, ${data.customer.country}` : ''
-              )}
             </div>
           </div>
         </div>
