@@ -435,9 +435,20 @@ export const CreateLPOModal = ({
                     </>
                   )}
 
+                  {/* Create New Supplier Option */}
+                  <div className="px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border-b border-t">
+                    ➕ Add New Supplier
+                  </div>
+                  <SelectItem value="__create_new__" onSelect={() => setShowCreateSupplier(true)}>
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      Create New Supplier...
+                    </div>
+                  </SelectItem>
+
                   {(!supplierData?.existing?.length && !supplierData?.potential?.length) && (
                     <div className="px-2 py-2 text-xs text-muted-foreground text-center">
-                      No customers available. Create customers first.
+                      No existing suppliers found. Use "Create New Supplier" above to add one.
                     </div>
                   )}
                 </SelectContent>
