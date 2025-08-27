@@ -33,6 +33,7 @@ import {
 import { useCreateLPO, useGenerateLPONumber, useSuppliers, useProducts, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { validateLPO } from '@/utils/lpoValidation';
+import { validateSupplierSelection, ValidationResult } from '@/utils/customerSupplierValidation';
 
 interface LPOItem {
   id: string;
