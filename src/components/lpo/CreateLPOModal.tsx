@@ -79,6 +79,16 @@ export const CreateLPOModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [supplierValidation, setSupplierValidation] = useState<ValidationResult | null>(null);
   const [isValidatingSupplier, setIsValidatingSupplier] = useState(false);
+  const [showCreateSupplier, setShowCreateSupplier] = useState(false);
+  const [newSupplierData, setNewSupplierData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    country: ''
+  });
+  const [isCreatingSupplier, setIsCreatingSupplier] = useState(false);
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
