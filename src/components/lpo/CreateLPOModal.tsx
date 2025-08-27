@@ -97,6 +97,7 @@ export const CreateLPOModal = ({
   const { data: products } = useProducts(currentCompany?.id);
   const createLPO = useCreateLPO();
   const generateLPONumber = useGenerateLPONumber();
+  const createCustomer = useCreateCustomer();
 
   useEffect(() => {
     if (open && currentCompany?.id) {
