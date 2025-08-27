@@ -263,7 +263,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     }
                   })
                   .catch(profileError => {
-                    console.warn('⚠️ Background profile fetch failed:', profileError);
+                    console.warn('⚠️ Background profile fetch failed:', {
+                      message: profileError instanceof Error ? profileError.message : String(profileError),
+                      code: profileError && typeof profileError === 'object' && 'code' in profileError ? profileError.code : undefined
+                    });
                   });
 
                 return { session: initialSession, profile: null, error: null };
@@ -302,7 +305,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             // Update last login silently (don't await)
             if (userProfile) {
-              updateLastLogin(initialSession.user.id).catch(console.error);
+              updateLastLogin(initialSession.user.id).catch(error => {
+                console.error('Error updating last login:', {
+                  message: error instanceof Error ? error.message : String(error),
+                  userId: initialSession.user.id
+                });
+              });
             }
 
             console.log('✅ Auth initialization completed successfully');
@@ -461,7 +469,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { error } = await supabase.auth.signOut();
 
       if (error) {
-        console.error('❌ Sign out error:', error);
+        console.error('❌ Sign out error:', {
+          message: error instanceof Error ? error.message : String(error),
+          code: error && typeof error === 'object' && 'code' in error ? error.code : undefined
+        });
         setTimeout(() => toast.error('Error signing out'), 0);
       } else {
         console.log('✅ Supabase sign out successful');
@@ -478,7 +489,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('🎉 Sign out complete!');
       }
     } catch (error) {
-      console.error('❌ Sign out exception:', error);
+      console.error('❌ Sign out exception:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       setTimeout(() => toast.error('Error signing out'), 0);
     } finally {
       if (mountedRef.current) {
@@ -518,7 +532,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error updating profile:', error);
+        console.error('Error updating profile:', {
+          message: error.message,
+          code: error.code,
+          details: error.details
+        });
         setTimeout(() => toast.error('Failed to update profile'), 0);
         return { error: new Error(error.message) };
       }
@@ -528,7 +546,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setTimeout(() => toast.success('Profile updated successfully'), 0);
       return { error: null };
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating profile:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       setTimeout(() => toast.error('Failed to update profile'), 0);
       return { error: error as Error };
     }
