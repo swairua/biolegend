@@ -508,6 +508,120 @@ export const CreateLPOModal = ({
             </div>
           )}
 
+          {/* Create New Supplier Form */}
+          {showCreateSupplier && (
+            <Card className="border-blue-500 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between text-blue-700">
+                  <span className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Create New Supplier
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowCreateSupplier(false);
+                      setNewSupplierData({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        address: '',
+                        city: '',
+                        country: ''
+                      });
+                    }}
+                  >
+                    ✕
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_name">Supplier Name *</Label>
+                    <Input
+                      id="new_supplier_name"
+                      value={newSupplierData.name}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter supplier name"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_email">Email</Label>
+                    <Input
+                      id="new_supplier_email"
+                      type="email"
+                      value={newSupplierData.email}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="supplier@example.com"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_phone">Phone</Label>
+                    <Input
+                      id="new_supplier_phone"
+                      value={newSupplierData.phone}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="+254 700 000000"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_city">City</Label>
+                    <Input
+                      id="new_supplier_city"
+                      value={newSupplierData.city}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Nairobi"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="new_supplier_address">Address</Label>
+                    <Input
+                      id="new_supplier_address"
+                      value={newSupplierData.address}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="Street address"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateSupplier(false);
+                      setNewSupplierData({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        address: '',
+                        city: '',
+                        country: ''
+                      });
+                    }}
+                    disabled={isCreatingSupplier}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleCreateNewSupplier}
+                    disabled={isCreatingSupplier || !newSupplierData.name.trim()}
+                  >
+                    {isCreatingSupplier ? 'Creating...' : 'Create Supplier'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="delivery_date">Expected Delivery Date</Label>
