@@ -47,6 +47,7 @@ export default function LPOs() {
   const [selectedLPO, setSelectedLPO] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAuditPanel, setShowAuditPanel] = useState(false);
+  const [showCustomerSupplierAudit, setShowCustomerSupplierAudit] = useState(false);
 
   // Database hooks
   const { data: companies } = useCompanies();
