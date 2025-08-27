@@ -252,6 +252,11 @@ export default function LPOs() {
         <DatabaseAuditPanel />
       )}
 
+      {/* Customer vs Supplier Audit Panel */}
+      {showCustomerSupplierAudit && (
+        <LPOCustomerSupplierAudit />
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
