@@ -308,9 +308,10 @@ export const CreateLPOModal = ({
             </div>
             <div className="space-y-2">
               <Label htmlFor="supplier_id">Supplier *</Label>
-              <Select 
-                value={formData.supplier_id} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, supplier_id: value }))}
+              <Select
+                value={formData.supplier_id}
+                onValueChange={handleSupplierChange}
+                disabled={isValidatingSupplier}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select supplier" />
