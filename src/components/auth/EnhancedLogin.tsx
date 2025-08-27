@@ -21,14 +21,6 @@ export function EnhancedLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const fillAdminCredentials = () => {
-    setFormData({
-      email: DEFAULT_ADMIN_CREDENTIALS.email,
-      password: DEFAULT_ADMIN_CREDENTIALS.password
-    });
-    setFormErrors({});
-    toast.info('Admin credentials filled in');
-  };
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
