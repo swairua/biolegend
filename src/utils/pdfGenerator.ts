@@ -1273,10 +1273,12 @@ export const downloadDeliveryNotePDF = async (deliveryNote: any, company?: Compa
 // Function for LPO PDF generation
 export const downloadLPOPDF = async (lpo: any, company?: CompanyDetails) => {
   const documentData: DocumentData = {
-    type: 'quotation', // Use quotation type for similar styling to LPO
+    type: 'lpo', // Use LPO document type
     number: lpo.lpo_number,
     date: lpo.lpo_date,
     due_date: lpo.delivery_date,
+    delivery_date: lpo.delivery_date,
+    delivery_address: lpo.delivery_address,
     company: company, // Pass company details
     customer: {
       name: lpo.suppliers?.name || 'Unknown Supplier',
@@ -1308,11 +1310,8 @@ export const downloadLPOPDF = async (lpo: any, company?: CompanyDetails) => {
     subtotal: lpo.subtotal,
     tax_amount: lpo.tax_amount,
     total_amount: lpo.total_amount,
-    notes: lpo.notes,
+    notes: `${lpo.notes || ''}${lpo.contact_person ? `\n\nContact Person: ${lpo.contact_person}` : ''}${lpo.contact_phone ? `\nContact Phone: ${lpo.contact_phone}` : ''}`.trim(),
     terms_and_conditions: lpo.terms_and_conditions,
-    // Add delivery information in notes if present
-    delivery_date: lpo.delivery_date,
-    delivery_address: lpo.delivery_address,
   };
 
   return generatePDF(documentData);
