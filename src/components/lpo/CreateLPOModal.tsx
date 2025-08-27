@@ -82,7 +82,8 @@ export const CreateLPOModal = ({
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
-  const { data: suppliers } = useSuppliers(currentCompany?.id);
+  const { data: supplierData } = useAllSuppliersAndCustomers(currentCompany?.id);
+  const suppliers = supplierData?.all || [];
   const { data: products } = useProducts(currentCompany?.id);
   const createLPO = useCreateLPO();
   const generateLPONumber = useGenerateLPONumber();
