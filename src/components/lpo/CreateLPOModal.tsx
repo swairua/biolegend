@@ -495,40 +495,101 @@ export const CreateLPOModal = ({
             <div className="space-y-3">
               {supplierValidation.errors.length > 0 && (
                 <Alert className="border-red-500 bg-red-50">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Supplier Selection Error</AlertTitle>
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertTitle className="text-red-800">⚠️ Critical Issue - Action Required</AlertTitle>
                   <AlertDescription>
-                    <ul className="list-disc list-inside space-y-1">
+                    <div className="space-y-2">
                       {supplierValidation.errors.map((error, index) => (
-                        <li key={index} className="text-sm">{error}</li>
+                        <div key={index} className="text-sm text-red-700 bg-red-100 p-2 rounded">
+                          {error}
+                        </div>
                       ))}
-                    </ul>
+                      <div className="text-xs text-red-600 font-medium mt-2">
+                        ⛔ You must resolve these issues before creating the LPO.
+                      </div>
+                    </div>
                   </AlertDescription>
                 </Alert>
               )}
 
               {supplierValidation.warnings.length > 0 && (
-                <Alert className="border-orange-500 bg-orange-50">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Supplier Selection Warning</AlertTitle>
-                  <AlertDescription>
-                    <ul className="list-disc list-inside space-y-1">
-                      {supplierValidation.warnings.map((warning, index) => (
-                        <li key={index} className="text-sm">{warning}</li>
-                      ))}
-                    </ul>
-                    {supplierValidation.conflictData && supplierValidation.conflictData.customerInvoiceCount > 0 && (
-                      <div className="mt-3 p-3 bg-white rounded border">
-                        <p className="font-medium text-sm">Conflict Summary:</p>
-                        <ul className="text-xs space-y-1 mt-1">
-                          <li>• Entity: {supplierValidation.conflictData.entityName}</li>
-                          <li>• Customer Invoices: {supplierValidation.conflictData.customerInvoiceCount}</li>
-                          <li>• Supplier LPOs: {supplierValidation.conflictData.supplierLPOCount}</li>
-                        </ul>
+                <div className="space-y-2">
+                  {supplierValidation.warnings.map((warning, index) => {
+                    // Determine alert type based on warning content
+                    const isDataModelNotice = warning.includes('DATA MODEL NOTICE');
+                    const isMinorConflict = warning.includes('MINOR CONFLICT');
+                    const isModerateConflict = warning.includes('MODERATE CONFLICT');
+                    const isTip = warning.includes('TIP:');
+
+                    if (isDataModelNotice) {
+                      return (
+                        <Alert key={index} className="border-blue-300 bg-blue-50">
+                          <AlertTriangle className="h-4 w-4 text-blue-600" />
+                          <AlertTitle className="text-blue-800">ℹ️ System Information</AlertTitle>
+                          <AlertDescription className="text-sm text-blue-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else if (isMinorConflict) {
+                      return (
+                        <Alert key={index} className="border-yellow-300 bg-yellow-50">
+                          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                          <AlertTitle className="text-yellow-800">ℹ️ Minor Conflict - Informational</AlertTitle>
+                          <AlertDescription className="text-sm text-yellow-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else if (isModerateConflict) {
+                      return (
+                        <Alert key={index} className="border-orange-400 bg-orange-50">
+                          <AlertTriangle className="h-4 w-4 text-orange-600" />
+                          <AlertTitle className="text-orange-800">⚠️ Moderate Conflict - Please Review</AlertTitle>
+                          <AlertDescription className="text-sm text-orange-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else if (isTip) {
+                      return (
+                        <Alert key={index} className="border-green-300 bg-green-50">
+                          <AlertTriangle className="h-4 w-4 text-green-600" />
+                          <AlertTitle className="text-green-800">💡 Helpful Suggestion</AlertTitle>
+                          <AlertDescription className="text-sm text-green-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else {
+                      return (
+                        <Alert key={index} className="border-orange-500 bg-orange-50">
+                          <AlertTriangle className="h-4 w-4 text-orange-600" />
+                          <AlertTitle className="text-orange-800">⚠️ Warning</AlertTitle>
+                          <AlertDescription className="text-sm text-orange-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    }
+                  })}
+
+                  {supplierValidation.conflictData && supplierValidation.conflictData.customerInvoiceCount > 0 && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
+                      <p className="font-medium text-sm text-gray-800">📊 Conflict Summary:</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                        <div className="bg-white p-2 rounded">
+                          <div className="font-medium text-gray-600">Entity Name</div>
+                          <div className="text-gray-800">{supplierValidation.conflictData.entityName}</div>
+                        </div>
+                        <div className="bg-white p-2 rounded">
+                          <div className="font-medium text-gray-600">Customer Invoices</div>
+                          <div className="text-gray-800">{supplierValidation.conflictData.customerInvoiceCount}</div>
+                        </div>
                       </div>
-                    )}
-                  </AlertDescription>
-                </Alert>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
