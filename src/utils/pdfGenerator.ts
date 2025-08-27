@@ -917,6 +917,7 @@ export const generatePDF = (data: DocumentData) => {
           ${data.type === 'delivery' ? '<br><em>This delivery note confirms the items delivered</em>' : ''}
           ${data.type === 'receipt' ? '<br><em>This receipt serves as proof of payment received</em>' : ''}
           ${data.type === 'remittance' ? '<br><em>This remittance advice details payments made to your account</em>' : ''}
+          ${data.type === 'lpo' ? '<br><em>This Local Purchase Order serves as an official request for goods/services</em>' : ''}
         </div>
       </div>
     </body>
