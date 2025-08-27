@@ -340,6 +340,12 @@ export const CreateLPOModal = ({
   };
 
   const handleSupplierChange = (supplierId: string) => {
+    // Handle create new supplier option
+    if (supplierId === '__create_new__') {
+      setShowCreateSupplier(true);
+      return;
+    }
+
     setFormData(prev => ({ ...prev, supplier_id: supplierId }));
 
     // Clear previous validation and validate new supplier
