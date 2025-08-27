@@ -336,6 +336,49 @@ export const CreateLPOModal = ({
             </div>
           </div>
 
+          {/* Supplier Validation Alerts */}
+          {supplierValidation && (supplierValidation.warnings.length > 0 || supplierValidation.errors.length > 0) && (
+            <div className="space-y-3">
+              {supplierValidation.errors.length > 0 && (
+                <Alert className="border-red-500 bg-red-50">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Supplier Selection Error</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc list-inside space-y-1">
+                      {supplierValidation.errors.map((error, index) => (
+                        <li key={index} className="text-sm">{error}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {supplierValidation.warnings.length > 0 && (
+                <Alert className="border-orange-500 bg-orange-50">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Supplier Selection Warning</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc list-inside space-y-1">
+                      {supplierValidation.warnings.map((warning, index) => (
+                        <li key={index} className="text-sm">{warning}</li>
+                      ))}
+                    </ul>
+                    {supplierValidation.conflictData && supplierValidation.conflictData.customerInvoiceCount > 0 && (
+                      <div className="mt-3 p-3 bg-white rounded border">
+                        <p className="font-medium text-sm">Conflict Summary:</p>
+                        <ul className="text-xs space-y-1 mt-1">
+                          <li>• Entity: {supplierValidation.conflictData.entityName}</li>
+                          <li>• Customer Invoices: {supplierValidation.conflictData.customerInvoiceCount}</li>
+                          <li>• Supplier LPOs: {supplierValidation.conflictData.supplierLPOCount}</li>
+                        </ul>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="delivery_date">Expected Delivery Date</Label>
