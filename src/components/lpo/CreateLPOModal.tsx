@@ -334,11 +334,43 @@ export const CreateLPOModal = ({
                   <SelectValue placeholder="Select supplier" />
                 </SelectTrigger>
                 <SelectContent>
-                  {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
+                  {supplierData?.existing && supplierData.existing.length > 0 && (
+                    <>
+                      <div className="px-2 py-1 text-xs font-semibold text-green-600 bg-green-50 border-b">
+                        ✓ Current Suppliers
+                      </div>
+                      {supplierData.existing.map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            {supplier.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+
+                  {supplierData?.potential && supplierData.potential.length > 0 && (
+                    <>
+                      <div className="px-2 py-1 text-xs font-semibold text-orange-600 bg-orange-50 border-b border-t">
+                        ⚠ Customers (Will Create Supplier Role)
+                      </div>
+                      {supplierData.potential.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                            {customer.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+
+                  {(!supplierData?.existing?.length && !supplierData?.potential?.length) && (
+                    <div className="px-2 py-2 text-xs text-muted-foreground text-center">
+                      No customers available. Create customers first.
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
