@@ -209,6 +209,21 @@ export const CreateLPOModal = ({
       return;
     }
 
+    // Check supplier validation
+    if (supplierValidation && !supplierValidation.isValid) {
+      toast.error('Please resolve supplier validation errors before creating LPO');
+      return;
+    }
+
+    // Show final warning for supplier conflicts
+    if (supplierValidation && supplierValidation.warnings.length > 0 && supplierValidation.conflictData?.customerInvoiceCount) {
+      const proceed = window.confirm(
+        `WARNING: This supplier "${supplierValidation.conflictData.entityName}" has ${supplierValidation.conflictData.customerInvoiceCount} invoice(s) as a customer. ` +
+        `This creates a customer/supplier conflict. Do you want to proceed anyway?`
+      );
+      if (!proceed) return;
+    }
+
     setIsSubmitting(true);
     try {
       const lpoData = {
