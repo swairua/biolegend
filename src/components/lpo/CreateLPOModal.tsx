@@ -89,6 +89,7 @@ export const CreateLPOModal = ({
     country: ''
   });
   const [isCreatingSupplier, setIsCreatingSupplier] = useState(false);
+  const [newlyCreatedSupplierId, setNewlyCreatedSupplierId] = useState<string | null>(null);
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
@@ -154,8 +155,9 @@ export const CreateLPOModal = ({
 
       const newCustomer = await createCustomer.mutateAsync(customerData);
 
-      // Set as selected supplier
+      // Set as selected supplier and mark as newly created
       setFormData(prev => ({ ...prev, supplier_id: newCustomer.id }));
+      setNewlyCreatedSupplierId(newCustomer.id);
 
       // Reset form
       setNewSupplierData({
@@ -170,8 +172,8 @@ export const CreateLPOModal = ({
 
       toast.success(`Supplier "${newCustomer.name}" created and selected!`);
 
-      // Validate the new supplier selection
-      await validateSupplier(newCustomer.id);
+      // Validate the new supplier selection (mark as newly created)
+      await validateSupplier(newCustomer.id, true);
 
     } catch (error) {
       console.error('Error creating supplier:', error);
@@ -181,7 +183,7 @@ export const CreateLPOModal = ({
     }
   };
 
-  const validateSupplier = async (supplierId: string) => {
+  const validateSupplier = async (supplierId: string, isNewlyCreated: boolean = false) => {
     if (!supplierId || !currentCompany?.id) return;
 
     setIsValidatingSupplier(true);
@@ -190,14 +192,16 @@ export const CreateLPOModal = ({
       const result = await validateSupplierSelection(
         supplierId,
         currentCompany.id,
-        supplier?.name
+        supplier?.name,
+        isNewlyCreated
       );
       setSupplierValidation(result);
 
-      // Show toast for critical errors
+      // Show toast for critical errors only
       if (!result.isValid && result.errors.length > 0) {
         toast.error('Supplier validation failed: ' + result.errors[0]);
-      } else if (result.warnings.length > 0) {
+      } else if (result.warnings.length > 0 && !isNewlyCreated) {
+        // Only show warning toast for existing suppliers with conflicts
         toast.warning('Supplier conflict detected - please review the warnings below');
       }
     } catch (error) {
@@ -279,14 +283,17 @@ export const CreateLPOModal = ({
       return;
     }
 
-    // Check supplier validation
-    if (supplierValidation && !supplierValidation.isValid) {
+    // Check supplier validation - only block on critical errors
+    if (supplierValidation && !supplierValidation.isValid && supplierValidation.errors.length > 0) {
       toast.error('Please resolve supplier validation errors before creating LPO');
       return;
     }
 
-    // Show final warning for supplier conflicts
-    if (supplierValidation && supplierValidation.warnings.length > 0 && supplierValidation.conflictData?.customerInvoiceCount) {
+    // Show final warning for supplier conflicts (only for existing suppliers with significant conflicts)
+    if (supplierValidation && supplierValidation.warnings.length > 0 &&
+        supplierValidation.conflictData?.customerInvoiceCount &&
+        supplierValidation.conflictData.customerInvoiceCount >= 5 &&
+        formData.supplier_id !== newlyCreatedSupplierId) {
       const proceed = window.confirm(
         `WARNING: This supplier "${supplierValidation.conflictData.entityName}" has ${supplierValidation.conflictData.customerInvoiceCount} invoice(s) as a customer. ` +
         `This creates a customer/supplier conflict. Do you want to proceed anyway?`
@@ -351,7 +358,9 @@ export const CreateLPOModal = ({
     // Clear previous validation and validate new supplier
     setSupplierValidation(null);
     if (supplierId) {
-      validateSupplier(supplierId);
+      // Check if this is the newly created supplier
+      const isNewlyCreated = supplierId === newlyCreatedSupplierId;
+      validateSupplier(supplierId, isNewlyCreated);
     }
   };
 
@@ -370,6 +379,7 @@ export const CreateLPOModal = ({
     setSearchTerm('');
     setShowProductSearch(false);
     setSupplierValidation(null);
+    setNewlyCreatedSupplierId(null);
     setShowCreateSupplier(false);
     setNewSupplierData({
       name: '',
@@ -485,40 +495,101 @@ export const CreateLPOModal = ({
             <div className="space-y-3">
               {supplierValidation.errors.length > 0 && (
                 <Alert className="border-red-500 bg-red-50">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Supplier Selection Error</AlertTitle>
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertTitle className="text-red-800">⚠️ Critical Issue - Action Required</AlertTitle>
                   <AlertDescription>
-                    <ul className="list-disc list-inside space-y-1">
+                    <div className="space-y-2">
                       {supplierValidation.errors.map((error, index) => (
-                        <li key={index} className="text-sm">{error}</li>
+                        <div key={index} className="text-sm text-red-700 bg-red-100 p-2 rounded">
+                          {error}
+                        </div>
                       ))}
-                    </ul>
+                      <div className="text-xs text-red-600 font-medium mt-2">
+                        ⛔ You must resolve these issues before creating the LPO.
+                      </div>
+                    </div>
                   </AlertDescription>
                 </Alert>
               )}
 
               {supplierValidation.warnings.length > 0 && (
-                <Alert className="border-orange-500 bg-orange-50">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertTitle>Supplier Selection Warning</AlertTitle>
-                  <AlertDescription>
-                    <ul className="list-disc list-inside space-y-1">
-                      {supplierValidation.warnings.map((warning, index) => (
-                        <li key={index} className="text-sm">{warning}</li>
-                      ))}
-                    </ul>
-                    {supplierValidation.conflictData && supplierValidation.conflictData.customerInvoiceCount > 0 && (
-                      <div className="mt-3 p-3 bg-white rounded border">
-                        <p className="font-medium text-sm">Conflict Summary:</p>
-                        <ul className="text-xs space-y-1 mt-1">
-                          <li>• Entity: {supplierValidation.conflictData.entityName}</li>
-                          <li>• Customer Invoices: {supplierValidation.conflictData.customerInvoiceCount}</li>
-                          <li>• Supplier LPOs: {supplierValidation.conflictData.supplierLPOCount}</li>
-                        </ul>
+                <div className="space-y-2">
+                  {supplierValidation.warnings.map((warning, index) => {
+                    // Determine alert type based on warning content
+                    const isDataModelNotice = warning.includes('DATA MODEL NOTICE');
+                    const isMinorConflict = warning.includes('MINOR CONFLICT');
+                    const isModerateConflict = warning.includes('MODERATE CONFLICT');
+                    const isTip = warning.includes('TIP:');
+
+                    if (isDataModelNotice) {
+                      return (
+                        <Alert key={index} className="border-blue-300 bg-blue-50">
+                          <AlertTriangle className="h-4 w-4 text-blue-600" />
+                          <AlertTitle className="text-blue-800">ℹ️ System Information</AlertTitle>
+                          <AlertDescription className="text-sm text-blue-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else if (isMinorConflict) {
+                      return (
+                        <Alert key={index} className="border-yellow-300 bg-yellow-50">
+                          <AlertTriangle className="h-4 w-4 text-yellow-600" />
+                          <AlertTitle className="text-yellow-800">ℹ️ Minor Conflict - Informational</AlertTitle>
+                          <AlertDescription className="text-sm text-yellow-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else if (isModerateConflict) {
+                      return (
+                        <Alert key={index} className="border-orange-400 bg-orange-50">
+                          <AlertTriangle className="h-4 w-4 text-orange-600" />
+                          <AlertTitle className="text-orange-800">⚠️ Moderate Conflict - Please Review</AlertTitle>
+                          <AlertDescription className="text-sm text-orange-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else if (isTip) {
+                      return (
+                        <Alert key={index} className="border-green-300 bg-green-50">
+                          <AlertTriangle className="h-4 w-4 text-green-600" />
+                          <AlertTitle className="text-green-800">💡 Helpful Suggestion</AlertTitle>
+                          <AlertDescription className="text-sm text-green-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    } else {
+                      return (
+                        <Alert key={index} className="border-orange-500 bg-orange-50">
+                          <AlertTriangle className="h-4 w-4 text-orange-600" />
+                          <AlertTitle className="text-orange-800">⚠️ Warning</AlertTitle>
+                          <AlertDescription className="text-sm text-orange-700">
+                            {warning}
+                          </AlertDescription>
+                        </Alert>
+                      );
+                    }
+                  })}
+
+                  {supplierValidation.conflictData && supplierValidation.conflictData.customerInvoiceCount > 0 && (
+                    <div className="mt-3 p-3 bg-gray-50 rounded border border-gray-200">
+                      <p className="font-medium text-sm text-gray-800">📊 Conflict Summary:</p>
+                      <div className="grid grid-cols-2 gap-2 text-xs mt-2">
+                        <div className="bg-white p-2 rounded">
+                          <div className="font-medium text-gray-600">Entity Name</div>
+                          <div className="text-gray-800">{supplierValidation.conflictData.entityName}</div>
+                        </div>
+                        <div className="bg-white p-2 rounded">
+                          <div className="font-medium text-gray-600">Customer Invoices</div>
+                          <div className="text-gray-800">{supplierValidation.conflictData.customerInvoiceCount}</div>
+                        </div>
                       </div>
-                    )}
-                  </AlertDescription>
-                </Alert>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -756,7 +827,8 @@ export const CreateLPOModal = ({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <Table>
+                  <div className="overflow-x-auto">
+                    <Table className="table-fixed min-w-full">
                     <TableHeader>
                       <TableRow>
                         <TableHead>Product</TableHead>
@@ -830,7 +902,8 @@ export const CreateLPOModal = ({
                         </TableRow>
                       ))}
                     </TableBody>
-                  </Table>
+                    </Table>
+                  </div>
 
                   {/* Totals */}
                   <div className="flex justify-end">

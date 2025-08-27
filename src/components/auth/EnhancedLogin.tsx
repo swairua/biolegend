@@ -9,7 +9,7 @@ import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { AutoAdminSetup } from './AutoAdminSetup';
-import { handleAuthError, DEFAULT_ADMIN_CREDENTIALS } from '@/utils/authErrorHandler';
+import { handleAuthError } from '@/utils/authErrorHandler';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
@@ -21,14 +21,6 @@ export function EnhancedLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const fillAdminCredentials = () => {
-    setFormData({
-      email: DEFAULT_ADMIN_CREDENTIALS.email,
-      password: DEFAULT_ADMIN_CREDENTIALS.password
-    });
-    setFormErrors({});
-    toast.info('Admin credentials filled in');
-  };
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -164,16 +156,6 @@ export function EnhancedLogin() {
                 )}
               </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={fillAdminCredentials}
-                className="w-full text-xs"
-                disabled={loading}
-              >
-                Use Admin Credentials
-              </Button>
             </div>
           </form>
 
