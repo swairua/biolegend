@@ -28,7 +28,7 @@ import {
   Package,
   Edit
 } from 'lucide-react';
-import { useUpdateLPOWithItems, useSuppliers, useProducts, useCompanies } from '@/hooks/useDatabase';
+import { useUpdateLPOWithItems, useAllSuppliersAndCustomers, useProducts, useCompanies } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { validateLPOEdit } from '@/utils/lpoValidation';
 
@@ -77,7 +77,8 @@ export const EditLPOModal = ({
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
-  const { data: suppliers } = useSuppliers(currentCompany?.id);
+  const { data: supplierData } = useAllSuppliersAndCustomers(currentCompany?.id);
+  const suppliers = supplierData?.all || [];
   const { data: products } = useProducts(currentCompany?.id);
   const updateLPOWithItems = useUpdateLPOWithItems();
 

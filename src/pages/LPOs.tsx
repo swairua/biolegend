@@ -38,6 +38,7 @@ import { ViewLPOModal } from '@/components/lpo/ViewLPOModal';
 import { EditLPOModal } from '@/components/lpo/EditLPOModal';
 import { DatabaseAuditPanel } from '@/components/DatabaseAuditPanel';
 import { DirectForceMigration } from '@/components/DirectForceMigration';
+import { LPOCustomerSupplierAudit } from '@/components/LPOCustomerSupplierAudit';
 
 export default function LPOs() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -46,6 +47,7 @@ export default function LPOs() {
   const [selectedLPO, setSelectedLPO] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAuditPanel, setShowAuditPanel] = useState(false);
+  const [showCustomerSupplierAudit, setShowCustomerSupplierAudit] = useState(false);
 
   // Database hooks
   const { data: companies } = useCompanies();
@@ -250,6 +252,11 @@ export default function LPOs() {
         <DatabaseAuditPanel />
       )}
 
+      {/* Customer vs Supplier Audit Panel */}
+      {showCustomerSupplierAudit && (
+        <LPOCustomerSupplierAudit />
+      )}
+
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
@@ -339,6 +346,15 @@ export default function LPOs() {
               >
                 <Database className="h-4 w-4 mr-2" />
                 Database Audit
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCustomerSupplierAudit(!showCustomerSupplierAudit)}
+                className="border-orange-500 text-orange-600 hover:bg-orange-50"
+              >
+                <User className="h-4 w-4 mr-2" />
+                Customer/Supplier Audit
               </Button>
             </div>
           </div>

@@ -5,6 +5,7 @@ export const mapDeliveryNoteForDisplay = (deliveryNote: DeliveryNote & any) => {
   return {
     ...deliveryNote,
     delivery_note_number: deliveryNote.delivery_number || deliveryNote.delivery_note_number,
+    invoice_number: deliveryNote.invoices?.invoice_number || deliveryNote.invoice_number,
   };
 };
 

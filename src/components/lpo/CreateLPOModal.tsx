@@ -20,19 +20,22 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { 
-  Plus, 
-  Trash2, 
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Plus,
+  Trash2,
   Search,
   ShoppingCart,
   Package,
   User,
   Building2,
-  Calendar
+  Calendar,
+  AlertTriangle
 } from 'lucide-react';
-import { useCreateLPO, useGenerateLPONumber, useSuppliers, useProducts, useCompanies } from '@/hooks/useDatabase';
+import { useCreateLPO, useGenerateLPONumber, useAllSuppliersAndCustomers, useProducts, useCompanies, useCreateCustomer } from '@/hooks/useDatabase';
 import { toast } from 'sonner';
 import { validateLPO } from '@/utils/lpoValidation';
+import { validateSupplierSelection, ValidationResult } from '@/utils/customerSupplierValidation';
 
 interface LPOItem {
   id: string;
@@ -74,13 +77,27 @@ export const CreateLPOModal = ({
   const [showProductSearch, setShowProductSearch] = useState(false);
   const [lpoNumber, setLpoNumber] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [supplierValidation, setSupplierValidation] = useState<ValidationResult | null>(null);
+  const [isValidatingSupplier, setIsValidatingSupplier] = useState(false);
+  const [showCreateSupplier, setShowCreateSupplier] = useState(false);
+  const [newSupplierData, setNewSupplierData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    address: '',
+    city: '',
+    country: ''
+  });
+  const [isCreatingSupplier, setIsCreatingSupplier] = useState(false);
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
-  const { data: suppliers } = useSuppliers(currentCompany?.id);
+  const { data: supplierData } = useAllSuppliersAndCustomers(currentCompany?.id);
+  const suppliers = supplierData?.all || [];
   const { data: products } = useProducts(currentCompany?.id);
   const createLPO = useCreateLPO();
   const generateLPONumber = useGenerateLPONumber();
+  const createCustomer = useCreateCustomer();
 
   useEffect(() => {
     if (open && currentCompany?.id) {
@@ -104,6 +121,92 @@ export const CreateLPOModal = ({
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.product_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Validate supplier selection for customer/supplier conflicts
+  // Create new supplier (customer) function
+  const handleCreateNewSupplier = async () => {
+    if (!currentCompany?.id) {
+      toast.error('Company not found');
+      return;
+    }
+
+    if (!newSupplierData.name.trim()) {
+      toast.error('Supplier name is required');
+      return;
+    }
+
+    setIsCreatingSupplier(true);
+    try {
+      // Generate customer code
+      const customerCode = `SUP-${newSupplierData.name.slice(0, 3).toUpperCase()}-${Date.now().toString().slice(-6)}`;
+
+      const customerData = {
+        company_id: currentCompany.id,
+        customer_code: customerCode,
+        name: newSupplierData.name.trim(),
+        email: newSupplierData.email.trim() || null,
+        phone: newSupplierData.phone.trim() || null,
+        address: newSupplierData.address.trim() || null,
+        city: newSupplierData.city.trim() || null,
+        country: newSupplierData.country.trim() || null,
+        is_active: true
+      };
+
+      const newCustomer = await createCustomer.mutateAsync(customerData);
+
+      // Set as selected supplier
+      setFormData(prev => ({ ...prev, supplier_id: newCustomer.id }));
+
+      // Reset form
+      setNewSupplierData({
+        name: '',
+        email: '',
+        phone: '',
+        address: '',
+        city: '',
+        country: ''
+      });
+      setShowCreateSupplier(false);
+
+      toast.success(`Supplier "${newCustomer.name}" created and selected!`);
+
+      // Validate the new supplier selection
+      await validateSupplier(newCustomer.id);
+
+    } catch (error) {
+      console.error('Error creating supplier:', error);
+      toast.error('Failed to create supplier. Please try again.');
+    } finally {
+      setIsCreatingSupplier(false);
+    }
+  };
+
+  const validateSupplier = async (supplierId: string) => {
+    if (!supplierId || !currentCompany?.id) return;
+
+    setIsValidatingSupplier(true);
+    try {
+      const supplier = suppliers?.find(s => s.id === supplierId);
+      const result = await validateSupplierSelection(
+        supplierId,
+        currentCompany.id,
+        supplier?.name
+      );
+      setSupplierValidation(result);
+
+      // Show toast for critical errors
+      if (!result.isValid && result.errors.length > 0) {
+        toast.error('Supplier validation failed: ' + result.errors[0]);
+      } else if (result.warnings.length > 0) {
+        toast.warning('Supplier conflict detected - please review the warnings below');
+      }
+    } catch (error) {
+      console.error('Error validating supplier:', error);
+      toast.error('Failed to validate supplier selection');
+    } finally {
+      setIsValidatingSupplier(false);
+    }
+  };
 
   const addItem = (product: any) => {
     const newItem: LPOItem = {
@@ -176,6 +279,21 @@ export const CreateLPOModal = ({
       return;
     }
 
+    // Check supplier validation
+    if (supplierValidation && !supplierValidation.isValid) {
+      toast.error('Please resolve supplier validation errors before creating LPO');
+      return;
+    }
+
+    // Show final warning for supplier conflicts
+    if (supplierValidation && supplierValidation.warnings.length > 0 && supplierValidation.conflictData?.customerInvoiceCount) {
+      const proceed = window.confirm(
+        `WARNING: This supplier "${supplierValidation.conflictData.entityName}" has ${supplierValidation.conflictData.customerInvoiceCount} invoice(s) as a customer. ` +
+        `This creates a customer/supplier conflict. Do you want to proceed anyway?`
+      );
+      if (!proceed) return;
+    }
+
     setIsSubmitting(true);
     try {
       const lpoData = {
@@ -221,6 +339,22 @@ export const CreateLPOModal = ({
     }
   };
 
+  const handleSupplierChange = (supplierId: string) => {
+    // Handle create new supplier option
+    if (supplierId === '__create_new__') {
+      setShowCreateSupplier(true);
+      return;
+    }
+
+    setFormData(prev => ({ ...prev, supplier_id: supplierId }));
+
+    // Clear previous validation and validate new supplier
+    setSupplierValidation(null);
+    if (supplierId) {
+      validateSupplier(supplierId);
+    }
+  };
+
   const handleClose = () => {
     setFormData({
       supplier_id: '',
@@ -235,6 +369,16 @@ export const CreateLPOModal = ({
     setItems([]);
     setSearchTerm('');
     setShowProductSearch(false);
+    setSupplierValidation(null);
+    setShowCreateSupplier(false);
+    setNewSupplierData({
+      name: '',
+      email: '',
+      phone: '',
+      address: '',
+      city: '',
+      country: ''
+    });
     onOpenChange(false);
   };
 
@@ -265,19 +409,63 @@ export const CreateLPOModal = ({
             </div>
             <div className="space-y-2">
               <Label htmlFor="supplier_id">Supplier *</Label>
-              <Select 
-                value={formData.supplier_id} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, supplier_id: value }))}
+              <Select
+                value={formData.supplier_id}
+                onValueChange={handleSupplierChange}
+                disabled={isValidatingSupplier}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select supplier" />
                 </SelectTrigger>
                 <SelectContent>
-                  {suppliers?.map((supplier) => (
-                    <SelectItem key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </SelectItem>
-                  ))}
+                  {supplierData?.existing && supplierData.existing.length > 0 && (
+                    <>
+                      <div className="px-2 py-1 text-xs font-semibold text-green-600 bg-green-50 border-b">
+                        ✓ Current Suppliers
+                      </div>
+                      {supplierData.existing.map((supplier) => (
+                        <SelectItem key={supplier.id} value={supplier.id}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                            {supplier.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+
+                  {supplierData?.potential && supplierData.potential.length > 0 && (
+                    <>
+                      <div className="px-2 py-1 text-xs font-semibold text-orange-600 bg-orange-50 border-b border-t">
+                        ⚠ Customers (Will Create Supplier Role)
+                      </div>
+                      {supplierData.potential.map((customer) => (
+                        <SelectItem key={customer.id} value={customer.id}>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 bg-orange-500 rounded-full"></span>
+                            {customer.name}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+
+                  {/* Create New Supplier Option */}
+                  <div className="px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-50 border-b border-t">
+                    ➕ Add New Supplier
+                  </div>
+                  <SelectItem value="__create_new__">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                      Create New Supplier...
+                    </div>
+                  </SelectItem>
+
+                  {(!supplierData?.existing?.length && !supplierData?.potential?.length) && (
+                    <div className="px-2 py-2 text-xs text-muted-foreground text-center">
+                      No existing suppliers found. Use "Create New Supplier" above to add one.
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -291,6 +479,163 @@ export const CreateLPOModal = ({
               />
             </div>
           </div>
+
+          {/* Supplier Validation Alerts */}
+          {supplierValidation && (supplierValidation.warnings.length > 0 || supplierValidation.errors.length > 0) && (
+            <div className="space-y-3">
+              {supplierValidation.errors.length > 0 && (
+                <Alert className="border-red-500 bg-red-50">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Supplier Selection Error</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc list-inside space-y-1">
+                      {supplierValidation.errors.map((error, index) => (
+                        <li key={index} className="text-sm">{error}</li>
+                      ))}
+                    </ul>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {supplierValidation.warnings.length > 0 && (
+                <Alert className="border-orange-500 bg-orange-50">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertTitle>Supplier Selection Warning</AlertTitle>
+                  <AlertDescription>
+                    <ul className="list-disc list-inside space-y-1">
+                      {supplierValidation.warnings.map((warning, index) => (
+                        <li key={index} className="text-sm">{warning}</li>
+                      ))}
+                    </ul>
+                    {supplierValidation.conflictData && supplierValidation.conflictData.customerInvoiceCount > 0 && (
+                      <div className="mt-3 p-3 bg-white rounded border">
+                        <p className="font-medium text-sm">Conflict Summary:</p>
+                        <ul className="text-xs space-y-1 mt-1">
+                          <li>• Entity: {supplierValidation.conflictData.entityName}</li>
+                          <li>• Customer Invoices: {supplierValidation.conflictData.customerInvoiceCount}</li>
+                          <li>• Supplier LPOs: {supplierValidation.conflictData.supplierLPOCount}</li>
+                        </ul>
+                      </div>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
+            </div>
+          )}
+
+          {/* Create New Supplier Form */}
+          {showCreateSupplier && (
+            <Card className="border-blue-500 bg-blue-50">
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between text-blue-700">
+                  <span className="flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Create New Supplier
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setShowCreateSupplier(false);
+                      setNewSupplierData({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        address: '',
+                        city: '',
+                        country: ''
+                      });
+                    }}
+                  >
+                    ✕
+                  </Button>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_name">Supplier Name *</Label>
+                    <Input
+                      id="new_supplier_name"
+                      value={newSupplierData.name}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="Enter supplier name"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_email">Email</Label>
+                    <Input
+                      id="new_supplier_email"
+                      type="email"
+                      value={newSupplierData.email}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, email: e.target.value }))}
+                      placeholder="supplier@example.com"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_phone">Phone</Label>
+                    <Input
+                      id="new_supplier_phone"
+                      value={newSupplierData.phone}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, phone: e.target.value }))}
+                      placeholder="+254 700 000000"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="new_supplier_city">City</Label>
+                    <Input
+                      id="new_supplier_city"
+                      value={newSupplierData.city}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Nairobi"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="new_supplier_address">Address</Label>
+                    <Input
+                      id="new_supplier_address"
+                      value={newSupplierData.address}
+                      onChange={(e) => setNewSupplierData(prev => ({ ...prev, address: e.target.value }))}
+                      placeholder="Street address"
+                      disabled={isCreatingSupplier}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setShowCreateSupplier(false);
+                      setNewSupplierData({
+                        name: '',
+                        email: '',
+                        phone: '',
+                        address: '',
+                        city: '',
+                        country: ''
+                      });
+                    }}
+                    disabled={isCreatingSupplier}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleCreateNewSupplier}
+                    disabled={isCreatingSupplier || !newSupplierData.name.trim()}
+                  >
+                    {isCreatingSupplier ? 'Creating...' : 'Create Supplier'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">

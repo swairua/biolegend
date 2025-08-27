@@ -135,6 +135,7 @@ export interface DeliveryNote {
   id: string;
   company_id: string;
   customer_id: string;
+  invoice_id?: string;
   delivery_number: string; // Matches database schema
   delivery_note_number?: string; // For backward compatibility
   delivery_date: string;
@@ -149,6 +150,38 @@ export interface DeliveryNote {
   invoice_number?: string;
   created_at?: string;
   updated_at?: string;
+  // Related data
+  customers?: {
+    name: string;
+    email?: string;
+    phone?: string;
+    address?: string;
+    city?: string;
+    country?: string;
+  };
+  invoices?: {
+    invoice_number: string;
+    total_amount: number;
+  };
+  delivery_note_items?: DeliveryNoteItem[];
+}
+
+export interface DeliveryNoteItem {
+  id: string;
+  delivery_note_id: string;
+  product_id?: string;
+  description: string;
+  quantity_ordered: number;
+  quantity_delivered: number;
+  unit_price?: number;
+  sort_order?: number;
+  created_at?: string;
+  updated_at?: string;
+  // Related data
+  products?: {
+    name: string;
+    unit_of_measure?: string;
+  };
 }
 
 export interface LPO {
@@ -1329,6 +1362,7 @@ export const useDeliveryNotes = (companyId?: string) => {
         .select(`
           *,
           customers:customers!customer_id(name, email, phone, address, city, country),
+          invoices:invoices!invoice_id(invoice_number, total_amount),
           delivery_note_items(*, products(name, unit_of_measure))
         `)
         .order('created_at', { ascending: false });
@@ -1621,25 +1655,149 @@ export const useGenerateLPONumber = () => {
   });
 };
 
-// Get suppliers (customers marked as suppliers)
+// Get suppliers (only customers that are actually used as suppliers in LPOs)
 export const useSuppliers = (companyId?: string) => {
   return useQuery({
     queryKey: ['suppliers', companyId],
     queryFn: async () => {
-      let query = supabase
-        .from('customers')
-        .select('*')
-        .eq('is_active', true)
-        .order('name', { ascending: true });
+      if (!companyId) return [];
 
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+      try {
+        // First, get unique supplier IDs from LPOs
+        const { data: lpoSuppliers, error: lpoError } = await supabase
+          .from('lpos')
+          .select('supplier_id')
+          .eq('company_id', companyId)
+          .not('supplier_id', 'is', null);
+
+        if (lpoError) throw lpoError;
+
+        // Get unique supplier IDs
+        const supplierIds = [...new Set(lpoSuppliers?.map(lpo => lpo.supplier_id).filter(Boolean))] || [];
+
+        if (supplierIds.length === 0) {
+          // No LPOs exist yet, return empty array instead of all customers
+          return [];
+        }
+
+        // Get only customers that are actually used as suppliers
+        const { data: suppliers, error: suppliersError } = await supabase
+          .from('customers')
+          .select('*')
+          .in('id', supplierIds)
+          .eq('is_active', true)
+          .eq('company_id', companyId)
+          .order('name', { ascending: true });
+
+        if (suppliersError) throw suppliersError;
+
+        return suppliers || [];
+
+      } catch (error) {
+        console.error('Error fetching suppliers:', error);
+        throw error;
       }
+    },
+    enabled: !!companyId,
+  });
+};
 
-      const { data, error } = await query;
+// Get potential suppliers (customers that haven't been used as suppliers yet)
+export const usePotentialSuppliers = (companyId?: string) => {
+  return useQuery({
+    queryKey: ['potential_suppliers', companyId],
+    queryFn: async () => {
+      if (!companyId) return [];
 
-      if (error) throw error;
-      return data;
+      try {
+        // Get all customers for this company
+        const { data: allCustomers, error: customersError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('company_id', companyId)
+          .eq('is_active', true)
+          .order('name', { ascending: true });
+
+        if (customersError) throw customersError;
+
+        // Get existing supplier IDs from LPOs
+        const { data: lpoSuppliers, error: lpoError } = await supabase
+          .from('lpos')
+          .select('supplier_id')
+          .eq('company_id', companyId)
+          .not('supplier_id', 'is', null);
+
+        if (lpoError) throw lpoError;
+
+        const existingSupplierIds = new Set(lpoSuppliers?.map(lpo => lpo.supplier_id).filter(Boolean) || []);
+
+        // Return customers that are NOT already suppliers
+        return allCustomers?.filter(customer => !existingSupplierIds.has(customer.id)) || [];
+
+      } catch (error) {
+        console.error('Error fetching potential suppliers:', error);
+        throw error;
+      }
+    },
+    enabled: !!companyId,
+  });
+};
+
+// Get all suppliers (existing + potential) - for comprehensive supplier selection
+export const useAllSuppliersAndCustomers = (companyId?: string) => {
+  return useQuery({
+    queryKey: ['all_suppliers_customers', companyId],
+    queryFn: async () => {
+      if (!companyId) return { existing: [], potential: [], all: [] };
+
+      try {
+        // Get all customers for this company
+        const { data: allCustomers, error: customersError } = await supabase
+          .from('customers')
+          .select('*')
+          .eq('company_id', companyId)
+          .eq('is_active', true)
+          .order('name', { ascending: true });
+
+        if (customersError) throw customersError;
+
+        // Get existing supplier IDs from LPOs
+        const { data: lpoSuppliers, error: lpoError } = await supabase
+          .from('lpos')
+          .select('supplier_id')
+          .eq('company_id', companyId)
+          .not('supplier_id', 'is', null);
+
+        if (lpoError) throw lpoError;
+
+        const existingSupplierIds = new Set(lpoSuppliers?.map(lpo => lpo.supplier_id).filter(Boolean) || []);
+
+        const existing = allCustomers?.filter(customer => existingSupplierIds.has(customer.id)) || [];
+        const potential = allCustomers?.filter(customer => !existingSupplierIds.has(customer.id)) || [];
+
+        // Add labels to distinguish them
+        const existingWithLabels = existing.map(supplier => ({
+          ...supplier,
+          display_name: `${supplier.name} (Current Supplier)`,
+          is_existing_supplier: true
+        }));
+
+        const potentialWithLabels = potential.map(customer => ({
+          ...customer,
+          display_name: `${customer.name} (Customer)`,
+          is_existing_supplier: false
+        }));
+
+        return {
+          existing: existingWithLabels,
+          potential: potentialWithLabels,
+          all: [...existingWithLabels, ...potentialWithLabels]
+        };
+
+      } catch (error) {
+        console.error('Error fetching all suppliers and customers:', error);
+        throw error;
+      }
     },
     enabled: !!companyId,
   });

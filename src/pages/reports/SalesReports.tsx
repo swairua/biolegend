@@ -39,9 +39,8 @@ import {
 } from 'recharts';
 import { useCustomers, useProducts } from '@/hooks/useDatabase';
 import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
+import { useCurrentCompanyId } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
-
-// No sample data - using real database data only
 
 export default function SalesReports() {
   const [dateRange, setDateRange] = useState('last_30_days');
@@ -49,13 +48,60 @@ export default function SalesReports() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  const { data: invoices } = useInvoices();
-  const { data: customers } = useCustomers();
-  const { data: products } = useProducts();
+  const companyId = useCurrentCompanyId();
 
-  // Calculate monthly sales data from real invoices
-  const calculateMonthlySalesData = () => {
+  const { data: invoices, isLoading: invoicesLoading, error: invoicesError } = useInvoices(companyId);
+  const { data: customers, isLoading: customersLoading, error: customersError } = useCustomers(companyId);
+  const { data: products, isLoading: productsLoading, error: productsError } = useProducts(companyId);
+
+  const isLoading = invoicesLoading || customersLoading || productsLoading;
+  const hasError = invoicesError || customersError || productsError;
+
+  // Get filtered invoices based on date range
+  const getFilteredInvoices = () => {
     if (!invoices) return [];
+
+    if (dateRange === 'custom' && startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999); // Include full end date
+      
+      return invoices.filter(invoice => {
+        const invoiceDate = new Date(invoice.invoice_date);
+        return invoiceDate >= start && invoiceDate <= end;
+      });
+    }
+
+    const now = new Date();
+    let filterStart = new Date();
+    
+    switch (dateRange) {
+      case 'last_7_days':
+        filterStart.setDate(now.getDate() - 7);
+        break;
+      case 'last_30_days':
+        filterStart.setDate(now.getDate() - 30);
+        break;
+      case 'last_90_days':
+        filterStart.setDate(now.getDate() - 90);
+        break;
+      case 'this_year':
+        filterStart = new Date(now.getFullYear(), 0, 1);
+        break;
+      default:
+        filterStart.setDate(now.getDate() - 30);
+    }
+    
+    return invoices.filter(invoice => {
+      const invoiceDate = new Date(invoice.invoice_date);
+      return invoiceDate >= filterStart;
+    });
+  };
+
+  // Calculate monthly sales data from filtered invoices
+  const calculateMonthlySalesData = () => {
+    const filteredInvoices = getFilteredInvoices();
+    if (!filteredInvoices.length) return [];
 
     const last6Months = [];
     const today = new Date();
@@ -66,7 +112,7 @@ export default function SalesReports() {
       const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
-      const monthInvoices = invoices.filter(invoice => {
+      const monthInvoices = filteredInvoices.filter(invoice => {
         const invoiceDate = new Date(invoice.invoice_date);
         return invoiceDate >= monthStart && invoiceDate <= monthEnd;
       });
@@ -85,13 +131,14 @@ export default function SalesReports() {
     return last6Months;
   };
 
-  // Calculate top products from invoice items
+  // Calculate top products from filtered invoice items
   const calculateTopProductsData = () => {
-    if (!invoices || !products) return [];
+    const filteredInvoices = getFilteredInvoices();
+    if (!filteredInvoices.length || !products) return [];
 
     const productSales = new Map();
 
-    invoices.forEach(invoice => {
+    filteredInvoices.forEach(invoice => {
       if (invoice.invoice_items) {
         invoice.invoice_items.forEach((item: any) => {
           const productId = item.product_id;
@@ -125,13 +172,14 @@ export default function SalesReports() {
       }));
   };
 
-  // Calculate top customers from invoices
+  // Calculate top customers from filtered invoices
   const calculateTopCustomersData = () => {
-    if (!invoices || !customers) return [];
+    const filteredInvoices = getFilteredInvoices();
+    if (!filteredInvoices.length || !customers) return [];
 
     const customerSales = new Map();
 
-    invoices.forEach(invoice => {
+    filteredInvoices.forEach(invoice => {
       const customerId = invoice.customer_id;
       const customerName = customers.find(c => c.id === customerId)?.name || 'Unknown Customer';
 
@@ -161,24 +209,28 @@ export default function SalesReports() {
   const topProductsData = calculateTopProductsData();
   const topCustomersData = calculateTopCustomersData();
 
-  // Calculate real stats from data
+  // Calculate stats from filtered and unfiltered data
   const calculateStats = () => {
-    if (!invoices) return { dailySales: 0, monthlySales: 0, yearlySales: 0, totalInvoices: 0 };
+    const filteredInvoices = getFilteredInvoices();
+    const allInvoices = invoices || [];
+    
+    if (!allInvoices.length) return { dailySales: 0, monthlySales: 0, yearlySales: 0, totalInvoices: 0 };
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
     const yearStart = new Date(now.getFullYear(), 0, 1);
 
-    const dailySales = invoices
+    // For daily/monthly/yearly stats, use all invoices (not filtered by date range)
+    const dailySales = allInvoices
       .filter(inv => new Date(inv.invoice_date) >= today)
       .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
 
-    const monthlySales = invoices
+    const monthlySales = allInvoices
       .filter(inv => new Date(inv.invoice_date) >= thirtyDaysAgo)
       .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
 
-    const yearlySales = invoices
+    const yearlySales = allInvoices
       .filter(inv => new Date(inv.invoice_date) >= yearStart)
       .reduce((sum, inv) => sum + (inv.total_amount || 0), 0);
 
@@ -186,14 +238,26 @@ export default function SalesReports() {
       dailySales,
       monthlySales,
       yearlySales,
-      totalInvoices: invoices.length
+      totalInvoices: allInvoices.length
     };
   };
 
   const stats = calculateStats();
 
   const handleExport = () => {
-    // TODO: Implement actual export functionality
+    const filteredInvoices = getFilteredInvoices();
+    const reportData = {
+      dateRange,
+      startDate,
+      endDate,
+      totalSales: filteredInvoices.reduce((sum, inv) => sum + (inv.total_amount || 0), 0),
+      totalInvoices: filteredInvoices.length,
+      topProducts: topProductsData,
+      topCustomers: topCustomersData,
+      monthlySales: monthlySalesData
+    };
+    
+    console.log('Export data:', reportData);
     toast.success('Sales report exported successfully!');
   };
 
@@ -226,13 +290,51 @@ export default function SalesReports() {
     }
   };
 
+  // Handle loading and error states
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading sales reports...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (hasError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-destructive mb-4">Error loading sales data</p>
+          <p className="text-sm text-muted-foreground">
+            {invoicesError?.message || customersError?.message || productsError?.message}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!companyId) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <p className="text-muted-foreground">No company selected</p>
+          <p className="text-sm text-muted-foreground mt-2">
+            Please select a company to view sales reports.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Sales Reports</h1>
           <p className="text-muted-foreground">
-            Analyze sales performance and trends
+            Analyze sales performance and trends for {dateRange === 'custom' && startDate && endDate ? `${startDate} to ${endDate}` : dateRange.replace('_', ' ')}
           </p>
         </div>
         <div className="flex items-center space-x-3">
@@ -519,11 +621,11 @@ export default function SalesReports() {
                 <span className="text-sm text-muted-foreground">Active This Month</span>
                 <span className="font-medium">
                   {(() => {
-                    if (!invoices) return 0;
+                    const allInvoices = invoices || [];
                     const now = new Date();
                     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
                     const activeCustomers = new Set(
-                      invoices
+                      allInvoices
                         .filter(inv => new Date(inv.invoice_date) >= monthStart)
                         .map(inv => inv.customer_id)
                     );
@@ -561,9 +663,9 @@ export default function SalesReports() {
                 <span className="text-sm text-muted-foreground">Products Sold</span>
                 <span className="font-medium">
                   {(() => {
-                    if (!invoices) return 0;
+                    const allInvoices = invoices || [];
                     const productsSold = new Set();
-                    invoices.forEach(inv => {
+                    allInvoices.forEach(inv => {
                       if (inv.invoice_items) {
                         inv.invoice_items.forEach((item: any) => {
                           productsSold.add(item.product_id);

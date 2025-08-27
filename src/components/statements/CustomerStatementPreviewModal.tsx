@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Download, Send, X, AlertCircle, CheckCircle, Clock } from 'lucide-react';
-import { usePayments } from '@/hooks/useDatabase';
+import { usePayments, useCompanies } from '@/hooks/useDatabase';
 import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { generateCustomerStatementPDF } from '@/utils/pdfGenerator';
 import { toast } from 'sonner';
@@ -33,6 +33,7 @@ export default function CustomerStatementPreviewModal({
   customer,
   statementDate = new Date().toISOString().split('T')[0]
 }: CustomerStatementPreviewModalProps) {
+  const { data: companies } = useCompanies();
   const { data: invoices } = useInvoices();
   const { data: payments } = usePayments();
 
@@ -92,9 +93,21 @@ export default function CustomerStatementPreviewModal({
         customer_code: customer.customer_id
       };
       
+      // Get current company details for PDF
+      const companyDetails = companies?.[0] ? {
+        name: companies[0].name,
+        address: companies[0].address,
+        city: companies[0].city,
+        country: companies[0].country,
+        phone: companies[0].phone,
+        email: companies[0].email,
+        tax_number: companies[0].tax_number,
+        logo_url: companies[0].logo_url
+      } : undefined;
+
       await generateCustomerStatementPDF(customerData, customerInvoices, customerPayments, {
         statement_date: statementDate
-      });
+      }, companyDetails);
       
       toast.success('Statement PDF generated successfully!');
     } catch (error) {
