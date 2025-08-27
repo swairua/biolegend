@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLPOs, useUpdateLPO, useCompanies } from '@/hooks/useDatabase';
-import { generateLPOPDF } from '@/utils/lpoPdfGenerator';
+import { downloadLPOPDF } from '@/utils/pdfGenerator';
 import { CreateLPOModal } from '@/components/lpo/CreateLPOModal';
 import { ViewLPOModal } from '@/components/lpo/ViewLPOModal';
 import { EditLPOModal } from '@/components/lpo/EditLPOModal';
@@ -110,20 +110,18 @@ export default function LPOs() {
         return;
       }
 
-      generateLPOPDF(lpo, {
+      await downloadLPOPDF(lpo, {
         name: currentCompany.name,
         email: currentCompany.email,
         phone: currentCompany.phone,
         address: currentCompany.address,
         city: currentCompany.city,
-        state: currentCompany.state,
-        postal_code: currentCompany.postal_code,
         country: currentCompany.country,
-        registration_number: currentCompany.registration_number,
         tax_number: currentCompany.tax_number,
+        logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800'
       });
 
-      toast.success(`LPO ${lpo.lpo_number} PDF downloaded successfully!`);
+      toast.success(`LPO ${lpo.lpo_number} PDF generated successfully!`);
     } catch (error) {
       console.error('Error downloading PDF:', error);
       toast.error('Failed to download PDF');

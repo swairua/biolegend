@@ -3,7 +3,7 @@
 // In a real app, you'd want to use a proper PDF library like jsPDF or react-pdf
 
 export interface DocumentData {
-  type: 'quotation' | 'invoice' | 'remittance' | 'proforma' | 'delivery' | 'statement' | 'receipt';
+  type: 'quotation' | 'invoice' | 'remittance' | 'proforma' | 'delivery' | 'statement' | 'receipt' | 'lpo';
   number: string;
   date: string;
   lpo_number?: string;
@@ -147,6 +147,7 @@ export const generatePDF = (data: DocumentData) => {
                        data.type === 'statement' ? 'Customer Statement' :
                        data.type === 'receipt' ? 'Payment Receipt' :
                        data.type === 'remittance' ? 'Remittance Advice' :
+                       data.type === 'lpo' ? 'Purchase Order' :
                        data.type.charAt(0).toUpperCase() + data.type.slice(1);
   
   const htmlContent = `
@@ -199,8 +200,8 @@ export const generatePDF = (data: DocumentData) => {
         }
         
         .logo {
-          width: 120px;
-          height: 60px;
+          width: 240px;
+          height: 120px;
           margin-bottom: 15px;
           border-radius: 8px;
           overflow: hidden;
@@ -269,20 +270,6 @@ export const generatePDF = (data: DocumentData) => {
           color: #212529;
         }
         
-        .customer-section {
-          margin: 30px 0;
-          display: flex;
-          justify-content: space-between;
-          gap: 30px;
-        }
-        
-        .bill-to, .ship-to {
-          flex: 1;
-          padding: 20px;
-          background: #f8f9fa;
-          border-radius: 8px;
-          border: 1px solid #e9ecef;
-        }
         
         .section-title {
           font-size: 14px;
@@ -606,23 +593,36 @@ export const generatePDF = (data: DocumentData) => {
               ${company.phone ? `Tel: ${company.phone}<br>` : ''}
               ${company.email ? `Email: ${company.email}` : ''}
             </div>
+
+            <!-- Client Details Section -->
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e9ecef;">
+              <div class="section-title" style="font-size: 12px; font-weight: bold; color: #0891B2; margin-bottom: 8px; text-transform: uppercase;">${data.type === 'lpo' ? 'Supplier' : 'Client'}</div>
+              <div class="customer-name" style="font-size: 14px; font-weight: bold; margin-bottom: 5px; color: #212529;">${data.customer.name}</div>
+              <div class="customer-details" style="font-size: 10px; color: #666; line-height: 1.4;">
+                ${data.customer.email ? `${data.customer.email}<br>` : ''}
+                ${data.customer.phone ? `${data.customer.phone}<br>` : ''}
+                ${data.customer.address ? `${data.customer.address}<br>` : ''}
+                ${data.customer.city ? `${data.customer.city}` : ''}
+                ${data.customer.country ? `, ${data.customer.country}` : ''}
+              </div>
+            </div>
           </div>
-          
+
           <div class="document-info">
             <div class="document-title">${documentTitle}</div>
             <div class="document-details">
               <table>
                 <tr>
-                  <td class="label">${data.type === 'receipt' ? 'Receipt #' : data.type === 'remittance' ? 'Advice #' : documentTitle + ' #'}:</td>
+                  <td class="label">${data.type === 'receipt' ? 'Receipt #' : data.type === 'remittance' ? 'Advice #' : data.type === 'lpo' ? 'LPO #' : documentTitle + ' #'}:</td>
                   <td class="value">${data.number}</td>
                 </tr>
                 <tr>
-                  <td class="label">Date:</td>
+                  <td class="label">${data.type === 'lpo' ? 'Order Date' : 'Date'}:</td>
                   <td class="value">${formatDate(data.date)}</td>
                 </tr>
                 ${data.due_date ? `
                 <tr>
-                  <td class="label">Due Date:</td>
+                  <td class="label">${data.type === 'lpo' ? 'Expected Delivery' : 'Due Date'}:</td>
                   <td class="value">${formatDate(data.due_date)}</td>
                 </tr>
                 ` : ''}
@@ -632,42 +632,17 @@ export const generatePDF = (data: DocumentData) => {
                   <td class="value">${formatDate(data.valid_until)}</td>
                 </tr>
                 ` : ''}
-                ${data.lpo_number ? `
+                ${data.lpo_number && data.type !== 'lpo' ? `
                 <tr>
                   <td class="label">LPO Number:</td>
                   <td class="value">${data.lpo_number}</td>
                 </tr>
                 ` : ''}
                 <tr>
-                  <td class="label">${data.type === 'receipt' ? 'Amount Paid' : data.type === 'remittance' ? 'Total Payment' : 'Amount'}:</td>
+                  <td class="label">${data.type === 'receipt' ? 'Amount Paid' : data.type === 'remittance' ? 'Total Payment' : data.type === 'lpo' ? 'Order Total' : 'Amount'}:</td>
                   <td class="value" style="font-weight: bold; color: ${data.type === 'receipt' ? '#10B981' : '#7C3AED'};">${formatCurrency(data.total_amount)}</td>
                 </tr>
               </table>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Customer Section -->
-        <div class="customer-section">
-          <div class="bill-to">
-            <div class="section-title">Bill To</div>
-            <div class="customer-name">${data.customer.name}</div>
-            <div class="customer-details">
-              ${data.customer.email ? `${data.customer.email}<br>` : ''}
-              ${data.customer.phone ? `${data.customer.phone}<br>` : ''}
-              ${data.customer.address ? `${data.customer.address}<br>` : ''}
-              ${data.customer.city ? `${data.customer.city}` : ''}
-              ${data.customer.country ? `, ${data.customer.country}` : ''}
-            </div>
-          </div>
-          
-          <div class="ship-to">
-            <div class="section-title">Ship To</div>
-            <div class="customer-name">${data.customer.name}</div>
-            <div class="customer-details">
-              ${data.customer.address ? `${data.customer.address}<br>` : 'Same as billing address'}
-              ${data.customer.city ? `${data.customer.city}` : ''}
-              ${data.customer.country ? `, ${data.customer.country}` : ''}
             </div>
           </div>
         </div>
@@ -894,7 +869,14 @@ export const generatePDF = (data: DocumentData) => {
         </div>
         ` : ''}
         
-        <!-- Bank Details -->\n        <div class=\"bank-details\">\n          <strong>MAKE ALL PAYMENTS THROUGH BIOLEGEND SCIENTIFIC LTD, KCB RIVER ROAD BRANCH NUMBER : 1216348367 - SWIFT CODE; KCBLKENX - BANK CODE; 01 - BRANCH CODE; 114 ABSA BANK KENYA PLC: THIKA ROAD MALL BRANCH, ACC: 2051129930, BRANCH CODE; 024, SWIFT CODE; BARCKENX</strong>\n        </div>\n        \n        <!-- Footer -->
+        <!-- Bank Details (only for invoices and quotations) -->
+        ${(data.type === 'invoice' || data.type === 'quotation') ? `
+        <div class="bank-details">
+          <strong>MAKE ALL PAYMENTS THROUGH BIOLEGEND SCIENTIFIC LTD, KCB RIVER ROAD BRANCH NUMBER : 1216348367 - SWIFT CODE; KCBLKENX - BANK CODE; 01 - BRANCH CODE; 114 ABSA BANK KENYA PLC: THIKA ROAD MALL BRANCH, ACC: 2051129930, BRANCH CODE; 024, SWIFT CODE; BARCKENX</strong>
+        </div>
+        ` : ''}
+
+        <!-- Footer -->
         <div class="footer">
           <strong>Thank you for your business!</strong><br>
           <strong>${company.name}</strong><br>
@@ -903,6 +885,7 @@ export const generatePDF = (data: DocumentData) => {
           ${data.type === 'delivery' ? '<br><em>This delivery note confirms the items delivered</em>' : ''}
           ${data.type === 'receipt' ? '<br><em>This receipt serves as proof of payment received</em>' : ''}
           ${data.type === 'remittance' ? '<br><em>This remittance advice details payments made to your account</em>' : ''}
+          ${data.type === 'lpo' ? '<br><em>This Local Purchase Order serves as an official request for goods/services</em>' : ''}
         </div>
       </div>
     </body>
@@ -1251,6 +1234,53 @@ export const downloadDeliveryNotePDF = async (deliveryNote: any, company?: Compa
     })) || [],
     total_amount: 0, // Not relevant for delivery notes
     notes: deliveryNote.notes || `Items delivered as per Invoice ${invoiceNumber}`,
+  };
+
+  return generatePDF(documentData);
+};
+
+// Function for LPO PDF generation
+export const downloadLPOPDF = async (lpo: any, company?: CompanyDetails) => {
+  const documentData: DocumentData = {
+    type: 'lpo', // Use LPO document type
+    number: lpo.lpo_number,
+    date: lpo.lpo_date,
+    due_date: lpo.delivery_date,
+    delivery_date: lpo.delivery_date,
+    delivery_address: lpo.delivery_address,
+    company: company, // Pass company details
+    customer: {
+      name: lpo.suppliers?.name || 'Unknown Supplier',
+      email: lpo.suppliers?.email,
+      phone: lpo.suppliers?.phone,
+      address: lpo.suppliers?.address,
+      city: lpo.suppliers?.city,
+      country: lpo.suppliers?.country,
+    },
+    items: lpo.lpo_items?.map((item: any) => {
+      const quantity = Number(item.quantity || 0);
+      const unitPrice = Number(item.unit_price || 0);
+      const taxAmount = Number(item.tax_amount || 0);
+      const computedLineTotal = quantity * unitPrice + taxAmount;
+
+      return {
+        description: item.description || item.products?.name || 'Unknown Item',
+        quantity: quantity,
+        unit_price: unitPrice,
+        discount_percentage: 0,
+        discount_amount: 0,
+        tax_percentage: Number(item.tax_rate || 0),
+        tax_amount: taxAmount,
+        tax_inclusive: false,
+        line_total: Number(item.line_total ?? computedLineTotal),
+        unit_of_measure: item.products?.unit_of_measure || 'pcs',
+      };
+    }) || [],
+    subtotal: lpo.subtotal,
+    tax_amount: lpo.tax_amount,
+    total_amount: lpo.total_amount,
+    notes: `${lpo.notes || ''}${lpo.contact_person ? `\n\nContact Person: ${lpo.contact_person}` : ''}${lpo.contact_phone ? `\nContact Phone: ${lpo.contact_phone}` : ''}`.trim(),
+    terms_and_conditions: lpo.terms_and_conditions,
   };
 
   return generatePDF(documentData);

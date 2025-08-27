@@ -83,10 +83,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return profileData;
     } catch (error) {
-      console.error('Exception fetching profile:', error);
+      // Properly log error details instead of [object Object]
+      console.error('Exception fetching profile:', {
+        message: error instanceof Error ? error.message : String(error),
+        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
+        details: error && typeof error === 'object' && 'details' in error ? error.details : undefined,
+        hint: error && typeof error === 'object' && 'hint' in error ? error.hint : undefined,
+        userId,
+        timestamp: new Date().toISOString()
+      });
 
+      // Handle specific error types
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as any).message;
 
-      // Show general error message
+        // Handle specific Supabase errors
+        if (errorMessage?.includes('JWT expired') || errorMessage?.includes('invalid_token')) {
+          console.warn('Profile fetch failed due to expired token - user may need to re-authenticate');
+          return null; // Don't show error toast for auth issues
+        }
+
+        if (errorMessage?.includes('Failed to fetch') || errorMessage?.includes('Network')) {
+          console.warn('Profile fetch failed due to network issue');
+          setTimeout(() => toast.error(
+            'Network connection issue. Profile will retry automatically.',
+            { duration: 3000 }
+          ), 0);
+          return null;
+        }
+
+        if (errorMessage?.includes('Row level security')) {
+          console.warn('Profile fetch failed due to permissions');
+          setTimeout(() => toast.error(
+            'Permission error accessing profile. Please sign in again.',
+            { duration: 4000 }
+          ), 0);
+          return null;
+        }
+      }
+
+      // Show general error message for other cases
       setTimeout(() => toast.error(
         'Failed to load user profile. Please try again.',
         { duration: 4000 }
@@ -104,7 +140,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .update({ last_login: new Date().toISOString() })
         .eq('id', userId);
     } catch (error) {
-      console.error('Error updating last login:', error);
+      console.error('Error updating last login:', {
+        message: error instanceof Error ? error.message : String(error),
+        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
+        userId
+      });
     }
   }, []);
 
@@ -136,7 +176,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Error in auth state change:', error);
+      console.error('Error in auth state change:', {
+        message: error instanceof Error ? error.message : String(error),
+        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
+        event,
+        hasSession: !!newSession
+      });
       
       // If we get invalid token errors, clear tokens
       if (error && typeof error === 'object' && 'message' in error) {
@@ -227,7 +272,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                     }
                   })
                   .catch(profileError => {
-                    console.warn('⚠️ Background profile fetch failed:', profileError);
+                    console.warn('⚠️ Background profile fetch failed:', {
+                      message: profileError instanceof Error ? profileError.message : String(profileError),
+                      code: profileError && typeof profileError === 'object' && 'code' in profileError ? profileError.code : undefined
+                    });
                   });
 
                 return { session: initialSession, profile: null, error: null };
@@ -266,7 +314,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
             // Update last login silently (don't await)
             if (userProfile) {
-              updateLastLogin(initialSession.user.id).catch(console.error);
+              updateLastLogin(initialSession.user.id).catch(error => {
+                console.error('Error updating last login:', {
+                  message: error instanceof Error ? error.message : String(error),
+                  userId: initialSession.user.id
+                });
+              });
             }
 
             console.log('✅ Auth initialization completed successfully');
@@ -425,7 +478,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { error } = await supabase.auth.signOut();
 
       if (error) {
-        console.error('❌ Sign out error:', error);
+        console.error('❌ Sign out error:', {
+          message: error instanceof Error ? error.message : String(error),
+          code: error && typeof error === 'object' && 'code' in error ? error.code : undefined
+        });
         setTimeout(() => toast.error('Error signing out'), 0);
       } else {
         console.log('✅ Supabase sign out successful');
@@ -442,7 +498,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('🎉 Sign out complete!');
       }
     } catch (error) {
-      console.error('❌ Sign out exception:', error);
+      console.error('❌ Sign out exception:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       setTimeout(() => toast.error('Error signing out'), 0);
     } finally {
       if (mountedRef.current) {
@@ -482,7 +541,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error updating profile:', error);
+        console.error('Error updating profile:', {
+          message: error.message,
+          code: error.code,
+          details: error.details
+        });
         setTimeout(() => toast.error('Failed to update profile'), 0);
         return { error: new Error(error.message) };
       }
@@ -492,7 +555,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setTimeout(() => toast.success('Profile updated successfully'), 0);
       return { error: null };
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('Error updating profile:', {
+        message: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
       setTimeout(() => toast.error('Failed to update profile'), 0);
       return { error: error as Error };
     }

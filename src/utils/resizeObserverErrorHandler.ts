@@ -3,73 +3,71 @@
 
 let suppressResizeObserverLoopErrors = false;
 
+// Initialize suppression immediately when this module loads
+const initializeErrorSuppression = () => {
+  if (typeof window === 'undefined') return;
+
+  // Immediate suppression setup
+  const isResizeObserverError = (message: any) => {
+    return typeof message === 'string' && (
+      message.includes('ResizeObserver loop completed with undelivered notifications') ||
+      message.includes('ResizeObserver loop limit exceeded') ||
+      message.includes('ResizeObserver')
+    );
+  };
+
+  // Override console.error immediately
+  const originalConsoleError = window.console.error;
+  window.console.error = (...args) => {
+    if (isResizeObserverError(args[0])) {
+      // Silently ignore ResizeObserver errors
+      return;
+    }
+    originalConsoleError.apply(console, args);
+  };
+
+  // Override window.onerror immediately
+  const originalOnError = window.onerror;
+  window.onerror = (message, source, lineno, colno, error) => {
+    if (isResizeObserverError(message)) {
+      return true; // Prevent the error from being logged
+    }
+    if (originalOnError) {
+      return originalOnError.call(window, message, source, lineno, colno, error);
+    }
+    return false;
+  };
+
+  // Handle error events
+  window.addEventListener('error', (event) => {
+    if (isResizeObserverError(event.message)) {
+      event.preventDefault();
+      event.stopPropagation();
+      event.stopImmediatePropagation();
+    }
+  }, true); // Use capture phase
+
+  // Handle unhandled rejections
+  window.addEventListener('unhandledrejection', (event) => {
+    if (isResizeObserverError(event.reason)) {
+      event.preventDefault();
+    }
+  });
+};
+
+// Initialize immediately when module loads
+if (typeof window !== 'undefined') {
+  initializeErrorSuppression();
+}
+
 export const enableResizeObserverErrorSuppression = () => {
   if (suppressResizeObserverLoopErrors) return;
 
   suppressResizeObserverLoopErrors = true;
 
-  // Capture and suppress ResizeObserver loop errors
-  const originalError = window.console.error;
-
-  window.console.error = (...args) => {
-    const message = args[0];
-
-    // Check if it's a ResizeObserver loop error
-    if (
-      typeof message === 'string' &&
-      (message.includes('ResizeObserver loop completed with undelivered notifications') ||
-       message.includes('ResizeObserver loop limit exceeded'))
-    ) {
-      // Suppress this specific error
-      return;
-    }
-
-    // Allow all other errors through
-    originalError.apply(console, args);
-  };
-
-  // Also handle it as a window error event
-  window.addEventListener('error', (event) => {
-    if (
-      event.message &&
-      (event.message.includes('ResizeObserver loop completed with undelivered notifications') ||
-       event.message.includes('ResizeObserver loop limit exceeded'))
-    ) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-  });
-
-  // Handle unhandled rejections that might contain ResizeObserver errors
-  window.addEventListener('unhandledrejection', (event) => {
-    if (
-      event.reason &&
-      typeof event.reason === 'string' &&
-      (event.reason.includes('ResizeObserver loop completed with undelivered notifications') ||
-       event.reason.includes('ResizeObserver loop limit exceeded'))
-    ) {
-      event.preventDefault();
-    }
-  });
-
-  // Override the global error handler for ResizeObserver
-  if (typeof window !== 'undefined') {
-    const originalOnError = window.onerror;
-    window.onerror = (message, source, lineno, colno, error) => {
-      if (
-        typeof message === 'string' &&
-        (message.includes('ResizeObserver loop completed with undelivered notifications') ||
-         message.includes('ResizeObserver loop limit exceeded'))
-      ) {
-        return true; // Prevent the error from being logged
-      }
-
-      if (originalOnError) {
-        return originalOnError.call(window, message, source, lineno, colno, error);
-      }
-      return false;
-    };
-  }
+  // The actual suppression is already handled in module initialization
+  // This function now just marks that suppression is enabled
+  console.debug('ResizeObserver error suppression enabled');
 };
 
 export const disableResizeObserverErrorSuppression = () => {
