@@ -1255,3 +1255,51 @@ export const downloadDeliveryNotePDF = async (deliveryNote: any, company?: Compa
 
   return generatePDF(documentData);
 };
+
+// Function for LPO PDF generation
+export const downloadLPOPDF = async (lpo: any, company?: CompanyDetails) => {
+  const documentData: DocumentData = {
+    type: 'quotation', // Use quotation type for similar styling to LPO
+    number: lpo.lpo_number,
+    date: lpo.lpo_date,
+    due_date: lpo.delivery_date,
+    company: company, // Pass company details
+    customer: {
+      name: lpo.suppliers?.name || 'Unknown Supplier',
+      email: lpo.suppliers?.email,
+      phone: lpo.suppliers?.phone,
+      address: lpo.suppliers?.address,
+      city: lpo.suppliers?.city,
+      country: lpo.suppliers?.country,
+    },
+    items: lpo.lpo_items?.map((item: any) => {
+      const quantity = Number(item.quantity || 0);
+      const unitPrice = Number(item.unit_price || 0);
+      const taxAmount = Number(item.tax_amount || 0);
+      const computedLineTotal = quantity * unitPrice + taxAmount;
+
+      return {
+        description: item.description || item.products?.name || 'Unknown Item',
+        quantity: quantity,
+        unit_price: unitPrice,
+        discount_percentage: 0,
+        discount_amount: 0,
+        tax_percentage: Number(item.tax_rate || 0),
+        tax_amount: taxAmount,
+        tax_inclusive: false,
+        line_total: Number(item.line_total ?? computedLineTotal),
+        unit_of_measure: item.products?.unit_of_measure || 'pcs',
+      };
+    }) || [],
+    subtotal: lpo.subtotal,
+    tax_amount: lpo.tax_amount,
+    total_amount: lpo.total_amount,
+    notes: lpo.notes,
+    terms_and_conditions: lpo.terms_and_conditions,
+    // Add delivery information in notes if present
+    delivery_date: lpo.delivery_date,
+    delivery_address: lpo.delivery_address,
+  };
+
+  return generatePDF(documentData);
+};
