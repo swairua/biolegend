@@ -140,7 +140,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .update({ last_login: new Date().toISOString() })
         .eq('id', userId);
     } catch (error) {
-      console.error('Error updating last login:', error);
+      console.error('Error updating last login:', {
+        message: error instanceof Error ? error.message : String(error),
+        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
+        userId
+      });
     }
   }, []);
 
@@ -172,7 +176,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Error in auth state change:', error);
+      console.error('Error in auth state change:', {
+        message: error instanceof Error ? error.message : String(error),
+        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
+        event,
+        hasSession: !!newSession
+      });
       
       // If we get invalid token errors, clear tokens
       if (error && typeof error === 'object' && 'message' in error) {
