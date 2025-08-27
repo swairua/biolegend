@@ -109,6 +109,34 @@ export const CreateLPOModal = ({
     product.product_code.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Validate supplier selection for customer/supplier conflicts
+  const validateSupplier = async (supplierId: string) => {
+    if (!supplierId || !currentCompany?.id) return;
+
+    setIsValidatingSupplier(true);
+    try {
+      const supplier = suppliers?.find(s => s.id === supplierId);
+      const result = await validateSupplierSelection(
+        supplierId,
+        currentCompany.id,
+        supplier?.name
+      );
+      setSupplierValidation(result);
+
+      // Show toast for critical errors
+      if (!result.isValid && result.errors.length > 0) {
+        toast.error('Supplier validation failed: ' + result.errors[0]);
+      } else if (result.warnings.length > 0) {
+        toast.warning('Supplier conflict detected - please review the warnings below');
+      }
+    } catch (error) {
+      console.error('Error validating supplier:', error);
+      toast.error('Failed to validate supplier selection');
+    } finally {
+      setIsValidatingSupplier(false);
+    }
+  };
+
   const addItem = (product: any) => {
     const newItem: LPOItem = {
       id: `item-${Date.now()}`,
