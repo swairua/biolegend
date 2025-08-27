@@ -200,8 +200,8 @@ export const generatePDF = (data: DocumentData) => {
         }
         
         .logo {
-          width: 120px;
-          height: 60px;
+          width: 240px;
+          height: 120px;
           margin-bottom: 15px;
           border-radius: 8px;
           overflow: hidden;
