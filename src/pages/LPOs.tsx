@@ -32,7 +32,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useLPOs, useUpdateLPO, useCompanies } from '@/hooks/useDatabase';
-import { generateLPOPDF } from '@/utils/lpoPdfGenerator';
+import { downloadLPOPDF } from '@/utils/pdfGenerator';
 import { CreateLPOModal } from '@/components/lpo/CreateLPOModal';
 import { ViewLPOModal } from '@/components/lpo/ViewLPOModal';
 import { EditLPOModal } from '@/components/lpo/EditLPOModal';
