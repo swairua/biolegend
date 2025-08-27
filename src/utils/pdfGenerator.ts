@@ -270,20 +270,6 @@ export const generatePDF = (data: DocumentData) => {
           color: #212529;
         }
         
-        .customer-section {
-          margin: 30px 0;
-          display: flex;
-          justify-content: space-between;
-          gap: 30px;
-        }
-        
-        .bill-to, .ship-to {
-          flex: 1;
-          padding: 20px;
-          background: #f8f9fa;
-          border-radius: 8px;
-          border: 1px solid #e9ecef;
-        }
         
         .section-title {
           font-size: 14px;
