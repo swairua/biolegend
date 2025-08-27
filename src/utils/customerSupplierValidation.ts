@@ -57,20 +57,31 @@ export const validateSupplierSelection = async (
     // If this entity has invoices as customer, flag as potential conflict
     // Skip warnings for newly created suppliers in the same session
     if (customerInvoiceCount > 0 && !isNewlyCreated) {
-      warnings.push(
-        `⚠️ CONFLICT DETECTED: This entity "${supplierName || 'Selected entity'}" already has ${customerInvoiceCount} invoice(s) as a CUSTOMER. ` +
-        `Using the same entity as both customer and supplier can cause business relationship confusion and data integrity issues.`
-      );
-
-      warnings.push(
-        `📋 Recommendation: Consider creating separate supplier records for entities that are also customers, or review your business relationship with this entity.`
-      );
-
-      // Only make it an error if there are many conflicts AND it's not a new supplier
       if (customerInvoiceCount >= 25) {
+        // Critical conflict - block the operation
         errors.push(
-          `🚫 CRITICAL CONFLICT: This entity has ${customerInvoiceCount} invoices as a customer. ` +
-          `Please review this business relationship before proceeding or create a separate supplier record.`
+          `🚫 CRITICAL CONFLICT: "${supplierName || 'This entity'}" has ${customerInvoiceCount} invoices as a customer. ` +
+          `This high level of customer activity creates significant business relationship conflicts. ` +
+          `Please create a separate supplier record or contact your administrator.`
+        );
+      } else if (customerInvoiceCount >= 5) {
+        // Moderate conflict - show warning but allow
+        warnings.push(
+          `⚠️ MODERATE CONFLICT: "${supplierName || 'This entity'}" has ${customerInvoiceCount} invoice(s) as a customer. ` +
+          `Consider creating a separate supplier record to avoid confusion.`
+        );
+      } else {
+        // Minor conflict - just inform
+        warnings.push(
+          `ℹ️ MINOR CONFLICT: "${supplierName || 'This entity'}" has ${customerInvoiceCount} invoice(s) as a customer. ` +
+          `This is generally acceptable but consider separating records for better organization.`
+        );
+      }
+
+      // Add helpful recommendations based on conflict severity
+      if (customerInvoiceCount >= 5) {
+        warnings.push(
+          `💡 TIP: You can create a supplier record with a name like "${supplierName} (Supplier)" to keep relationships separate.`
         );
       }
     }
