@@ -89,6 +89,7 @@ export const CreateLPOModal = ({
     country: ''
   });
   const [isCreatingSupplier, setIsCreatingSupplier] = useState(false);
+  const [newlyCreatedSupplierId, setNewlyCreatedSupplierId] = useState<string | null>(null);
 
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
@@ -154,8 +155,9 @@ export const CreateLPOModal = ({
 
       const newCustomer = await createCustomer.mutateAsync(customerData);
 
-      // Set as selected supplier
+      // Set as selected supplier and mark as newly created
       setFormData(prev => ({ ...prev, supplier_id: newCustomer.id }));
+      setNewlyCreatedSupplierId(newCustomer.id);
 
       // Reset form
       setNewSupplierData({
@@ -170,8 +172,8 @@ export const CreateLPOModal = ({
 
       toast.success(`Supplier "${newCustomer.name}" created and selected!`);
 
-      // Validate the new supplier selection
-      await validateSupplier(newCustomer.id);
+      // Validate the new supplier selection (mark as newly created)
+      await validateSupplier(newCustomer.id, true);
 
     } catch (error) {
       console.error('Error creating supplier:', error);
@@ -181,7 +183,7 @@ export const CreateLPOModal = ({
     }
   };
 
-  const validateSupplier = async (supplierId: string) => {
+  const validateSupplier = async (supplierId: string, isNewlyCreated: boolean = false) => {
     if (!supplierId || !currentCompany?.id) return;
 
     setIsValidatingSupplier(true);
@@ -190,14 +192,16 @@ export const CreateLPOModal = ({
       const result = await validateSupplierSelection(
         supplierId,
         currentCompany.id,
-        supplier?.name
+        supplier?.name,
+        isNewlyCreated
       );
       setSupplierValidation(result);
 
-      // Show toast for critical errors
+      // Show toast for critical errors only
       if (!result.isValid && result.errors.length > 0) {
         toast.error('Supplier validation failed: ' + result.errors[0]);
-      } else if (result.warnings.length > 0) {
+      } else if (result.warnings.length > 0 && !isNewlyCreated) {
+        // Only show warning toast for existing suppliers with conflicts
         toast.warning('Supplier conflict detected - please review the warnings below');
       }
     } catch (error) {
@@ -279,14 +283,17 @@ export const CreateLPOModal = ({
       return;
     }
 
-    // Check supplier validation
-    if (supplierValidation && !supplierValidation.isValid) {
+    // Check supplier validation - only block on critical errors
+    if (supplierValidation && !supplierValidation.isValid && supplierValidation.errors.length > 0) {
       toast.error('Please resolve supplier validation errors before creating LPO');
       return;
     }
 
-    // Show final warning for supplier conflicts
-    if (supplierValidation && supplierValidation.warnings.length > 0 && supplierValidation.conflictData?.customerInvoiceCount) {
+    // Show final warning for supplier conflicts (only for existing suppliers with significant conflicts)
+    if (supplierValidation && supplierValidation.warnings.length > 0 &&
+        supplierValidation.conflictData?.customerInvoiceCount &&
+        supplierValidation.conflictData.customerInvoiceCount >= 5 &&
+        formData.supplier_id !== newlyCreatedSupplierId) {
       const proceed = window.confirm(
         `WARNING: This supplier "${supplierValidation.conflictData.entityName}" has ${supplierValidation.conflictData.customerInvoiceCount} invoice(s) as a customer. ` +
         `This creates a customer/supplier conflict. Do you want to proceed anyway?`
@@ -351,7 +358,9 @@ export const CreateLPOModal = ({
     // Clear previous validation and validate new supplier
     setSupplierValidation(null);
     if (supplierId) {
-      validateSupplier(supplierId);
+      // Check if this is the newly created supplier
+      const isNewlyCreated = supplierId === newlyCreatedSupplierId;
+      validateSupplier(supplierId, isNewlyCreated);
     }
   };
 
@@ -370,6 +379,7 @@ export const CreateLPOModal = ({
     setSearchTerm('');
     setShowProductSearch(false);
     setSupplierValidation(null);
+    setNewlyCreatedSupplierId(null);
     setShowCreateSupplier(false);
     setNewSupplierData({
       name: '',
