@@ -38,6 +38,7 @@ import { ViewLPOModal } from '@/components/lpo/ViewLPOModal';
 import { EditLPOModal } from '@/components/lpo/EditLPOModal';
 import { DatabaseAuditPanel } from '@/components/DatabaseAuditPanel';
 import { DirectForceMigration } from '@/components/DirectForceMigration';
+import { LPOCustomerSupplierAudit } from '@/components/LPOCustomerSupplierAudit';
 
 export default function LPOs() {
   const [showCreateModal, setShowCreateModal] = useState(false);
