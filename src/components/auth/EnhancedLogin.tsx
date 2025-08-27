@@ -156,16 +156,6 @@ export function EnhancedLogin() {
                 )}
               </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={fillAdminCredentials}
-                className="w-full text-xs"
-                disabled={loading}
-              >
-                Use Admin Credentials
-              </Button>
             </div>
           </form>
 
