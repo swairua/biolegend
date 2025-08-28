@@ -119,7 +119,23 @@ export function ViewQuotationModal({
           {/* Header */}
           <div className="flex justify-between items-start">
             <div className="space-y-2">
-              <BiolegendLogo size="lg" showText={true} />
+              {currentCompany?.logo_url ? (
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={currentCompany.logo_url}
+                    alt={`${currentCompany.name} Logo`}
+                    className="h-16 w-auto object-contain"
+                    onError={(e) => {
+                      // Fallback to BiolegendLogo if company logo fails to load
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLElement).nextElementSibling?.setAttribute('style', 'display: block');
+                    }}
+                  />
+                  <BiolegendLogo size="lg" showText={true} style={{ display: 'none' }} />
+                </div>
+              ) : (
+                <BiolegendLogo size="lg" showText={true} />
+              )}
               <div className="text-sm text-muted-foreground space-y-1">
                 <div>P.O Box 85988-00200, Nairobi, Kenya</div>
                 <div>Tel: 0741 207 690/0780 165 490</div>
