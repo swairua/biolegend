@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [fetchProfile, updateLastLogin]);
 
-  // Initialize auth state with simplified logic
+  // Initialize auth state with ultra-fast approach and background retry
   useEffect(() => {
     if (initializingRef.current) return;
 
@@ -206,86 +206,151 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     mountedRef.current = true;
 
     const initializeAuthState = async () => {
-      try {
-        console.log('🚀 Initializing auth state...');
+      console.log('🚀 Starting fast auth initialization...');
 
-        // Simple timeout mechanism - 10 seconds max
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Auth initialization timeout after 10000ms')), 10000);
+      // Always start the app immediately - don't block on auth
+      const startAppImmediately = () => {
+        if (mountedRef.current) {
+          setLoading(false);
+          setInitialized(true);
+          console.log('🏁 App started immediately (auth will continue in background)');
+        }
+      };
+
+      // Start app after very short delay regardless of auth status
+      const immediateStartTimer = setTimeout(startAppImmediately, 1000); // 1 second max
+
+      try {
+        // Very fast auth check with 3-second timeout
+        console.log('🔍 Quick auth check (3s timeout)...');
+
+        const quickAuthPromise = new Promise<any>(async (resolve, reject) => {
+          try {
+            // Quick session check
+            const { data: sessionData, error } = await supabase.auth.getSession();
+
+            if (error) {
+              console.warn('⚠️ Quick session check error:', error.message);
+              resolve({ session: null, error });
+              return;
+            }
+
+            console.log('✅ Quick session check completed');
+            resolve({ session: sessionData.session, error: null });
+          } catch (fetchError) {
+            console.warn('⚠️ Quick session fetch error:', fetchError);
+            resolve({ session: null, error: fetchError });
+          }
         });
 
-        // Simple auth check
-        const authPromise = initializeAuth();
+        // 3-second timeout for quick check
+        const quickTimeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Quick auth timeout after 3000ms')), 3000);
+        });
 
-        // Race with timeout
-        const result = await Promise.race([authPromise, timeoutPromise]);
-        const { session: initialSession, error } = result as any;
+        // Race quick auth against timeout
+        const result = await Promise.race([quickAuthPromise, quickTimeoutPromise]);
+        const { session: quickSession, error } = result as any;
 
-        if (error) {
-          console.warn('⚠️ Auth initialization error:', error.message);
-          throw error;
-        }
+        if (quickSession?.user && mountedRef.current) {
+          console.log('✅ Quick auth success - user authenticated');
 
-        if (initialSession?.user && mountedRef.current) {
-          console.log('✅ Found valid session, user authenticated');
+          // Clear the immediate start timer since we have auth
+          clearTimeout(immediateStartTimer);
 
-          // Set user and session immediately
-          setSession(initialSession);
-          setUser(initialSession.user);
+          // Set auth state immediately
+          setSession(quickSession);
+          setUser(quickSession.user);
+          setLoading(false);
+          setInitialized(true);
+          initializingRef.current = false;
 
-          // Fetch profile in background - don't block initialization
-          fetchProfile(initialSession.user.id)
+          // Fetch profile in background
+          fetchProfile(quickSession.user.id)
             .then(userProfile => {
               if (mountedRef.current) {
                 setProfile(userProfile);
-                console.log('✅ Profile loaded');
+                console.log('✅ Profile loaded in background');
 
                 // Update last login silently
                 if (userProfile) {
-                  updateLastLogin(initialSession.user.id).catch(console.error);
+                  updateLastLogin(quickSession.user.id).catch(console.error);
                 }
               }
             })
             .catch(profileError => {
-              console.warn('⚠️ Profile fetch failed:', {
+              console.warn('⚠️ Background profile fetch failed:', {
                 message: profileError instanceof Error ? profileError.message : String(profileError)
               });
             });
 
-          console.log('✅ Auth initialization completed');
-        } else {
-          console.log('ℹ️ No valid session found');
+          console.log('🎉 Fast auth initialization completed successfully');
+          return;
         }
 
-      } catch (error) {
-        console.error('❌ Auth initialization error:', error);
+        // If quick auth didn't work, continue with background retry
+        console.log('ℹ️ Quick auth did not find session, starting background retry...');
 
-        // Handle specific error types
+        // Don't block app startup - let immediate timer complete
+        // But start background retry for better user experience
+        setTimeout(() => {
+          if (mountedRef.current && !user) {
+            console.log('🔄 Starting background auth retry...');
+
+            // More patient background retry (10 seconds)
+            const backgroundAuthCheck = async () => {
+              try {
+                const bgResult = await initializeAuth();
+                const { session: bgSession } = bgResult;
+
+                if (bgSession?.user && mountedRef.current && !user) {
+                  console.log('✅ Background auth retry succeeded');
+                  setSession(bgSession);
+                  setUser(bgSession.user);
+
+                  // Fetch profile
+                  const userProfile = await fetchProfile(bgSession.user.id);
+                  if (mountedRef.current) {
+                    setProfile(userProfile);
+                    if (userProfile) {
+                      updateLastLogin(bgSession.user.id).catch(console.error);
+                    }
+                  }
+                }
+              } catch (bgError) {
+                console.warn('⚠️ Background auth retry failed:', bgError);
+                // Silent failure - app is already running
+              }
+            };
+
+            backgroundAuthCheck();
+          }
+        }, 2000); // Start background retry after 2 seconds
+
+      } catch (error) {
+        console.warn('⚠️ Quick auth check failed:', error);
+
+        // Handle specific error types silently
         if (error instanceof Error) {
-          if (error.message.includes('timeout')) {
-            console.warn('⏰ Auth initialization timed out - continuing without auth');
-          } else if (error.message.includes('Invalid Refresh Token') ||
-                    error.message.includes('invalid_token')) {
-            console.warn('🧹 Clearing invalid tokens');
+          if (error.message.includes('Invalid Refresh Token') ||
+              error.message.includes('invalid_token')) {
+            console.warn('🧹 Clearing invalid tokens (silent)');
             clearAuthTokens();
           }
         }
 
-        // Always reset to clean state on error
-        if (mountedRef.current) {
-          setSession(null);
-          setUser(null);
-          setProfile(null);
-        }
-      } finally {
-        // Always complete initialization
-        if (mountedRef.current) {
+        // Don't show errors - app will start anyway
+      }
+
+      // Ensure we always complete initialization even if immediate timer didn't fire
+      setTimeout(() => {
+        if (mountedRef.current && !initialized) {
+          console.log('🏁 Ensuring auth initialization completes');
           setLoading(false);
           setInitialized(true);
           initializingRef.current = false;
-          console.log('🏁 Auth initialization completed');
         }
-      }
+      }, 1500);
     };
 
     initializeAuthState();
@@ -297,7 +362,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile, updateLastLogin, handleAuthStateChange]);
+  }, [fetchProfile, updateLastLogin, handleAuthStateChange, user, initialized]);
 
   const signIn = useCallback(async (email: string, password: string) => {
     const { data, error } = await safeAuthOperation(async () => {
