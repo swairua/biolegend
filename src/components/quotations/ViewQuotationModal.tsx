@@ -22,6 +22,7 @@ import {
   Send
 } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
+import { useCompanies } from '@/hooks/useDatabase';
 
 interface ViewQuotationModalProps {
   open: boolean;
@@ -32,15 +33,19 @@ interface ViewQuotationModalProps {
   onSend: () => void;
 }
 
-export function ViewQuotationModal({ 
-  open, 
-  onOpenChange, 
-  quotation, 
-  onEdit, 
+export function ViewQuotationModal({
+  open,
+  onOpenChange,
+  quotation,
+  onEdit,
   onDownload,
-  onSend 
+  onSend
 }: ViewQuotationModalProps) {
   if (!quotation) return null;
+
+  // Get company data for logo
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
@@ -114,13 +119,46 @@ export function ViewQuotationModal({
           {/* Header */}
           <div className="flex justify-between items-start">
             <div className="space-y-2">
-              <BiolegendLogo size="lg" showText={true} />
+              {currentCompany?.logo_url ? (
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={currentCompany.logo_url}
+                    alt={`${currentCompany.name} Logo`}
+                    className="h-16 w-auto object-contain"
+                    onError={(e) => {
+                      // Fallback to BiolegendLogo if company logo fails to load
+                      (e.target as HTMLImageElement).style.display = 'none';
+                      (e.target as HTMLElement).nextElementSibling?.setAttribute('style', 'display: block');
+                    }}
+                  />
+                  <BiolegendLogo size="lg" showText={true} style={{ display: 'none' }} />
+                </div>
+              ) : (
+                <BiolegendLogo size="lg" showText={true} />
+              )}
               <div className="text-sm text-muted-foreground space-y-1">
-                <div>P.O Box 85988-00200, Nairobi, Kenya</div>
-                <div>Tel: 0741 207 690/0780 165 490</div>
-                <div>Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
-                <div>Website: www.biolegendscientific.co.ke</div>
-                <div className="text-xs italic text-primary/70">Delivering Discoveries.... and more</div>
+                {currentCompany ? (
+                  <>
+                    {currentCompany.tax_number && <div>PIN: {currentCompany.tax_number}</div>}
+                    {currentCompany.address && <div>{currentCompany.address}</div>}
+                    {(currentCompany.city || currentCompany.country) && (
+                      <div>
+                        {currentCompany.city}{currentCompany.city && currentCompany.country ? ', ' : ''}{currentCompany.country}
+                      </div>
+                    )}
+                    {currentCompany.phone && <div>Tel: {currentCompany.phone}</div>}
+                    {currentCompany.email && <div>Email: {currentCompany.email}</div>}
+                    {currentCompany.website && <div>Website: {currentCompany.website}</div>}
+                  </>
+                ) : (
+                  <>
+                    <div>P.O Box 85988-00200, Nairobi, Kenya</div>
+                    <div>Tel: 0741 207 690/0780 165 490</div>
+                    <div>Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
+                    <div>Website: www.biolegendscientific.co.ke</div>
+                    <div className="text-xs italic text-primary/70">Delivering Discoveries.... and more</div>
+                  </>
+                )}
               </div>
             </div>
             
@@ -308,11 +346,27 @@ export function ViewQuotationModal({
 
           {/* Footer */}
           <div className="text-center text-sm text-muted-foreground pt-6 border-t">
-            <div className="mb-2">
-              <BiolegendLogo size="sm" showText={true} className="justify-center" />
+            <div className="mb-2 flex justify-center">
+              {currentCompany?.logo_url ? (
+                <img
+                  src={currentCompany.logo_url}
+                  alt={`${currentCompany.name} Logo`}
+                  className="h-8 w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback to BiolegendLogo if company logo fails to load
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLElement).nextElementSibling?.setAttribute('style', 'display: block');
+                  }}
+                />
+              ) : null}
+              <BiolegendLogo size="sm" showText={true} className="justify-center" style={{ display: currentCompany?.logo_url ? 'none' : 'block' }} />
             </div>
-            <div>Your Medical & Laboratory Supplies Partner</div>
-            <div className="mt-1">Medical Supplies • Laboratory Supplies • Technical Equipment</div>
+            <div>{currentCompany?.name || 'Your Medical & Laboratory Supplies Partner'}</div>
+            {currentCompany?.business_description ? (
+              <div className="mt-1">{currentCompany.business_description}</div>
+            ) : (
+              <div className="mt-1">Medical Supplies • Laboratory Supplies • Technical Equipment</div>
+            )}
           </div>
         </div>
       </DialogContent>
