@@ -33,15 +33,19 @@ interface ViewQuotationModalProps {
   onSend: () => void;
 }
 
-export function ViewQuotationModal({ 
-  open, 
-  onOpenChange, 
-  quotation, 
-  onEdit, 
+export function ViewQuotationModal({
+  open,
+  onOpenChange,
+  quotation,
+  onEdit,
   onDownload,
-  onSend 
+  onSend
 }: ViewQuotationModalProps) {
   if (!quotation) return null;
+
+  // Get company data for logo
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-KE', {
