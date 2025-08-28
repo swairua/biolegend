@@ -121,39 +121,46 @@ export const safeAuthOperation = async <T>(
  */
 export const initializeAuth = async () => {
   try {
-    console.log('🔑 Ultra-fast auth check...');
+    console.log('🔑 Fast auth check...');
 
-    // Very short timeout for background calls
+    // Shorter timeout for faster initialization
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second max for background retry
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 second max
 
     try {
       // Quick connectivity test first
       const connectivityCheck = new Promise((resolve) => {
-        // Simple fetch to test basic connectivity
         fetch(supabase.supabaseUrl + '/rest/v1/', {
           method: 'HEAD',
-          signal: controller.signal
+          signal: controller.signal,
+          cache: 'no-cache'
         })
           .then(() => resolve(true))
           .catch(() => resolve(false));
       });
 
-      // Don't wait too long for connectivity
+      // Shorter connectivity timeout
       const connectivityTimeout = new Promise((resolve) => {
-        setTimeout(() => resolve(false), 2000);
+        setTimeout(() => resolve(false), 1500);
       });
 
       const hasConnectivity = await Promise.race([connectivityCheck, connectivityTimeout]);
 
       if (!hasConnectivity) {
-        console.warn('🌐 No connectivity to Supabase, skipping auth');
+        console.warn('🌐 No connectivity to Supabase - starting without auth');
         clearTimeout(timeoutId);
         return { session: null, error: new Error('No connectivity') };
       }
 
-      // Get current session with abort signal
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      // Get current session with timeout
+      const sessionPromise = supabase.auth.getSession();
+      const sessionTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Session timeout')), 2500);
+      });
+
+      const sessionResult = await Promise.race([sessionPromise, sessionTimeout]);
+      const { data: sessionData, error: sessionError } = sessionResult as any;
+
       clearTimeout(timeoutId);
 
       // Handle invalid token errors by clearing them
@@ -170,15 +177,15 @@ export const initializeAuth = async () => {
         return { session: null, error: sessionError };
       }
 
-      console.log('✅ Ultra-fast auth completed successfully');
+      console.log('✅ Fast auth completed successfully');
       return { session: sessionData.session, error: null };
 
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
 
       // Handle timeout
-      if (fetchError.name === 'AbortError') {
-        console.warn('⏱️ Auth request timed out (background)');
+      if (fetchError.name === 'AbortError' || fetchError.message?.includes('timeout')) {
+        console.warn('⏱️ Auth request timed out');
         return { session: null, error: new Error('Auth request timeout') };
       }
 
@@ -186,7 +193,7 @@ export const initializeAuth = async () => {
       if (fetchError.message?.includes('Failed to fetch') ||
           fetchError.message?.includes('Network request failed') ||
           fetchError.message?.includes('fetch')) {
-        console.warn('🌐 Network error during auth (background):', fetchError.message);
+        console.warn('🌐 Network error during auth:', fetchError.message);
         return { session: null, error: new Error('Network connectivity issue') };
       }
 
@@ -194,7 +201,7 @@ export const initializeAuth = async () => {
     }
 
   } catch (error: any) {
-    console.warn('⚠️ Background auth check failed:', error);
+    console.warn('⚠️ Auth check failed:', error);
     return { session: null, error: error };
   }
 };
