@@ -14,6 +14,7 @@ import { SupabaseConfigGuide } from './SupabaseConfigGuide';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -46,6 +47,7 @@ export function EnhancedLogin() {
       return;
     }
 
+    setSubmitting(true);
     const { error } = await signIn(formData.email, formData.password);
 
     if (error) {
@@ -67,6 +69,7 @@ export function EnhancedLogin() {
     } else {
       toast.success('Welcome to Biolegend Scientific!');
     }
+    setSubmitting(false);
   };
 
   const handleInputChange = (field: keyof typeof formData) => (
@@ -113,7 +116,7 @@ export function EnhancedLogin() {
                       value={formData.email}
                       onChange={handleInputChange('email')}
                       className={`pl-10 ${formErrors.email ? 'border-destructive' : ''}`}
-                      disabled={loading}
+                      disabled={submitting}
                     />
                   </div>
                   {formErrors.email && (
@@ -132,7 +135,7 @@ export function EnhancedLogin() {
                       value={formData.password}
                       onChange={handleInputChange('password')}
                       className={`pl-10 pr-10 ${formErrors.password ? 'border-destructive' : ''}`}
-                      disabled={loading}
+                      disabled={submitting}
                     />
                     <Button
                       type="button"
@@ -140,7 +143,7 @@ export function EnhancedLogin() {
                       size="icon"
                       className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={loading}
+                      disabled={submitting}
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -158,9 +161,9 @@ export function EnhancedLogin() {
                   <Button
                     type="submit"
                     className="w-full"
-                    disabled={loading}
+                    disabled={submitting}
                   >
-                    {loading ? (
+                    {submitting ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Signing in...
