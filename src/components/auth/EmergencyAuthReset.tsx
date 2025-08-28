@@ -69,16 +69,16 @@ export const EmergencyAuthReset = () => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-destructive">
+        <CardTitle className="flex items-center gap-2 text-blue-600">
           <AlertTriangle className="h-5 w-5" />
-          Authentication Issue Detected
+          Need Help Getting Started?
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <Alert>
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            The app appears to be stuck loading. This usually happens when authentication tokens become corrupted or network issues prevent proper initialization.
+            The app is taking longer than usual to load. This can happen due to slow networks or cached data conflicts. The options below can help get you back on track.
           </AlertDescription>
         </Alert>
 
