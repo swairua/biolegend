@@ -193,17 +193,38 @@ export const useCreateProforma = () => {
         total_amount: totals.total_amount,
       };
 
-      // Create the proforma invoice
-      const { data: proformaData, error: proformaError } = await supabase
+      // Create the proforma invoice (retry without valid_until if column missing)
+      let proformaData;
+      let { data: firstData, error: proformaError } = await supabase
         .from('proforma_invoices')
         .insert([proformaWithTotals])
         .select()
         .single();
 
       if (proformaError) {
-        const errorMessage = serializeError(proformaError);
-        console.error('Error creating proforma:', errorMessage);
-        throw new Error(`Failed to create proforma: ${errorMessage}`);
+        const errorMessage = serializeError(proformaError).toLowerCase();
+        console.warn('Proforma insert failed, checking for schema mismatch:', errorMessage);
+
+        if (errorMessage.includes('valid_until')) {
+          const { valid_until, ...withoutValidUntil } = proformaWithTotals as any;
+          const retry = await supabase
+            .from('proforma_invoices')
+            .insert([withoutValidUntil])
+            .select()
+            .single();
+
+          if (retry.error) {
+            const retryMessage = serializeError(retry.error);
+            console.error('Retry insert failed:', retryMessage);
+            throw new Error(`Failed to create proforma: ${retryMessage}`);
+          }
+
+          proformaData = retry.data;
+        } else {
+          throw new Error(`Failed to create proforma: ${serializeError(proformaError)}`);
+        }
+      } else {
+        proformaData = firstData;
       }
 
       // Create the proforma items
