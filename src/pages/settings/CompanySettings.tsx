@@ -818,9 +818,25 @@ export default function CompanySettings() {
                       Current: {companyData.logo_url.startsWith('data:') ? 'Local storage (Base64)' : 'Cloud storage'}
                     </p>
                     {companyData.logo_url.startsWith('data:') && (
-                      <p className="text-xs text-orange-600">
-                        Note: Logo is stored locally. For production use, consider setting up cloud storage.
-                      </p>
+                      <div className="text-xs text-orange-600 space-y-1">
+                        <p>Note: Logo is stored locally. For production use, consider setting up cloud storage.</p>
+                        {storageStatus === 'unavailable' && (
+                          <details className="cursor-pointer">
+                            <summary className="hover:text-orange-700">View storage setup instructions</summary>
+                            <div className="mt-2 p-2 bg-orange-50 rounded text-orange-800 space-y-1">
+                              <p className="font-medium">To enable cloud storage:</p>
+                              <ol className="list-decimal list-inside space-y-1 text-xs">
+                                <li>Go to your Supabase dashboard</li>
+                                <li>Navigate to Storage section</li>
+                                <li>Create a new bucket named "company-logos"</li>
+                                <li>Set it as public with 5MB file size limit</li>
+                                <li>Allow image MIME types: PNG, JPG, GIF, WebP</li>
+                                <li>Click "Retry" button above to test</li>
+                              </ol>
+                            </div>
+                          </details>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}
