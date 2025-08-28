@@ -137,11 +137,28 @@ export function ViewQuotationModal({
                 <BiolegendLogo size="lg" showText={true} />
               )}
               <div className="text-sm text-muted-foreground space-y-1">
-                <div>P.O Box 85988-00200, Nairobi, Kenya</div>
-                <div>Tel: 0741 207 690/0780 165 490</div>
-                <div>Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
-                <div>Website: www.biolegendscientific.co.ke</div>
-                <div className="text-xs italic text-primary/70">Delivering Discoveries.... and more</div>
+                {currentCompany ? (
+                  <>
+                    {currentCompany.tax_number && <div>PIN: {currentCompany.tax_number}</div>}
+                    {currentCompany.address && <div>{currentCompany.address}</div>}
+                    {(currentCompany.city || currentCompany.country) && (
+                      <div>
+                        {currentCompany.city}{currentCompany.city && currentCompany.country ? ', ' : ''}{currentCompany.country}
+                      </div>
+                    )}
+                    {currentCompany.phone && <div>Tel: {currentCompany.phone}</div>}
+                    {currentCompany.email && <div>Email: {currentCompany.email}</div>}
+                    {currentCompany.website && <div>Website: {currentCompany.website}</div>}
+                  </>
+                ) : (
+                  <>
+                    <div>P.O Box 85988-00200, Nairobi, Kenya</div>
+                    <div>Tel: 0741 207 690/0780 165 490</div>
+                    <div>Email: biolegend@biolegendscientific.co.ke/info@biolegendscientific.co.ke</div>
+                    <div>Website: www.biolegendscientific.co.ke</div>
+                    <div className="text-xs italic text-primary/70">Delivering Discoveries.... and more</div>
+                  </>
+                )}
               </div>
             </div>
             
