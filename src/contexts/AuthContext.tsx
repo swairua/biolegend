@@ -231,8 +231,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       };
 
-      // Start app after very short delay regardless of auth status
-      const immediateStartTimer = setTimeout(startAppImmediately, 500); // Reduced to 500ms
+      // Start app immediately regardless of auth status
+      const immediateStartTimer = setTimeout(startAppImmediately, 0);
 
       try {
         // Very fast auth check with 3-second timeout
