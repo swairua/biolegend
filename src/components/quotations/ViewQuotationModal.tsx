@@ -361,8 +361,12 @@ export function ViewQuotationModal({
               ) : null}
               <BiolegendLogo size="sm" showText={true} className="justify-center" style={{ display: currentCompany?.logo_url ? 'none' : 'block' }} />
             </div>
-            <div>Your Medical & Laboratory Supplies Partner</div>
-            <div className="mt-1">Medical Supplies • Laboratory Supplies • Technical Equipment</div>
+            <div>{currentCompany?.name || 'Your Medical & Laboratory Supplies Partner'}</div>
+            {currentCompany?.business_description ? (
+              <div className="mt-1">{currentCompany.business_description}</div>
+            ) : (
+              <div className="mt-1">Medical Supplies • Laboratory Supplies • Technical Equipment</div>
+            )}
           </div>
         </div>
       </DialogContent>
