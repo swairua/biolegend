@@ -9,11 +9,13 @@ import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
 import { AutoAdminSetup } from './AutoAdminSetup';
 import { handleAuthError } from '@/utils/authErrorHandler';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -59,6 +61,7 @@ export function EnhancedLogin() {
       }
     } else {
       toast.success('Welcome to Biolegend Scientific!');
+      navigate('/');
     }
     setSubmitting(false);
   };
