@@ -657,12 +657,37 @@ export default function CompanySettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start space-x-6">
-              <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25">
-                {companyData.logo_url ? (
+              <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25 relative">
+                {uploading ? (
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span className="text-xs mt-1">Uploading...</span>
+                  </div>
+                ) : companyData.logo_url ? (
                   <img
                     src={companyData.logo_url}
                     alt="Company Logo"
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      console.error('Logo failed to load:', companyData.logo_url);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      // Show fallback
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `
+                          <div class="flex flex-col items-center justify-center text-muted-foreground">
+                            <svg class="h-6 w-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="text-xs">Load Failed</span>
+                          </div>
+                        `;
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log('Logo loaded successfully');
+                    }}
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
@@ -676,12 +701,13 @@ export default function CompanySettings() {
                   <Label className="text-sm font-medium">Company Logo</Label>
                   <p className="text-xs text-muted-foreground mt-1">
                     Upload your company logo. Recommended size: 200x200px, max 5MB. Supports PNG, JPG, GIF, WebP.
+                    {' '}Cloud storage will be used if available, otherwise files ≤1MB will be stored locally.
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                     ref={fileInputRef}
                     onChange={handleFileChange}
                     style={{ display: 'none' }}
@@ -710,9 +736,16 @@ export default function CompanySettings() {
                   )}
                 </div>
                 {companyData.logo_url && (
-                  <p className="text-xs text-muted-foreground">
-                    Current: Custom uploaded logo
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Current: {companyData.logo_url.startsWith('data:') ? 'Local storage (Base64)' : 'Cloud storage'}
+                    </p>
+                    {companyData.logo_url.startsWith('data:') && (
+                      <p className="text-xs text-orange-600">
+                        Note: Logo is stored locally. For production use, consider setting up cloud storage.
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
