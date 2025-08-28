@@ -192,21 +192,19 @@ export default function CompanySettings() {
     const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
 
     if (bucketsError) {
+      // Handle RLS permission errors specifically
+      if (bucketsError.message.includes('row-level security') ||
+          bucketsError.message.includes('permission') ||
+          bucketsError.message.includes('policy')) {
+        throw new Error('Cloud storage requires admin permissions. Please use local storage or contact your administrator.');
+      }
       throw new Error(`Storage not available: ${bucketsError.message}`);
     }
 
     const hasLogoBucket = buckets?.some(bucket => bucket.name === 'company-logos');
     if (!hasLogoBucket) {
-      // Try to create the bucket
-      const { error: createError } = await supabase.storage.createBucket('company-logos', {
-        public: true,
-        fileSizeLimit: 5242880, // 5MB
-        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-      });
-
-      if (createError) {
-        throw new Error(`Cannot create storage bucket: ${createError.message}`);
-      }
+      // Don't try to create bucket - this requires admin permissions
+      throw new Error('Storage bucket "company-logos" not found. Please create it manually in Supabase dashboard or use local storage.');
     }
 
     // Upload the file
@@ -220,6 +218,12 @@ export default function CompanySettings() {
       });
 
     if (uploadError) {
+      // Handle RLS permission errors during upload
+      if (uploadError.message.includes('row-level security') ||
+          uploadError.message.includes('permission') ||
+          uploadError.message.includes('policy')) {
+        throw new Error('You don\'t have permission to upload to cloud storage. Please use local storage or contact your administrator.');
+      }
       throw new Error(`Upload failed: ${uploadError.message}`);
     }
 
