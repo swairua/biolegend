@@ -551,11 +551,20 @@ export const useCreateProformaWithItems = () => {
           sort_order: index + 1
         }));
 
-        const { error: itemsError } = await supabase
+        let { error: itemsError } = await supabase
           .from('proforma_items')
           .insert(proformaItems);
 
-        if (itemsError) throw itemsError;
+        if (itemsError) {
+          const msg = (itemsError.message || JSON.stringify(itemsError)).toLowerCase();
+          if (msg.includes('discount_percentage')) {
+            const minimalItems = proformaItems.map(({ discount_percentage, ...rest }) => rest);
+            const retry = await supabase.from('proforma_items').insert(minimalItems);
+            if (retry.error) throw retry.error;
+          } else {
+            throw itemsError;
+          }
+        }
       }
 
       return proformaData;
