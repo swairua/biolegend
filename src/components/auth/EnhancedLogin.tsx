@@ -4,23 +4,23 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail, Lock, HelpCircle } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { AutoAdminSetup } from './AutoAdminSetup';
 import { handleAuthError } from '@/utils/authErrorHandler';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { SupabaseConfigGuide } from './SupabaseConfigGuide';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
+  const [activeTab, setActiveTab] = useState<'login' | 'config'>('login');
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -51,7 +51,14 @@ export function EnhancedLogin() {
     if (error) {
       const errorInfo = handleAuthError(error);
 
-      // Additional context for invalid credentials
+      if (error.message && typeof error.message === 'string') {
+        const msg = error.message.toLowerCase();
+        if (msg.includes('email logins are disabled') || msg.includes('email signups are disabled')) {
+          setActiveTab('config');
+          toast.error('Email authentication is disabled in Supabase. See Configuration Guide tab.');
+        }
+      }
+
       if (errorInfo.type === 'invalid_credentials') {
         setTimeout(() => {
           toast.info('Tip: Use the "Create Admin User" button above if this is your first time setting up the system.');
@@ -73,7 +80,7 @@ export function EnhancedLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-2xl">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto">
             <BiolegendLogo size="lg" showText={false} />
@@ -87,79 +94,103 @@ export function EnhancedLogin() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleInputChange('email')}
-                  className={`pl-10 ${formErrors.email ? 'border-destructive' : ''}`}
-                  disabled={loading}
-                />
-              </div>
-              {formErrors.email && (
-                <p className="text-sm text-destructive">{formErrors.email}</p>
-              )}
-            </div>
+          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'config')}>
+            <TabsList className="w-full">
+              <TabsTrigger value="login" className="flex-1">Sign In</TabsTrigger>
+              <TabsTrigger value="config" className="flex-1">Configuration Guide</TabsTrigger>
+            </TabsList>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleInputChange('password')}
-                  className={`pl-10 pr-10 ${formErrors.password ? 'border-destructive' : ''}`}
-                  disabled={loading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
+            <TabsContent value="login">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange('email')}
+                      className={`pl-10 ${formErrors.email ? 'border-destructive' : ''}`}
+                      disabled={loading}
+                    />
+                  </div>
+                  {formErrors.email && (
+                    <p className="text-sm text-destructive">{formErrors.email}</p>
                   )}
-                </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      className={`pl-10 pr-10 ${formErrors.password ? 'border-destructive' : ''}`}
+                      disabled={loading}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={loading}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {formErrors.password && (
+                    <p className="text-sm text-destructive">{formErrors.password}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="w-full flex items-center justify-center gap-2 text-muted-foreground"
+                    onClick={() => setActiveTab('config')}
+                  >
+                    <HelpCircle className="h-4 w-4" />
+                    Having trouble signing in? Open configuration guide
+                  </Button>
+                </div>
+              </form>
+
+              <div className="mt-6">
+                <AutoAdminSetup />
               </div>
-              {formErrors.password && (
-                <p className="text-sm text-destructive">{formErrors.password}</p>
-              )}
-            </div>
+            </TabsContent>
 
-            <div className="space-y-2">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-
-            </div>
-          </form>
-
-          <AutoAdminSetup />
+            <TabsContent value="config">
+              <SupabaseConfigGuide />
+            </TabsContent>
+          </Tabs>
 
           <div className="text-center space-y-2">
             <p className="text-xs text-muted-foreground">
