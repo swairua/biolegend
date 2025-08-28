@@ -22,6 +22,7 @@ import {
   Send
 } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
+import { useCompanies } from '@/hooks/useDatabase';
 
 interface ViewQuotationModalProps {
   open: boolean;
