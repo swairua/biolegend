@@ -3,6 +3,7 @@ import { User, Session, AuthError } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { clearAuthTokens, safeAuthOperation } from '@/utils/authHelpers';
+import { logError, logWarning, getUserFriendlyErrorMessage } from '@/utils/errorLogger';
 
 export interface UserProfile {
   id: string;
@@ -71,13 +72,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .maybeSingle();
 
       if (error) {
-        console.warn('Profile fetch error:', error.message);
+        logWarning('Profile fetch error:', error, { userId });
         return null;
       }
 
       return profileData;
     } catch (error) {
-      console.warn('Profile fetch exception:', error);
+      logWarning('Profile fetch exception:', error, { userId });
       return null;
     }
   }, []);
@@ -90,7 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .update({ last_login: new Date().toISOString() })
         .eq('id', userId);
     } catch (error) {
-      console.warn('Error updating last login:', error);
+      logWarning('Error updating last login:', error, { userId });
     }
   }, []);
 
@@ -119,15 +120,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.warn('Error in auth state change:', error);
-      
+      logWarning('Error in auth state change:', error, { event, hasSession: !!newSession });
+
       // Clear invalid tokens if needed
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = (error as any).message;
-        if (errorMessage?.includes('Invalid Refresh Token') || 
-            errorMessage?.includes('Refresh Token Not Found')) {
-          clearAuthTokens();
-        }
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      if (errorMessage?.includes('Invalid Refresh Token') ||
+          errorMessage?.includes('Refresh Token Not Found')) {
+        clearAuthTokens();
       }
     } finally {
       if (mountedRef.current) {
@@ -194,11 +193,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearTimeout(forceCompleteTimer);
 
         if (sessionError) {
-          console.warn('⚠️ Session error:', sessionError.message);
-          
+          logWarning('⚠️ Session error:', sessionError);
+
           // Handle invalid token errors
-          if (sessionError.message?.includes('Invalid Refresh Token') ||
-              sessionError.message?.includes('invalid_token')) {
+          const errorMessage = getUserFriendlyErrorMessage(sessionError);
+          if (errorMessage?.includes('Invalid Refresh Token') ||
+              errorMessage?.includes('invalid_token')) {
             console.log('🧹 Clearing invalid tokens');
             clearAuthTokens();
           }
@@ -216,11 +216,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               if (mountedRef.current) {
                 setProfile(userProfile);
                 if (userProfile) {
-                  updateLastLogin(sessionData.session.user.id).catch(console.error);
+                  updateLastLogin(sessionData.session.user.id).catch(error =>
+                    logWarning('Error updating last login in initialization:', error)
+                  );
                 }
               }
             })
-            .catch(console.warn);
+            .catch(error => logWarning('Background profile fetch failed:', error));
         }
 
         // Complete initialization
@@ -232,9 +234,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
       } catch (error) {
-        console.warn('⚠️ Auth initialization error:', error);
+        logWarning('⚠️ Auth initialization error:', error);
         clearTimeout(forceCompleteTimer);
-        
+
         // Always complete initialization even on error
         if (mountedRef.current) {
           setLoading(false);
@@ -315,8 +317,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const { error } = await supabase.auth.signOut();
 
       if (error) {
-        console.error('❌ Sign out error:', error);
-        setTimeout(() => toast.error('Error signing out'), 0);
+        logError('❌ Sign out error:', error);
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        setTimeout(() => toast.error(`Error signing out: ${errorMessage}`), 0);
       } else {
         console.log('✅ Sign out successful');
         setUser(null);
@@ -326,8 +329,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setTimeout(() => toast.success('Signed out successfully'), 0);
       }
     } catch (error) {
-      console.error('❌ Sign out exception:', error);
-      setTimeout(() => toast.error('Error signing out'), 0);
+      logError('❌ Sign out exception:', error);
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      setTimeout(() => toast.error(`Error signing out: ${errorMessage}`), 0);
     } finally {
       if (mountedRef.current) {
         setLoading(false);
@@ -364,18 +368,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .eq('id', user.id);
 
       if (error) {
-        console.error('Error updating profile:', error);
-        setTimeout(() => toast.error('Failed to update profile'), 0);
-        return { error: new Error(error.message) };
+        logError('Error updating profile:', error, { userId: user.id });
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        setTimeout(() => toast.error(`Failed to update profile: ${errorMessage}`), 0);
+        return { error: new Error(errorMessage) };
       }
 
       await refreshProfile();
       setTimeout(() => toast.success('Profile updated successfully'), 0);
       return { error: null };
     } catch (error) {
-      console.error('Error updating profile:', error);
-      setTimeout(() => toast.error('Failed to update profile'), 0);
-      return { error: error as Error };
+      logError('Error updating profile:', error, { userId: user.id });
+      const errorMessage = getUserFriendlyErrorMessage(error);
+      setTimeout(() => toast.error(`Failed to update profile: ${errorMessage}`), 0);
+      return { error: new Error(errorMessage) };
     }
   }, [user]);
 
