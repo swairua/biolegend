@@ -401,14 +401,6 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
             Create a detailed quotation with multiple items for your customer
           </DialogDescription>
 
-          {/* Debug Info - Remove this after fixing */}
-          <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
-            <strong>Debug Info:</strong><br/>
-            Companies: {companies?.length || 0} found<br/>
-            Current Company: {currentCompany?.name || 'None'}<br/>
-            Customers: {loadingCustomers ? 'Loading...' : `${customers?.length || 0} found`}<br/>
-            Company ID: {currentCompany?.id || 'undefined'}
-          </div>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
