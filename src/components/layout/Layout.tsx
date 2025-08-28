@@ -17,7 +17,7 @@ export function Layout({ children }: LayoutProps) {
   const [showEmergencyReset, setShowEmergencyReset] = useState(false);
 
 
-  // Check for loading timeout and show emergency reset after 12 seconds (since auth now maxes at 10s)
+  // Check for loading timeout and show emergency reset after 5 seconds (since app should start in 1-3s)
   useEffect(() => {
     if (!loading) {
       setShowEmergencyReset(false);
@@ -26,10 +26,10 @@ export function Layout({ children }: LayoutProps) {
 
     const timer = setTimeout(() => {
       if (loading) {
-        console.warn('Auth loading exceeded 12 seconds, showing reset option');
+        console.warn('App startup exceeded 5 seconds, showing reset option');
         setShowEmergencyReset(true);
       }
-    }, 12000); // 12 second timeout (auth should complete in max 10s)
+    }, 5000); // 5 second timeout (app should start in 1-3s max)
 
     return () => clearTimeout(timer);
   }, [loading]);
