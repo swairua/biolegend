@@ -303,7 +303,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                   if (mountedRef.current) {
                     setProfile(userProfile);
                     if (userProfile) {
-                      updateLastLogin(bgSession.user.id).catch(console.error);
+                      updateLastLogin(bgSession.user.id).catch(err =>
+                        logError('Background retry update last login failed:', err, {
+                          userId: bgSession.user.id,
+                          context: 'backgroundAuthRetry'
+                        })
+                      );
                     }
                   }
                 }
