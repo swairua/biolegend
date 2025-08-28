@@ -18,8 +18,8 @@ export function Layout({ children }: LayoutProps) {
   const publicRoutes = ['/auth-test', '/manual-setup', '/database-fix-page', '/auto-fix', '/audit', '/auto-payment-sync', '/payment-sync'];
   const isPublicRoute = publicRoutes.includes(location.pathname);
 
-  // Show login immediately for non-authenticated users (even during initial auth load)
-  if (!isAuthenticated && !isPublicRoute) {
+  // Show login after initial auth completes to avoid redirect bounce
+  if (!loading && !isAuthenticated && !isPublicRoute) {
     return <EnhancedLogin />;
   }
 
