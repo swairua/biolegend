@@ -183,8 +183,12 @@ export function convertToTaxInclusive(exclusivePrice: number, taxPercentage: num
 /**
  * Format currency with proper decimals
  */
-export function formatCurrency(amount: number, currencySymbol: string = '$'): string {
-  return `${currencySymbol}${amount.toFixed(2)}`;
+export function formatCurrency(amount: number, locale: string = 'en-KE', currency: string = 'KES'): string {
+  try {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  } catch {
+    return `KSh ${amount.toFixed(2)}`;
+  }
 }
 
 /**
