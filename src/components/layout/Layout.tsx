@@ -66,15 +66,16 @@ export function Layout({ children }: LayoutProps) {
             <>
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
               <div>
-                <p className="text-muted-foreground">Loading...</p>
-                {loadingDuration > 5 && (
+                <p className="text-lg font-medium text-foreground">Starting up...</p>
+                <p className="text-sm text-muted-foreground">Preparing your workspace</p>
+                {loadingDuration > 3 && loadingDuration <= 8 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Loading for {loadingDuration} seconds...
+                    Just a moment longer...
                   </p>
                 )}
-                {loadingDuration > 10 && (
-                  <p className="text-sm text-yellow-600 mt-1">
-                    This is taking longer than usual. If the app doesn't load soon, an emergency reset option will appear.
+                {loadingDuration > 8 && (
+                  <p className="text-sm text-blue-600 mt-1">
+                    Almost ready! If this persists, we'll show you some options to help.
                   </p>
                 )}
               </div>
