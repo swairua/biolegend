@@ -100,19 +100,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (isErrorType(error, 'network')) {
         console.warn('Profile fetch failed due to network issue');
-        setTimeout(() => toast.error(
-          'Network connection issue. Profile will retry automatically.',
-          { duration: 3000 }
-        ), 0);
+
+        // Prevent toast spam - only show network error toast every 10 seconds
+        const now = Date.now();
+        if (now - lastNetworkErrorToast.current > TOAST_COOLDOWN) {
+          lastNetworkErrorToast.current = now;
+          setTimeout(() => toast.error(
+            'Network connection issue while loading profile. Please check your connection.',
+            { duration: 5000 }
+          ), 0);
+        }
         return null;
       }
 
       if (isErrorType(error, 'permission')) {
         console.warn('Profile fetch failed due to permissions');
-        setTimeout(() => toast.error(
-          'Permission error accessing profile. Please sign in again.',
-          { duration: 4000 }
-        ), 0);
+
+        // Prevent toast spam - only show permission error toast every 10 seconds
+        const now = Date.now();
+        if (now - lastPermissionErrorToast.current > TOAST_COOLDOWN) {
+          lastPermissionErrorToast.current = now;
+          setTimeout(() => toast.error(
+            'Permission error accessing profile. Please sign in again.',
+            { duration: 4000 }
+          ), 0);
+        }
         return null;
       }
 
