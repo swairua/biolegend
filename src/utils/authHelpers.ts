@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logError, logWarning, getUserFriendlyErrorMessage } from '@/utils/errorLogger';
 
 /**
  * Clear corrupted auth tokens from localStorage
@@ -101,13 +102,14 @@ export const safeAuthOperation = async <T>(
 
   } catch (error: any) {
     // Check if this is a timeout error
-    if (error?.message?.includes('timed out')) {
-      console.warn(`${operationName} operation timed out`);
+    const errorMessage = getUserFriendlyErrorMessage(error);
+    if (errorMessage?.includes('timed out')) {
+      logWarning(`${operationName} operation timed out`, error);
       return { data: null, error: new Error(`${operationName} operation took too long. Please try again.`) };
     }
 
     // Check if this is a rate limit error
-    if (error?.message?.includes('rate limit') || error?.message?.includes('Rate limit')) {
+    if (errorMessage?.includes('rate limit') || errorMessage?.includes('Rate limit')) {
       markRateLimited();
       const remaining = getRateLimitTimeRemaining();
       const rateLimitError = new Error(`Rate limit reached. Please wait ${remaining} seconds before trying again.`);
@@ -115,16 +117,18 @@ export const safeAuthOperation = async <T>(
     }
 
     // Check if this is an invalid token error
-    if (error?.message?.includes('Invalid Refresh Token') ||
-        error?.message?.includes('Refresh Token Not Found') ||
-        error?.message?.includes('invalid_token')) {
-      console.warn('Clearing invalid auth tokens');
+    if (errorMessage?.includes('Invalid Refresh Token') ||
+        errorMessage?.includes('Refresh Token Not Found') ||
+        errorMessage?.includes('invalid_token')) {
+      logWarning('Clearing invalid auth tokens', error);
       clearAuthTokens();
       const tokenError = new Error('Authentication tokens were invalid and have been cleared. Please sign in again.');
       return { data: null, error: tokenError };
     }
 
-    return { data: null, error: error as Error };
+    // Log the original error for debugging
+    logError(`${operationName} operation failed`, error);
+    return { data: null, error: new Error(errorMessage) };
   }
 };
 
@@ -197,15 +201,16 @@ export const initializeAuth = async () => {
 
       // Handle timeout
       if (fetchError.name === 'AbortError' || fetchError.message?.includes('timeout')) {
-        console.warn('⏱️ Auth request timed out');
+        logWarning('⏱️ Auth request timed out', fetchError);
         return { session: null, error: new Error('Auth request timeout') };
       }
 
       // Handle network errors gracefully
-      if (fetchError.message?.includes('Failed to fetch') ||
-          fetchError.message?.includes('Network request failed') ||
-          fetchError.message?.includes('fetch')) {
-        console.warn('🌐 Network error during auth:', fetchError.message);
+      const errorMessage = getUserFriendlyErrorMessage(fetchError);
+      if (errorMessage?.includes('Failed to fetch') ||
+          errorMessage?.includes('Network request failed') ||
+          errorMessage?.includes('fetch')) {
+        logWarning('🌐 Network error during auth:', fetchError);
         return { session: null, error: new Error('Network connectivity issue') };
       }
 
@@ -213,7 +218,7 @@ export const initializeAuth = async () => {
     }
 
   } catch (error: any) {
-    console.warn('⚠️ Auth check failed:', error);
+    logWarning('⚠️ Auth check failed:', error);
     return { session: null, error: error };
   }
 };
