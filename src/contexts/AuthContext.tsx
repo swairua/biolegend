@@ -550,7 +550,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     profile,
     session,
-    loading: (loading || !initialized) && !forceCompletedRef.current,
+    loading: loading && !forceCompletedRef.current,
     signIn,
     signUp,
     signOut,
