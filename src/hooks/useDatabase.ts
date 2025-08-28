@@ -1233,8 +1233,10 @@ export const useQuotations = (companyId?: string) => {
             description,
             quantity,
             unit_price,
-            tax_rate,
+            discount_percentage,
+            tax_percentage,
             tax_amount,
+            tax_inclusive,
             line_total,
             sort_order
           `)
