@@ -440,10 +440,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.log('🎉 Sign out complete!');
       }
     } catch (error) {
-      console.error('❌ Sign out exception:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      logError('❌ Sign out exception:', error, { context: 'signOut' });
       setTimeout(() => toast.error('Error signing out'), 0);
     } finally {
       if (mountedRef.current) {
