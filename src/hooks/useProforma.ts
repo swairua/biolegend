@@ -229,7 +229,7 @@ export const useCreateProforma = () => {
 
       // Create the proforma items
       if (items.length > 0) {
-        const proformaItems = items.map(item => ({
+        const proformaItemsFull = items.map(item => ({
           proforma_id: proformaData.id,
           product_id: item.product_id,
           description: item.description,
@@ -243,16 +243,37 @@ export const useCreateProforma = () => {
           line_total: item.line_total,
         }));
 
-        const { error: itemsError } = await supabase
+        let { error: itemsError } = await supabase
           .from('proforma_items')
-          .insert(proformaItems);
+          .insert(proformaItemsFull);
 
         if (itemsError) {
-          const errorMessage = serializeError(itemsError);
-          console.error('Error creating proforma items:', errorMessage);
-          // Try to delete the proforma if items creation failed
-          await supabase.from('proforma_invoices').delete().eq('id', proformaData.id);
-          throw new Error(`Failed to create proforma items: ${errorMessage}`);
+          const firstMsg = serializeError(itemsError).toLowerCase();
+          console.warn('Proforma items insert failed, attempting reduced columns:', firstMsg);
+
+          // Retry without discount_amount / tax fields if schema is older
+          const proformaItemsReduced = items.map((item, index) => ({
+            proforma_id: proformaData.id,
+            product_id: item.product_id,
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            discount_percentage: item.discount_percentage || 0,
+            line_total: item.line_total,
+            sort_order: index + 1,
+          }));
+
+          const retry = await supabase
+            .from('proforma_items')
+            .insert(proformaItemsReduced);
+
+          if (retry.error) {
+            const retryMessage = serializeError(retry.error);
+            console.error('Retry creating proforma items failed:', retryMessage);
+            // Try to delete the proforma if items creation failed
+            await supabase.from('proforma_invoices').delete().eq('id', proformaData.id);
+            throw new Error(`Failed to create proforma items: ${retryMessage}`);
+          }
         }
       }
 
