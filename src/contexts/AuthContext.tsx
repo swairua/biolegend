@@ -63,6 +63,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const initializingRef = useRef(false);
   const forceCompletedRef = useRef(false);
 
+  // Toast spam prevention
+  const lastNetworkErrorToast = useRef<number>(0);
+  const lastPermissionErrorToast = useRef<number>(0);
+  const TOAST_COOLDOWN = 10000; // 10 seconds between similar error toasts
+
   // Fetch user profile from database with error handling and retry logic
   const fetchProfile = useCallback(async (userId: string): Promise<UserProfile | null> => {
     try {
