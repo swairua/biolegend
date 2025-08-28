@@ -583,7 +583,11 @@ export const generatePDF = (data: DocumentData) => {
         <div class="header">
           <div class="company-info">
             <div class="logo">
-              <img src="${company.logo_url}" alt="${company.name} Logo" />
+              ${company.logo_url ?
+                `<img src="${company.logo_url}" alt="${company.name} Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                 <div style="display:none; width:100%; height:100%; background:#f8f9fa; border:2px dashed #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color:#6c757d; text-align:center;">Logo not available</div>` :
+                `<div style="width:100%; height:100%; background:#f8f9fa; border:2px dashed #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color:#6c757d; text-align:center;">No logo configured</div>`
+              }
             </div>
             <div class="company-name">${company.name}</div>
             <div class="company-details">
