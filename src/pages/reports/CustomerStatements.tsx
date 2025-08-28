@@ -59,6 +59,8 @@ export default function CustomerStatements() {
   const { data: customers } = useCustomers();
   const { data: invoices } = useInvoices();
   const { data: payments } = usePayments();
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
 
   // Calculate customer statements
   const calculateCustomerStatements = (): CustomerStatement[] => {
