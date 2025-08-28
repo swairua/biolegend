@@ -124,7 +124,7 @@ export function ViewQuotationModal({
                   <img
                     src={currentCompany.logo_url}
                     alt={`${currentCompany.name} Logo`}
-                    className="h-16 w-auto object-contain"
+                    className="h-20 w-auto object-contain"
                     onError={(e) => {
                       // Fallback to BiolegendLogo if company logo fails to load
                       (e.target as HTMLImageElement).style.display = 'none';
