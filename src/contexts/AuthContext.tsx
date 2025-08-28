@@ -198,7 +198,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [fetchProfile, updateLastLogin]);
 
-  // Initialize auth state with improved error handling and timeout
+  // Initialize auth state with simplified logic
   useEffect(() => {
     if (initializingRef.current) return;
 
@@ -206,203 +206,89 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     mountedRef.current = true;
 
     const initializeAuthState = async () => {
-      const initStartTime = Date.now();
-      const INIT_TIMEOUT = parseInt(import.meta.env.VITE_AUTH_TIMEOUT || '15000'); // Default 15 seconds
-
       try {
         console.log('🚀 Initializing auth state...');
 
-        // Create a more robust initialization with progressive timeout
-        const initWithRetry = async () => {
-          let lastError: Error | null = null;
+        // Simple timeout mechanism - 10 seconds max
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Auth initialization timeout after 10000ms')), 10000);
+        });
 
-          // Try up to 3 times with increasing timeouts
-          const attempts = [
-            { timeout: 5000, label: 'Quick check' },
-            { timeout: 10000, label: 'Standard check' },
-            { timeout: 15000, label: 'Extended check' }
-          ];
+        // Simple auth check
+        const authPromise = initializeAuth();
 
-          for (let i = 0; i < attempts.length; i++) {
-            const attempt = attempts[i];
-            try {
-              console.log(`🔄 Auth attempt ${i + 1}/3 (${attempt.label})`);
+        // Race with timeout
+        const result = await Promise.race([authPromise, timeoutPromise]);
+        const { session: initialSession, error } = result as any;
 
-              // Create timeout for this specific attempt
-              const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error(`Auth ${attempt.label} timeout after ${attempt.timeout}ms`)), attempt.timeout);
-              });
+        if (error) {
+          console.warn('⚠️ Auth initialization error:', error.message);
+          throw error;
+        }
 
-              // Try auth initialization
-              const authPromise = initializeAuth();
+        if (initialSession?.user && mountedRef.current) {
+          console.log('✅ Found valid session, user authenticated');
 
-              // Race this attempt against its timeout
-              const { session: initialSession, error } = await Promise.race([authPromise, timeoutPromise]) as any;
+          // Set user and session immediately
+          setSession(initialSession);
+          setUser(initialSession.user);
 
-              if (error) {
-                lastError = error;
-                console.warn(`⚠️ Auth attempt ${i + 1} failed:`, error.message);
+          // Fetch profile in background - don't block initialization
+          fetchProfile(initialSession.user.id)
+            .then(userProfile => {
+              if (mountedRef.current) {
+                setProfile(userProfile);
+                console.log('✅ Profile loaded');
 
-                // If it's an auth error (not timeout), don't retry
-                if (!error.message.includes('timeout')) {
-                  throw error;
+                // Update last login silently
+                if (userProfile) {
+                  updateLastLogin(initialSession.user.id).catch(console.error);
                 }
-
-                // For timeout errors, try next attempt if available
-                if (i < attempts.length - 1) {
-                  console.log(`⏳ Timeout on attempt ${i + 1}, trying next approach...`);
-                  continue;
-                }
-                throw error;
               }
-
-              // Success!
-              console.log(`✅ Auth attempt ${i + 1} succeeded`);
-
-              if (initialSession?.user && mountedRef.current) {
-                console.log('✅ Found valid session, user authenticated');
-
-                // Don't block auth initialization on profile fetching
-                // Fetch profile in background and update state when ready
-                fetchProfile(initialSession.user.id)
-                  .then(userProfile => {
-                    if (mountedRef.current) {
-                      setProfile(userProfile);
-                      console.log('✅ Profile loaded asynchronously');
-                    }
-                  })
-                  .catch(profileError => {
-                    console.warn('⚠️ Background profile fetch failed:', {
-                      message: profileError instanceof Error ? profileError.message : String(profileError),
-                      code: profileError && typeof profileError === 'object' && 'code' in profileError ? profileError.code : undefined
-                    });
-                  });
-
-                return { session: initialSession, profile: null, error: null };
-              } else {
-                console.log('ℹ️ No valid session found');
-                return { session: null, profile: null, error: null };
-              }
-
-            } catch (attemptError: any) {
-              lastError = attemptError;
-
-              // If it's not a timeout and not the last attempt, still try next
-              if (i < attempts.length - 1 && attemptError.message?.includes('timeout')) {
-                console.log(`⏳ Attempt ${i + 1} timed out, trying longer timeout...`);
-                continue;
-              }
-
-              // If it's the last attempt or a non-timeout error, break
-              throw attemptError;
-            }
-          }
-
-          // If we get here, all attempts failed
-          throw lastError || new Error('All auth initialization attempts failed');
-        };
-
-        const result = await initWithRetry();
-
-        if (mountedRef.current && typeof result === 'object' && result !== null) {
-          const { session: initialSession, profile: userProfile } = result as any;
-
-          if (initialSession?.user) {
-            setSession(initialSession);
-            setUser(initialSession.user);
-            setProfile(userProfile);
-
-            // Update last login silently (don't await)
-            if (userProfile) {
-              updateLastLogin(initialSession.user.id).catch(error => {
-                console.error('Error updating last login:', {
-                  message: error instanceof Error ? error.message : String(error),
-                  userId: initialSession.user.id
-                });
+            })
+            .catch(profileError => {
+              console.warn('⚠️ Profile fetch failed:', {
+                message: profileError instanceof Error ? profileError.message : String(profileError)
               });
-            }
+            });
 
-            console.log('✅ Auth initialization completed successfully');
-          }
+          console.log('✅ Auth initialization completed');
+        } else {
+          console.log('ℹ️ No valid session found');
         }
 
       } catch (error) {
-        const initDuration = Date.now() - initStartTime;
-        console.error('❌ Error initializing auth (took', initDuration + 'ms):', error);
+        console.error('❌ Auth initialization error:', error);
 
-        // Handle different types of errors more gracefully
+        // Handle specific error types
         if (error instanceof Error) {
           if (error.message.includes('timeout')) {
-            console.warn('⏰ Auth initialization timed out - app will continue without authentication');
-            // Show a less alarming message for timeouts
-            setTimeout(() => {
-              toast.info('Authentication check is taking longer than expected. You can continue using the app and sign in when needed.', {
-                duration: 4000
-              });
-            }, 100);
+            console.warn('⏰ Auth initialization timed out - continuing without auth');
           } else if (error.message.includes('Invalid Refresh Token') ||
-                    error.message.includes('Refresh Token Not Found') ||
                     error.message.includes('invalid_token')) {
-            console.warn('🧹 Clearing invalid tokens during initialization');
+            console.warn('🧹 Clearing invalid tokens');
             clearAuthTokens();
-            setTimeout(() => {
-              toast.info('Authentication tokens were cleared. Please sign in again.', {
-                duration: 3000
-              });
-            }, 100);
-          } else if (error.message.includes('Failed to fetch') ||
-                    error.message.includes('Network request failed') ||
-                    error.message.includes('CONNECTION_TIMEOUT')) {
-            console.warn('🌐 Network connectivity issue during auth initialization');
-            setTimeout(() => {
-              toast.warning('Network connection issue detected. Please check your internet connection.', {
-                duration: 4000
-              });
-            }, 100);
-          } else {
-            // Generic error - be less alarming
-            console.warn('⚠️ Auth initialization had an issue, but app will continue');
-            setTimeout(() => {
-              toast.info('Authentication system had a minor issue. You may need to sign in again.', {
-                duration: 3000
-              });
-            }, 100);
           }
         }
 
-        // Ensure we always complete initialization even on error
+        // Always reset to clean state on error
         if (mountedRef.current) {
           setSession(null);
           setUser(null);
           setProfile(null);
         }
       } finally {
+        // Always complete initialization
         if (mountedRef.current) {
           setLoading(false);
           setInitialized(true);
           initializingRef.current = false;
-          console.log('🏁 Auth initialization finalized');
+          console.log('🏁 Auth initialization completed');
         }
       }
     };
 
     initializeAuthState();
-
-    // Safety timeout - force complete initialization after 20 seconds
-    const safetyTimeout = setTimeout(() => {
-      if (mountedRef.current && !initialized && !forceCompletedRef.current) {
-        console.warn('🚨 Force completing auth initialization due to safety timeout');
-        forceCompletedRef.current = true;
-        setLoading(false);
-        setInitialized(true);
-        initializingRef.current = false;
-        setTimeout(() => {
-          toast.info('Authentication check completed. You can continue using the app normally.', {
-            duration: 3000
-          });
-        }, 100);
-      }
-    }, 20000); // 20 second safety timeout
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
@@ -410,7 +296,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => {
       mountedRef.current = false;
       subscription.unsubscribe();
-      clearTimeout(safetyTimeout);
     };
   }, [fetchProfile, updateLastLogin, handleAuthStateChange]);
 
