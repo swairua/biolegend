@@ -130,11 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         .update({ last_login: new Date().toISOString() })
         .eq('id', userId);
     } catch (error) {
-      console.error('Error updating last login:', {
-        message: error instanceof Error ? error.message : String(error),
-        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
-        userId
-      });
+      logError('Error updating last login:', error, { userId, context: 'updateLastLogin' });
     }
   }, []);
 
