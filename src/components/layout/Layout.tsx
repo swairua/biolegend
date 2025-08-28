@@ -17,7 +17,7 @@ export function Layout({ children }: LayoutProps) {
   const [showEmergencyReset, setShowEmergencyReset] = useState(false);
 
 
-  // Check for loading timeout and show emergency reset after 15 seconds
+  // Check for loading timeout and show emergency reset after 5 seconds (since app should start in 1-3s)
   useEffect(() => {
     if (!loading) {
       setShowEmergencyReset(false);
@@ -26,9 +26,10 @@ export function Layout({ children }: LayoutProps) {
 
     const timer = setTimeout(() => {
       if (loading) {
+        console.warn('App startup exceeded 5 seconds, showing reset option');
         setShowEmergencyReset(true);
       }
-    }, 15000); // 15 second timeout
+    }, 5000); // 5 second timeout (app should start in 1-3s max)
 
     return () => clearTimeout(timer);
   }, [loading]);
@@ -65,15 +66,16 @@ export function Layout({ children }: LayoutProps) {
             <>
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
               <div>
-                <p className="text-muted-foreground">Loading...</p>
-                {loadingDuration > 5 && (
+                <p className="text-lg font-medium text-foreground">Starting up...</p>
+                <p className="text-sm text-muted-foreground">This should only take a moment</p>
+                {loadingDuration > 2 && loadingDuration <= 4 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Loading for {loadingDuration} seconds...
+                    Almost ready...
                   </p>
                 )}
-                {loadingDuration > 10 && (
-                  <p className="text-sm text-yellow-600 mt-1">
-                    This is taking longer than usual. If the app doesn't load soon, an emergency reset option will appear.
+                {loadingDuration > 4 && (
+                  <p className="text-sm text-orange-600 mt-1">
+                    Taking longer than expected. Help options coming up...
                   </p>
                 )}
               </div>

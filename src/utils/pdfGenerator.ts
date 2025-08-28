@@ -77,7 +77,7 @@ const DEFAULT_COMPANY: CompanyDetails = {
   phone: '0741207690/0780165490',
   email: 'biolegend@biolegendscientific.co.ke',
   tax_number: 'P051701091X',
-  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800'
+  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F0dc223c975394fb180f961daff51284e%2Fc6326902fe5c42489708ae2804c1b10b?format=webp&width=800'
 };
 
 // Helper function to determine which columns have values
@@ -200,8 +200,8 @@ export const generatePDF = (data: DocumentData) => {
         }
         
         .logo {
-          width: 240px;
-          height: 120px;
+          width: 320px;
+          height: 160px;
           margin-bottom: 15px;
           border-radius: 8px;
           overflow: hidden;
@@ -583,7 +583,11 @@ export const generatePDF = (data: DocumentData) => {
         <div class="header">
           <div class="company-info">
             <div class="logo">
-              <img src="${company.logo_url}" alt="${company.name} Logo" />
+              ${company.logo_url ?
+                `<img src="${company.logo_url}" alt="${company.name} Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                 <div style="display:none; width:100%; height:100%; background:#f8f9fa; border:2px dashed #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color:#6c757d; text-align:center;">Logo not available</div>` :
+                `<div style="width:100%; height:100%; background:#f8f9fa; border:2px dashed #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color:#6c757d; text-align:center;">No logo configured</div>`
+              }
             </div>
             <div class="company-name">${company.name}</div>
             <div class="company-details">

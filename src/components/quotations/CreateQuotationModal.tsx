@@ -72,13 +72,10 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
   const { data: products, isLoading: loadingProducts } = useProducts(currentCompany?.id);
   const { data: taxSettings } = useTaxSettings(currentCompany?.id);
 
-  // Debug logging to understand why customer dropdown is empty
-  console.log('=== CREATE QUOTATION MODAL DEBUG ===');
-  console.log('Companies:', companies);
-  console.log('Current Company:', currentCompany);
-  console.log('Customers:', customers);
-  console.log('Loading Customers:', loadingCustomers);
-  console.log('Company ID for customers query:', currentCompany?.id);
+  // Log for debugging if needed
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Company:', currentCompany?.name, 'Customers:', customers?.length || 0);
+  }
   const createQuotationWithItems = useCreateQuotationWithItems();
   const generateDocNumber = useGenerateDocumentNumber();
 
@@ -307,6 +304,7 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
           description: item.description,
           quantity: item.quantity,
           unit_price: item.unit_price,
+          discount_percentage: 0, // Can be added later if needed
           tax_percentage: item.vat_percentage || 0,
           tax_amount: calculateTaxAmount(item),
           tax_inclusive: item.vat_inclusive || false,
@@ -404,14 +402,6 @@ export function CreateQuotationModal({ open, onOpenChange, onSuccess }: CreateQu
             Create a detailed quotation with multiple items for your customer
           </DialogDescription>
 
-          {/* Debug Info - Remove this after fixing */}
-          <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm">
-            <strong>Debug Info:</strong><br/>
-            Companies: {companies?.length || 0} found<br/>
-            Current Company: {currentCompany?.name || 'None'}<br/>
-            Customers: {loadingCustomers ? 'Loading...' : `${customers?.length || 0} found`}<br/>
-            Company ID: {currentCompany?.id || 'undefined'}
-          </div>
         </DialogHeader>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

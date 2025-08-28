@@ -1,16 +1,19 @@
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { AuthPerformanceTest } from '@/components/auth/AuthPerformanceTest';
 import { Button } from '@/components/ui/button';
-import { FileText } from 'lucide-react';
+import { FileText, BarChart3 } from 'lucide-react';
 import { downloadQuotationPDF } from '@/utils/pdfGenerator';
 import { useQuotations, useCompanies } from '@/hooks/useDatabase';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 const Index = () => {
   const { data: companies } = useCompanies();
   const currentCompany = companies?.[0];
   const { data: quotations } = useQuotations(currentCompany?.id);
+  const [showAuthPerformance, setShowAuthPerformance] = useState(false);
 
   const handleTestPDF = () => {
     try {
@@ -89,14 +92,25 @@ const Index = () => {
             Welcome back! Here's what's happening with your business today.
           </p>
         </div>
-        <Button
-          onClick={handleTestPDF}
-          variant="outline"
-          className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          {quotations?.length ? 'Download Sample PDF' : 'Test PDF Generation'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleTestPDF}
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            {quotations?.length ? 'Download Sample PDF' : 'Test PDF Generation'}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => setShowAuthPerformance(!showAuthPerformance)}
+            className="border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            {showAuthPerformance ? 'Hide' : 'Show'} Performance
+          </Button>
+        </div>
       </div>
 
       {/* Dashboard Stats */}
@@ -112,6 +126,13 @@ const Index = () => {
         {/* Right Column - Takes 1/3 of the space */}
         <div className="space-y-6">
           <QuickActions />
+
+          {/* Auth Performance Monitor - Toggle visibility */}
+          {showAuthPerformance && (
+            <div className="transition-all duration-300 ease-in-out">
+              <AuthPerformanceTest />
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -8,9 +8,9 @@ interface BiolegendLogoProps {
 
 export function BiolegendLogo({ className, size = "md", showText = true }: BiolegendLogoProps) {
   const sizeClasses = {
-    sm: "h-6 w-6",
-    md: "h-8 w-8",
-    lg: "h-12 w-12"
+    sm: "h-10 w-10",
+    md: "h-16 w-16",
+    lg: "h-20 w-20"
   };
 
   const textSizeClasses = {
@@ -24,7 +24,7 @@ export function BiolegendLogo({ className, size = "md", showText = true }: Biole
       {/* Biolegend Logo Image */}
       <div className={cn("relative", sizeClasses[size])}>
         <img
-          src="https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800"
+          src="https://cdn.builder.io/api/v1/image/assets%2F0dc223c975394fb180f961daff51284e%2Fc6326902fe5c42489708ae2804c1b10b?format=webp&width=800"
           alt="Biolegend Scientific Ltd Logo"
           className="w-full h-full object-contain"
         />
