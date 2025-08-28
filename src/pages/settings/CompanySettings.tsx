@@ -102,9 +102,10 @@ export default function CompanySettings() {
     const file = e.target.files?.[0];
     if (!file || !currentCompany) return;
 
-    // Basic validation
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    // Enhanced validation
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      toast.error('Please select a valid image file (PNG, JPG, GIF, or WebP)');
       return;
     }
 
@@ -116,29 +117,33 @@ export default function CompanySettings() {
 
     setUploading(true);
     try {
-      // Choose a path; e.g. company-{id}/logo-{timestamp}.{ext}
-      const ext = file.name.split('.').pop();
-      const filePath = `company-${currentCompany.id}/logo-${Date.now()}.${ext}`;
+      // Try multiple upload strategies
+      let logoUrl: string | null = null;
 
-      // Upload to Supabase storage bucket 'company-logos'
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('company-logos')
-        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+      // Strategy 1: Try Supabase Storage
+      try {
+        logoUrl = await uploadToSupabaseStorage(file, currentCompany.id);
+        console.log('✅ Supabase storage upload successful');
+      } catch (storageError) {
+        console.warn('⚠️ Supabase storage failed:', storageError);
 
-      if (uploadError) throw uploadError;
+        // Strategy 2: Fallback to base64 for smaller files
+        if (file.size <= 1024 * 1024) { // 1MB limit for base64
+          logoUrl = await convertToBase64(file);
+          console.log('✅ Base64 fallback successful');
+          toast.info('Logo saved locally (storage not available)');
+        } else {
+          throw new Error('File too large for local storage. Please use a smaller image or configure cloud storage.');
+        }
+      }
 
-      // Get public URL
-      const { data: publicUrlData } = supabase
-        .storage
-        .from('company-logos')
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl;
+      if (!logoUrl) {
+        throw new Error('Failed to process logo upload');
+      }
 
       // Update local state & persist using existing hook
-      setCompanyData(prev => ({ ...prev, logo_url: publicUrl }));
-      await updateCompany.mutateAsync({ id: currentCompany.id, logo_url: publicUrl });
+      setCompanyData(prev => ({ ...prev, logo_url: logoUrl }));
+      await updateCompany.mutateAsync({ id: currentCompany.id, logo_url: logoUrl });
 
       toast.success('Logo uploaded and saved successfully!');
     } catch (err: any) {
@@ -146,9 +151,22 @@ export default function CompanySettings() {
       logError(err, 'Logo Upload');
       let userMessage = getUserFriendlyMessage(err, 'Failed to upload logo');
 
-      // Add specific handling for storage errors
+      // Add specific handling for different error types
       if (userMessage.includes('company-logos') || userMessage.includes('bucket')) {
-        userMessage = 'Storage bucket "company-logos" does not exist. Please create the storage bucket first.';
+        userMessage = 'Cloud storage not configured. Using local storage for smaller files (max 1MB).';
+
+        // Auto-retry with base64 for small files
+        if (file.size <= 1024 * 1024) {
+          try {
+            const base64Url = await convertToBase64(file);
+            setCompanyData(prev => ({ ...prev, logo_url: base64Url }));
+            await updateCompany.mutateAsync({ id: currentCompany.id, logo_url: base64Url });
+            toast.success('Logo saved locally!');
+            return;
+          } catch (base64Error) {
+            userMessage = 'Failed to save logo. Please try again with a smaller file.';
+          }
+        }
       }
 
       toast.error(userMessage);
@@ -159,6 +177,77 @@ export default function CompanySettings() {
         fileInputRef.current.value = '';
       }
     }
+  };
+
+  // Helper function to upload to Supabase Storage
+  const uploadToSupabaseStorage = async (file: File, companyId: string): Promise<string> => {
+    // Get file extension safely
+    const fileNameParts = file.name.split('.');
+    const ext = fileNameParts.length > 1 ? fileNameParts.pop() : 'png';
+    const filePath = `company-${companyId}/logo-${Date.now()}.${ext}`;
+
+    // Check if storage is available by listing buckets first
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+
+    if (bucketsError) {
+      throw new Error(`Storage not available: ${bucketsError.message}`);
+    }
+
+    const hasLogoBucket = buckets?.some(bucket => bucket.name === 'company-logos');
+    if (!hasLogoBucket) {
+      // Try to create the bucket
+      const { error: createError } = await supabase.storage.createBucket('company-logos', {
+        public: true,
+        fileSizeLimit: 5242880, // 5MB
+        allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+      });
+
+      if (createError) {
+        throw new Error(`Cannot create storage bucket: ${createError.message}`);
+      }
+    }
+
+    // Upload the file
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('company-logos')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: file.type
+      });
+
+    if (uploadError) {
+      throw new Error(`Upload failed: ${uploadError.message}`);
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase
+      .storage
+      .from('company-logos')
+      .getPublicUrl(filePath);
+
+    if (!publicUrlData.publicUrl) {
+      throw new Error('Failed to get public URL for uploaded file');
+    }
+
+    return publicUrlData.publicUrl;
+  };
+
+  // Helper function to convert file to base64
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = () => reject(new Error('File reading failed'));
+      reader.readAsDataURL(file);
+    });
   };
 
   const validateCompanyData = (data: any) => {
