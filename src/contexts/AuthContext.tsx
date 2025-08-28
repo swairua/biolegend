@@ -131,10 +131,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Show general error message for other cases
       const friendlyMessage = getUserFriendlyErrorMessage(error);
-      setTimeout(() => toast.error(
-        `Failed to load user profile: ${friendlyMessage}`,
-        { duration: 4000 }
-      ), 0);
+
+      // Prevent toast spam - only show general error toast every 10 seconds
+      const now = Date.now();
+      if (now - lastGeneralErrorToast.current > TOAST_COOLDOWN) {
+        lastGeneralErrorToast.current = now;
+        setTimeout(() => toast.error(
+          `Failed to load user profile: ${friendlyMessage}`,
+          { duration: 4000 }
+        ), 0);
+      }
 
       return null;
     }
@@ -256,7 +262,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { session: quickSession, error } = result as any;
 
         if (quickSession?.user && mountedRef.current) {
-          console.log('��� Quick auth success - user authenticated');
+          console.log('✅ Quick auth success - user authenticated');
 
           // Clear the immediate start timer since we have auth
           clearTimeout(immediateStartTimer);
