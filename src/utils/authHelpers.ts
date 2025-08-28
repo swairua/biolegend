@@ -76,7 +76,7 @@ export const getRateLimitTimeRemaining = (): number => {
 };
 
 /**
- * Safe auth operation with rate limiting protection
+ * Safe auth operation with rate limiting protection and timeout
  */
 export const safeAuthOperation = async <T>(
   operation: () => Promise<T>,
@@ -89,11 +89,23 @@ export const safeAuthOperation = async <T>(
       const error = new Error(`Rate limited. Please wait ${remaining} seconds before trying again.`);
       return { data: null, error };
     }
-    
-    const result = await operation();
+
+    // Add timeout to auth operations (4 seconds max)
+    const operationPromise = operation();
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`${operationName} operation timed out after 4 seconds`)), 4000);
+    });
+
+    const result = await Promise.race([operationPromise, timeoutPromise]);
     return { data: result, error: null };
-    
+
   } catch (error: any) {
+    // Check if this is a timeout error
+    if (error?.message?.includes('timed out')) {
+      console.warn(`${operationName} operation timed out`);
+      return { data: null, error: new Error(`${operationName} operation took too long. Please try again.`) };
+    }
+
     // Check if this is a rate limit error
     if (error?.message?.includes('rate limit') || error?.message?.includes('Rate limit')) {
       markRateLimited();
@@ -101,9 +113,9 @@ export const safeAuthOperation = async <T>(
       const rateLimitError = new Error(`Rate limit reached. Please wait ${remaining} seconds before trying again.`);
       return { data: null, error: rateLimitError };
     }
-    
+
     // Check if this is an invalid token error
-    if (error?.message?.includes('Invalid Refresh Token') || 
+    if (error?.message?.includes('Invalid Refresh Token') ||
         error?.message?.includes('Refresh Token Not Found') ||
         error?.message?.includes('invalid_token')) {
       console.warn('Clearing invalid auth tokens');
@@ -111,7 +123,7 @@ export const safeAuthOperation = async <T>(
       const tokenError = new Error('Authentication tokens were invalid and have been cleared. Please sign in again.');
       return { data: null, error: tokenError };
     }
-    
+
     return { data: null, error: error as Error };
   }
 };
