@@ -261,6 +261,20 @@ export default function Proforma() {
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const res = await ensureProformaSchema();
+                  if ((res as any)?.success) {
+                    toast.success('Proforma schema harmonized');
+                  } else {
+                    toast.error(`Schema fix failed: ${(res as any)?.error || 'Unknown error'}`);
+                  }
+                }}
+              >
+                Fix Proforma Schema
+              </Button>
             </div>
           </div>
         </CardHeader>
