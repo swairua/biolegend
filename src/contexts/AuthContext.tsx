@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Toast spam prevention
   const lastNetworkErrorToast = useRef<number>(0);
   const lastPermissionErrorToast = useRef<number>(0);
+  const lastGeneralErrorToast = useRef<number>(0);
   const TOAST_COOLDOWN = 10000; // 10 seconds between similar error toasts
 
   // Fetch user profile from database with error handling and retry logic
@@ -255,7 +256,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const { session: quickSession, error } = result as any;
 
         if (quickSession?.user && mountedRef.current) {
-          console.log('✅ Quick auth success - user authenticated');
+          console.log('��� Quick auth success - user authenticated');
 
           // Clear the immediate start timer since we have auth
           clearTimeout(immediateStartTimer);
