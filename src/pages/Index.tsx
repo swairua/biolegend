@@ -1,10 +1,12 @@
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { QuickActions } from '@/components/dashboard/QuickActions';
+import { AuthPerformanceTest } from '@/components/auth/AuthPerformanceTest';
 import { Button } from '@/components/ui/button';
-import { FileText } from 'lucide-react';
+import { FileText, BarChart3 } from 'lucide-react';
 import { downloadQuotationPDF } from '@/utils/pdfGenerator';
 import { useQuotations, useCompanies } from '@/hooks/useDatabase';
+import { useState } from 'react';
 import { toast } from 'sonner';
 
 const Index = () => {
