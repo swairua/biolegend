@@ -92,14 +92,25 @@ const Index = () => {
             Welcome back! Here's what's happening with your business today.
           </p>
         </div>
-        <Button
-          onClick={handleTestPDF}
-          variant="outline"
-          className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          {quotations?.length ? 'Download Sample PDF' : 'Test PDF Generation'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={handleTestPDF}
+            variant="outline"
+            className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            {quotations?.length ? 'Download Sample PDF' : 'Test PDF Generation'}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => setShowAuthPerformance(!showAuthPerformance)}
+            className="border-blue-500 text-blue-600 hover:bg-blue-500 hover:text-white"
+          >
+            <BarChart3 className="h-4 w-4 mr-2" />
+            {showAuthPerformance ? 'Hide' : 'Show'} Performance
+          </Button>
+        </div>
       </div>
 
       {/* Dashboard Stats */}
