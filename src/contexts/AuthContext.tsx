@@ -420,6 +420,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { error: data.error };
     }
 
+    // Immediately update auth state to avoid UI waiting for onAuthStateChange
+    try {
+      const session = (data as any)?.data?.session;
+      const signedInUser = session?.user;
+      if (signedInUser) {
+        setSession(session);
+        setUser(signedInUser);
+        // Fetch profile in background
+        fetchProfile(signedInUser.id).then(setProfile).catch(() => {});
+      }
+    } catch {}
+
+    setLoading(false);
     setTimeout(() => toast.success('Signed in successfully'), 0);
     return { error: null };
   }, []);
