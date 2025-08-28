@@ -30,6 +30,7 @@ import OptimizedCustomers from "./pages/OptimizedCustomers";
 import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimizerPage";
 import SetupAndTest from "./components/SetupAndTest";
 import AuthTest from "./components/AuthTest";
+import ErrorTestPage from "./pages/ErrorTestPage";
 
 const App = () => {
 
@@ -254,6 +255,9 @@ const App = () => {
 
           {/* Authentication Test - No protection needed */}
           <Route path="/auth-test" element={<AuthTest />} />
+
+          {/* Error Test - No protection needed */}
+          <Route path="/error-test" element={<ErrorTestPage />} />
 
 
           {/* Payment Synchronization - No protection needed for setup */}
