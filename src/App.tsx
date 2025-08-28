@@ -31,6 +31,7 @@ import CustomerPerformanceOptimizerPage from "./pages/CustomerPerformanceOptimiz
 import SetupAndTest from "./components/SetupAndTest";
 import AuthTest from "./components/AuthTest";
 import ErrorTestPage from "./pages/ErrorTestPage";
+import TestPDFPage from "./pages/TestPDFPage";
 
 const App = () => {
 
@@ -258,6 +259,9 @@ const App = () => {
 
           {/* Error Test - No protection needed */}
           <Route path="/error-test" element={<ErrorTestPage />} />
+
+          {/* PDF Test - No protection needed */}
+          <Route path="/pdf-test" element={<TestPDFPage />} />
 
 
           {/* Payment Synchronization - No protection needed for setup */}
