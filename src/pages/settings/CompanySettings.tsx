@@ -789,9 +789,9 @@ export default function CompanySettings() {
                     <div className="flex items-center gap-2">
                       <Badge variant={storageStatus === 'available' ? 'success' :
                                     storageStatus === 'unavailable' ? 'warning' : 'outline'}>
-                        {storageStatus === 'available' && '✓ Cloud Storage'}
-                        {storageStatus === 'unavailable' && '⚠ Local Only'}
-                        {storageStatus === 'unknown' && '? Testing...'}
+                        {storageStatus === 'available' && '✓ Cloud Ready'}
+                        {storageStatus === 'unavailable' && '⚠ Local Storage'}
+                        {storageStatus === 'unknown' && '⏳ Testing...'}
                       </Badge>
                       {storageStatus === 'unavailable' && (
                         <Button
