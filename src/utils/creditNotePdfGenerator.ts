@@ -40,7 +40,7 @@ export interface CompanyData {
   logo_url?: string;
 }
 
-// Default company details (fallback)
+// Default company details (fallback) - logo will be determined dynamically
 const DEFAULT_COMPANY: CompanyData = {
   name: 'Biolegend Scientific Ltd',
   address: 'P.O. Box 85988-00200, Nairobi\nAlpha Center, Eastern Bypass, Membley',
@@ -49,7 +49,7 @@ const DEFAULT_COMPANY: CompanyData = {
   phone: '0741207690/0780165490',
   email: 'biolegend@biolegendscientific.co.ke',
   tax_number: 'P051701091X',
-  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800'
+  logo_url: '' // Will use company settings or fallback gracefully
 };
 
 export const generateCreditNotePDF = (creditNote: CreditNotePDFData, company?: CompanyData) => {
