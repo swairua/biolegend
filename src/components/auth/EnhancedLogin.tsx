@@ -4,15 +4,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Eye, EyeOff, Mail, Lock, Shield } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { AutoAdminSetup } from './AutoAdminSetup';
 import { handleAuthError } from '@/utils/authErrorHandler';
+import { useNavigate } from 'react-router-dom';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
@@ -20,7 +22,6 @@ export function EnhancedLogin() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -46,12 +47,13 @@ export function EnhancedLogin() {
       return;
     }
 
+    setSubmitting(true);
     const { error } = await signIn(formData.email, formData.password);
 
     if (error) {
       const errorInfo = handleAuthError(error);
 
-      // Additional context for invalid credentials
+
       if (errorInfo.type === 'invalid_credentials') {
         setTimeout(() => {
           toast.info('Tip: Use the "Create Admin User" button above if this is your first time setting up the system.');
@@ -59,7 +61,9 @@ export function EnhancedLogin() {
       }
     } else {
       toast.success('Welcome to Biolegend Scientific!');
+      navigate('/');
     }
+    setSubmitting(false);
   };
 
   const handleInputChange = (field: keyof typeof formData) => (
@@ -73,7 +77,7 @@ export function EnhancedLogin() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
-      <Card className="w-full max-w-md">
+      <Card className="w-full max-w-2xl">
         <CardHeader className="text-center space-y-4">
           <div className="mx-auto">
             <BiolegendLogo size="lg" showText={false} />
@@ -87,79 +91,90 @@ export function EnhancedLogin() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Enter your email"
-                  value={formData.email}
-                  onChange={handleInputChange('email')}
-                  className={`pl-10 ${formErrors.email ? 'border-destructive' : ''}`}
-                  disabled={loading}
-                />
-              </div>
-              {formErrors.email && (
-                <p className="text-sm text-destructive">{formErrors.email}</p>
-              )}
-            </div>
+          <Tabs value={'login'}>
+            <TabsList className="w-full">
+              <TabsTrigger value="login" className="flex-1">Sign In</TabsTrigger>
+            </TabsList>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleInputChange('password')}
-                  className={`pl-10 pr-10 ${formErrors.password ? 'border-destructive' : ''}`}
-                  disabled={loading}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
-                  disabled={loading}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
+            <TabsContent value="login">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      value={formData.email}
+                      onChange={handleInputChange('email')}
+                      className={`pl-10 ${formErrors.email ? 'border-destructive' : ''}`}
+                      disabled={submitting}
+                    />
+                  </div>
+                  {formErrors.email && (
+                    <p className="text-sm text-destructive">{formErrors.email}</p>
                   )}
-                </Button>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="Enter your password"
+                      value={formData.password}
+                      onChange={handleInputChange('password')}
+                      className={`pl-10 pr-10 ${formErrors.password ? 'border-destructive' : ''}`}
+                      disabled={submitting}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2"
+                      onClick={() => setShowPassword(!showPassword)}
+                      disabled={submitting}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  {formErrors.password && (
+                    <p className="text-sm text-destructive">{formErrors.password}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+
+                </div>
+              </form>
+
+              <div className="mt-6">
+                <AutoAdminSetup />
               </div>
-              {formErrors.password && (
-                <p className="text-sm text-destructive">{formErrors.password}</p>
-              )}
-            </div>
+            </TabsContent>
 
-            <div className="space-y-2">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-
-            </div>
-          </form>
-
-          <AutoAdminSetup />
+          </Tabs>
 
           <div className="text-center space-y-2">
             <p className="text-xs text-muted-foreground">

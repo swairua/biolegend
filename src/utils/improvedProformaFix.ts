@@ -40,7 +40,7 @@ export async function validateProformaData(): Promise<ProformaValidationResult> 
   try {
     // Check for duplicate proforma numbers
     const { data: duplicates, error: duplicatesError } = await supabase
-      .from('proformas')
+      .from('proforma_invoices')
       .select('proforma_number')
       .not('proforma_number', 'is', null);
 
@@ -66,7 +66,7 @@ export async function validateProformaData(): Promise<ProformaValidationResult> 
 
     // Check for missing customer relationships
     const { data: orphaned, error: orphanedError } = await supabase
-      .from('proformas')
+      .from('proforma_invoices')
       .select('id, customer_id')
       .is('customer_id', null);
 
@@ -80,7 +80,7 @@ export async function validateProformaData(): Promise<ProformaValidationResult> 
 
     // Check for invalid amounts
     const { data: invalidAmounts, error: amountsError } = await supabase
-      .from('proformas')
+      .from('proforma_invoices')
       .select('id, total_amount')
       .or('total_amount.is.null,total_amount.lt.0');
 
@@ -107,7 +107,7 @@ export async function validateProformaData(): Promise<ProformaValidationResult> 
 export async function generateNextProformaNumber(): Promise<string> {
   try {
     const { data: lastProforma, error } = await supabase
-      .from('proformas')
+      .from('proforma_invoices')
       .select('proforma_number')
       .not('proforma_number', 'is', null)
       .order('created_at', { ascending: false })
@@ -157,7 +157,7 @@ export async function fixDuplicateNumbers(): Promise<ProformaFixResult> {
 
     // Get all proformas with duplicate numbers
     const { data: duplicateProformas, error } = await supabase
-      .from('proformas')
+      .from('proforma_invoices')
       .select('id, proforma_number, created_at')
       .in('proforma_number', validation.duplicateNumbers)
       .order('created_at', { ascending: true });
@@ -174,7 +174,7 @@ export async function fixDuplicateNumbers(): Promise<ProformaFixResult> {
 
     // Keep the first occurrence of each duplicate, renumber the rest
     const seen = new Set<string>();
-    const toUpdate: Array<{ id: number; newNumber: string }> = [];
+    const toUpdate: Array<{ id: string; newNumber: string }> = [];
 
     for (const proforma of duplicateProformas) {
       if (seen.has(proforma.proforma_number)) {
@@ -189,7 +189,7 @@ export async function fixDuplicateNumbers(): Promise<ProformaFixResult> {
     // Update proformas with new numbers
     for (const update of toUpdate) {
       const { error: updateError } = await supabase
-        .from('proformas')
+        .from('proforma_invoices')
         .update({ proforma_number: update.newNumber })
         .eq('id', update.id);
 

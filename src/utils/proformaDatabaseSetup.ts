@@ -236,6 +236,34 @@ export async function setupProformaTables() {
   return results;
 }
 
+/** Ensure schema columns exist (harmonize) */
+export async function ensureProformaSchema() {
+  const SQL = `
+  -- Harmonize proforma_invoices
+  ALTER TABLE IF EXISTS proforma_invoices
+    ADD COLUMN IF NOT EXISTS valid_until DATE;
+
+  -- Harmonize proforma_items
+  ALTER TABLE IF EXISTS proforma_items
+    ADD COLUMN IF NOT EXISTS discount_percentage NUMERIC(5,2) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS discount_amount NUMERIC(15,2) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS tax_percentage NUMERIC(5,2) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS tax_amount NUMERIC(15,2) DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS tax_inclusive BOOLEAN DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS line_total NUMERIC(15,2) DEFAULT 0;
+  `;
+
+  try {
+    const { error } = await supabase.rpc('exec_sql', { sql: SQL });
+    if (error) throw error;
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Schema harmonization failed:', message);
+    return { success: false, error: message };
+  }
+}
+
 /**
  * Check if proforma tables exist
  */

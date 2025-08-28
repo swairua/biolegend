@@ -231,8 +231,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       };
 
-      // Start app after very short delay regardless of auth status
-      const immediateStartTimer = setTimeout(startAppImmediately, 500); // Reduced to 500ms
+      // Start app immediately regardless of auth status
+      const immediateStartTimer = setTimeout(startAppImmediately, 0);
 
       try {
         // Very fast auth check with 3-second timeout
@@ -420,6 +420,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       return { error: data.error };
     }
 
+    // Immediately update auth state to avoid UI waiting for onAuthStateChange
+    try {
+      const session = (data as any)?.data?.session;
+      const signedInUser = session?.user;
+      if (signedInUser) {
+        setSession(session);
+        setUser(signedInUser);
+        // Fetch profile in background
+        fetchProfile(signedInUser.id).then(setProfile).catch(() => {});
+      }
+    } catch {}
+
+    setLoading(false);
     setTimeout(() => toast.success('Signed in successfully'), 0);
     return { error: null };
   }, []);

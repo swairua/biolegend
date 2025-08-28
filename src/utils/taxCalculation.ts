@@ -52,16 +52,13 @@ export function calculateItemTax(item: TaxableItem): CalculatedItem {
   let lineTotal = 0;
   
   if (item.tax_inclusive) {
-    // Tax is included in the unit price
-    // Calculate what the tax portion is: tax = taxable_amount - (taxable_amount / (1 + tax_rate))
-    const taxRate = item.tax_percentage / 100;
-    const preTaxAmount = taxableAmount / (1 + taxRate);
-    taxAmount = taxableAmount - preTaxAmount;
-    lineTotal = taxableAmount; // Total is the taxable amount since tax is included
-  } else {
-    // Tax is added on top (most common case)
+    // Treat checkbox as "apply tax" on top (prices are tax-exclusive by default)
     taxAmount = taxableAmount * (item.tax_percentage / 100);
     lineTotal = taxableAmount + taxAmount;
+  } else {
+    // No tax applied (exclusive price without tax)
+    taxAmount = 0;
+    lineTotal = taxableAmount;
   }
   
   return {
@@ -186,8 +183,12 @@ export function convertToTaxInclusive(exclusivePrice: number, taxPercentage: num
 /**
  * Format currency with proper decimals
  */
-export function formatCurrency(amount: number, currencySymbol: string = '$'): string {
-  return `${currencySymbol}${amount.toFixed(2)}`;
+export function formatCurrency(amount: number, locale: string = 'en-KE', currency: string = 'KES'): string {
+  try {
+    return new Intl.NumberFormat(locale, { style: 'currency', currency }).format(amount);
+  } catch {
+    return `KSh ${amount.toFixed(2)}`;
+  }
 }
 
 /**

@@ -193,22 +193,43 @@ export const useCreateProforma = () => {
         total_amount: totals.total_amount,
       };
 
-      // Create the proforma invoice
-      const { data: proformaData, error: proformaError } = await supabase
+      // Create the proforma invoice (retry without valid_until if column missing)
+      let proformaData;
+      let { data: firstData, error: proformaError } = await supabase
         .from('proforma_invoices')
         .insert([proformaWithTotals])
         .select()
         .single();
 
       if (proformaError) {
-        const errorMessage = serializeError(proformaError);
-        console.error('Error creating proforma:', errorMessage);
-        throw new Error(`Failed to create proforma: ${errorMessage}`);
+        const errorMessage = serializeError(proformaError).toLowerCase();
+        console.warn('Proforma insert failed, checking for schema mismatch:', errorMessage);
+
+        if (errorMessage.includes('valid_until')) {
+          const { valid_until, ...withoutValidUntil } = proformaWithTotals as any;
+          const retry = await supabase
+            .from('proforma_invoices')
+            .insert([withoutValidUntil])
+            .select()
+            .single();
+
+          if (retry.error) {
+            const retryMessage = serializeError(retry.error);
+            console.error('Retry insert failed:', retryMessage);
+            throw new Error(`Failed to create proforma: ${retryMessage}`);
+          }
+
+          proformaData = retry.data;
+        } else {
+          throw new Error(`Failed to create proforma: ${serializeError(proformaError)}`);
+        }
+      } else {
+        proformaData = firstData;
       }
 
       // Create the proforma items
       if (items.length > 0) {
-        const proformaItems = items.map(item => ({
+        const proformaItemsFull = items.map(item => ({
           proforma_id: proformaData.id,
           product_id: item.product_id,
           description: item.description,
@@ -222,16 +243,42 @@ export const useCreateProforma = () => {
           line_total: item.line_total,
         }));
 
-        const { error: itemsError } = await supabase
+        let { error: itemsError } = await supabase
           .from('proforma_items')
-          .insert(proformaItems);
+          .insert(proformaItemsFull);
 
         if (itemsError) {
-          const errorMessage = serializeError(itemsError);
-          console.error('Error creating proforma items:', errorMessage);
-          // Try to delete the proforma if items creation failed
-          await supabase.from('proforma_invoices').delete().eq('id', proformaData.id);
-          throw new Error(`Failed to create proforma items: ${errorMessage}`);
+          const firstMsg = serializeError(itemsError).toLowerCase();
+          console.warn('Proforma items insert failed, attempting reduced columns:', firstMsg);
+
+          // Retry without discount_amount / tax fields
+          let proformaItemsReduced = items.map((item, index) => ({
+            proforma_id: proformaData.id,
+            product_id: item.product_id,
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            discount_percentage: item.discount_percentage || 0,
+            line_total: item.line_total,
+            sort_order: index + 1,
+          }));
+
+          // If discount_percentage column is missing, remove it too
+          if (firstMsg.includes('discount_percentage')) {
+            proformaItemsReduced = proformaItemsReduced.map(({ discount_percentage, ...rest }) => rest as any);
+          }
+
+          const retry = await supabase
+            .from('proforma_items')
+            .insert(proformaItemsReduced);
+
+          if (retry.error) {
+            const retryMessage = serializeError(retry.error);
+            console.error('Retry creating proforma items failed:', retryMessage);
+            // Try to delete the proforma if items creation failed
+            await supabase.from('proforma_invoices').delete().eq('id', proformaData.id);
+            throw new Error(`Failed to create proforma items: ${retryMessage}`);
+          }
         }
       }
 

@@ -35,6 +35,7 @@ import { ViewProformaModal } from '@/components/proforma/ViewProformaModal';
 import { ProformaSetupBanner } from '@/components/proforma/ProformaSetupBanner';
 import { downloadInvoicePDF, downloadQuotationPDF } from '@/utils/pdfGenerator';
 import { formatCurrency } from '@/utils/taxCalculation';
+import { ensureProformaSchema } from '@/utils/proformaDatabaseSetup';
 
 export default function Proforma() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -259,6 +260,20 @@ export default function Proforma() {
               <Button variant="outline" size="sm" onClick={handleFilter}>
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={async () => {
+                  const res = await ensureProformaSchema();
+                  if ((res as any)?.success) {
+                    toast.success('Proforma schema harmonized');
+                  } else {
+                    toast.error(`Schema fix failed: ${(res as any)?.error || 'Unknown error'}`);
+                  }
+                }}
+              >
+                Fix Proforma Schema
               </Button>
             </div>
           </div>

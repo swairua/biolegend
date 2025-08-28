@@ -243,9 +243,12 @@ export const CreateProformaModal = ({
         description: item.description,
         quantity: item.quantity,
         unit_price: item.unit_price,
-        discount_percentage: 0, // Add default discount
+        discount_percentage: 0,
+        discount_amount: 0,
+        tax_percentage: item.tax_percentage,
+        tax_amount: item.tax_amount,
+        tax_inclusive: item.tax_inclusive,
         line_total: item.line_total,
-        // Note: tax fields will be added once database migration is applied
       }));
 
       // Create proforma in database

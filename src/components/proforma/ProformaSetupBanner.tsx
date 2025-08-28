@@ -9,7 +9,7 @@ import {
   Loader2,
   Database
 } from 'lucide-react';
-import { checkProformaTables, setupProformaTables } from '@/utils/proformaDatabaseSetup';
+import { checkProformaTables, setupProformaTables, ensureProformaSchema } from '@/utils/proformaDatabaseSetup';
 import { toast } from 'sonner';
 
 export function ProformaSetupBanner() {
@@ -43,9 +43,15 @@ export function ProformaSetupBanner() {
       
       const result = await setupProformaTables();
       setSetupResult(result);
-      
+
+      // Always attempt to harmonize schema
+      const harmonize = await ensureProformaSchema();
+      if (!harmonize.success) {
+        console.warn('Schema harmonization reported an issue:', harmonize.error);
+      }
+
       if (result.success) {
-        toast.success('Proforma tables created successfully!');
+        toast.success('Proforma tables created and schema harmonized!');
         setStatus('ready');
       } else {
         toast.error(`Setup failed: ${result.errors.join(', ')}`);
