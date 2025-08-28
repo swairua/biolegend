@@ -490,10 +490,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setTimeout(() => toast.success('Profile updated successfully'), 0);
       return { error: null };
     } catch (error) {
-      console.error('Error updating profile:', {
-        message: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined
-      });
+      logError('Error updating profile exception:', error, { context: 'updateProfile', userId: user.id });
       setTimeout(() => toast.error('Failed to update profile'), 0);
       return { error: error as Error };
     }
