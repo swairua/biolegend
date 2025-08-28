@@ -117,110 +117,61 @@ export const safeAuthOperation = async <T>(
 };
 
 /**
- * Initialize auth with token cleanup and network resilience
+ * Initialize auth with simplified, fast approach
  */
 export const initializeAuth = async () => {
-  const maxRetries = 2;
-  let lastError: Error | null = null;
+  try {
+    console.log('🔑 Auth initialization...');
 
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    // Simple timeout - fail fast
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second max
+
     try {
-      console.log(`🔑 Auth initialization attempt ${attempt}/${maxRetries}`);
+      // Get current session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      clearTimeout(timeoutId);
 
-      // Add a controller for timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout per attempt
-
-      try {
-        // Try to get the current session with abort signal
-        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-
-        clearTimeout(timeoutId);
-
-        // If we get an invalid token error, clear tokens and try again
-        if (sessionError?.message?.includes('Invalid Refresh Token') ||
-            sessionError?.message?.includes('Refresh Token Not Found') ||
-            sessionError?.message?.includes('invalid_token')) {
-          console.warn('Invalid tokens detected during initialization, clearing...');
-          clearAuthTokens();
-
-          // Only retry token clearing once
-          if (attempt === 1) {
-            console.log('🔄 Retrying after clearing tokens...');
-            continue;
-          }
-
-          // If second attempt also fails with token error, return no session
-          return { session: null, error: null };
-        }
-
-        if (sessionError) {
-          // Check if it's a network-related error
-          if (sessionError.message?.includes('Failed to fetch') ||
-              sessionError.message?.includes('Network request failed') ||
-              sessionError.message?.includes('fetch')) {
-            lastError = new Error(`Network error during auth: ${sessionError.message}`);
-
-            // Retry network errors
-            if (attempt < maxRetries) {
-              console.warn(`🌐 Network error on attempt ${attempt}, retrying...`);
-              await delay(1000 * attempt); // Progressive delay
-              continue;
-            }
-          }
-
-          console.error('Session error:', sessionError);
-          return { session: null, error: sessionError };
-        }
-
-        console.log(`✅ Auth session retrieved successfully on attempt ${attempt}`);
-        return { session: sessionData.session, error: null };
-
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-
-        // Handle abort/timeout errors
-        if (fetchError.name === 'AbortError' || fetchError.message?.includes('aborted')) {
-          lastError = new Error(`Auth request timeout on attempt ${attempt}`);
-          console.warn(`⏱️ Auth request timed out on attempt ${attempt}`);
-
-          if (attempt < maxRetries) {
-            await delay(1000); // Wait before retry
-            continue;
-          }
-        }
-
-        // Handle other fetch errors
-        if (fetchError.message?.includes('Failed to fetch') ||
-            fetchError.message?.includes('Network request failed')) {
-          lastError = new Error(`Network connectivity issue: ${fetchError.message}`);
-          console.warn(`🌐 Network error on attempt ${attempt}:`, fetchError.message);
-
-          if (attempt < maxRetries) {
-            await delay(2000 * attempt); // Progressive delay for network errors
-            continue;
-          }
-        }
-
-        throw fetchError;
+      // Handle invalid token errors by clearing them
+      if (sessionError?.message?.includes('Invalid Refresh Token') ||
+          sessionError?.message?.includes('Refresh Token Not Found') ||
+          sessionError?.message?.includes('invalid_token')) {
+        console.warn('Invalid tokens detected, clearing...');
+        clearAuthTokens();
+        return { session: null, error: null };
       }
 
-    } catch (error: any) {
-      lastError = error;
-      console.error(`❌ Auth initialization attempt ${attempt} failed:`, error);
-
-      // If it's the last attempt, don't retry
-      if (attempt === maxRetries) {
-        break;
+      if (sessionError) {
+        console.warn('Session error:', sessionError.message);
+        return { session: null, error: sessionError };
       }
 
-      // For other errors, wait before retry
-      await delay(1000 * attempt);
+      console.log('✅ Auth session retrieved successfully');
+      return { session: sessionData.session, error: null };
+
+    } catch (fetchError: any) {
+      clearTimeout(timeoutId);
+
+      // Handle timeout
+      if (fetchError.name === 'AbortError') {
+        console.warn('⏱️ Auth request timed out');
+        return { session: null, error: new Error('Auth request timeout') };
+      }
+
+      // Handle network errors
+      if (fetchError.message?.includes('Failed to fetch') ||
+          fetchError.message?.includes('Network request failed')) {
+        console.warn('🌐 Network error during auth:', fetchError.message);
+        return { session: null, error: new Error('Network connectivity issue') };
+      }
+
+      throw fetchError;
     }
-  }
 
-  console.error('🚫 All auth initialization attempts failed');
-  return { session: null, error: lastError || new Error('Auth initialization failed after all retries') };
+  } catch (error: any) {
+    console.error('❌ Auth initialization failed:', error);
+    return { session: null, error: error };
+  }
 };
 
 /**
