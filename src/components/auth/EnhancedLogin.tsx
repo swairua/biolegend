@@ -4,13 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Eye, EyeOff, Mail, Lock, HelpCircle } from 'lucide-react';
+import { Loader2, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { BiolegendLogo } from '@/components/ui/biolegend-logo';
 import { toast } from 'sonner';
 import { AutoAdminSetup } from './AutoAdminSetup';
 import { handleAuthError } from '@/utils/authErrorHandler';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { SupabaseConfigGuide } from './SupabaseConfigGuide';
 
 export function EnhancedLogin() {
   const { signIn, loading } = useAuth();
@@ -21,7 +20,6 @@ export function EnhancedLogin() {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState<'login' | 'config'>('login');
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
@@ -53,13 +51,6 @@ export function EnhancedLogin() {
     if (error) {
       const errorInfo = handleAuthError(error);
 
-      if (error.message && typeof error.message === 'string') {
-        const msg = error.message.toLowerCase();
-        if (msg.includes('email logins are disabled') || msg.includes('email signups are disabled')) {
-          setActiveTab('config');
-          toast.error('Email authentication is disabled in Supabase. See Configuration Guide tab.');
-        }
-      }
 
       if (errorInfo.type === 'invalid_credentials') {
         setTimeout(() => {
@@ -97,10 +88,9 @@ export function EnhancedLogin() {
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'config')}>
+          <Tabs value={'login'}>
             <TabsList className="w-full">
               <TabsTrigger value="login" className="flex-1">Sign In</TabsTrigger>
-              <TabsTrigger value="config" className="flex-1">Configuration Guide</TabsTrigger>
             </TabsList>
 
             <TabsContent value="login">
@@ -173,15 +163,6 @@ export function EnhancedLogin() {
                     )}
                   </Button>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    className="w-full flex items-center justify-center gap-2 text-muted-foreground"
-                    onClick={() => setActiveTab('config')}
-                  >
-                    <HelpCircle className="h-4 w-4" />
-                    Having trouble signing in? Open configuration guide
-                  </Button>
                 </div>
               </form>
 
@@ -190,9 +171,6 @@ export function EnhancedLogin() {
               </div>
             </TabsContent>
 
-            <TabsContent value="config">
-              <SupabaseConfigGuide />
-            </TabsContent>
           </Tabs>
 
           <div className="text-center space-y-2">
