@@ -252,6 +252,58 @@ export default function CompanySettings() {
     });
   };
 
+  // Test storage availability
+  const testStorageAvailability = async () => {
+    setTestingStorage(true);
+    try {
+      // Check if storage is available by listing buckets
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+
+      if (bucketsError) {
+        throw new Error(`Storage not configured: ${bucketsError.message}`);
+      }
+
+      const hasLogoBucket = buckets?.some(bucket => bucket.name === 'company-logos');
+
+      if (!hasLogoBucket) {
+        // Try to create the bucket
+        const { error: createError } = await supabase.storage.createBucket('company-logos', {
+          public: true,
+          fileSizeLimit: 5242880, // 5MB
+          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        });
+
+        if (createError) {
+          if (createError.message.includes('already exists')) {
+            setStorageStatus('available');
+            toast.success('Storage bucket already exists and is available!');
+          } else {
+            throw new Error(`Cannot create storage bucket: ${createError.message}`);
+          }
+        } else {
+          setStorageStatus('available');
+          toast.success('Storage bucket created successfully!');
+        }
+      } else {
+        setStorageStatus('available');
+        toast.success('Storage bucket is available and ready to use!');
+      }
+    } catch (error) {
+      console.error('Storage test failed:', error);
+      setStorageStatus('unavailable');
+      toast.warning('Cloud storage not available. Logo uploads will use local storage (max 1MB).');
+    } finally {
+      setTestingStorage(false);
+    }
+  };
+
+  // Test storage on component mount
+  useEffect(() => {
+    if (currentCompany && storageStatus === 'unknown') {
+      testStorageAvailability();
+    }
+  }, [currentCompany, storageStatus]);
+
   const validateCompanyData = (data: any) => {
     const errors = [];
 
