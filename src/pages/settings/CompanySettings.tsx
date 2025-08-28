@@ -808,8 +808,8 @@ export default function CompanySettings() {
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Upload your company logo. Recommended size: 200x200px, max 5MB. Supports PNG, JPG, GIF, WebP.
-                    {storageStatus === 'available' && ' Cloud storage is configured and ready.'}
-                    {storageStatus === 'unavailable' && ' Cloud storage unavailable - files ≤1MB will be stored locally.'}
+                    {storageStatus === 'available' && ' Cloud storage is configured and ready for any file size.'}
+                    {storageStatus === 'unavailable' && ' Cloud storage not configured - files ≤1MB stored locally. Larger files need cloud storage setup.'}
                     {storageStatus === 'unknown' && ' Checking storage configuration...'}
                   </p>
                 </div>
