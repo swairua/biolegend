@@ -191,6 +191,18 @@ export default function CustomerStatements() {
         selectedCustomers.includes(s.customer_id)
       );
 
+      // Prepare company details for PDF
+      const companyDetails = currentCompany ? {
+        name: currentCompany.name,
+        address: currentCompany.address,
+        city: currentCompany.city,
+        country: currentCompany.country,
+        phone: currentCompany.phone,
+        email: currentCompany.email,
+        tax_number: currentCompany.tax_number,
+        logo_url: currentCompany.logo_url
+      } : undefined;
+
       for (const statement of selectedStatements) {
         const customer = customers?.find(c => c.id === statement.customer_id);
         if (customer) {
@@ -199,7 +211,7 @@ export default function CustomerStatements() {
 
           await generateCustomerStatementPDF(customer, customerInvoices, customerPayments, {
             statement_date: statementDate
-          });
+          }, companyDetails);
         }
       }
 
@@ -226,6 +238,18 @@ export default function CustomerStatements() {
     }
 
     try {
+      // Prepare company details for PDF
+      const companyDetails = currentCompany ? {
+        name: currentCompany.name,
+        address: currentCompany.address,
+        city: currentCompany.city,
+        country: currentCompany.country,
+        phone: currentCompany.phone,
+        email: currentCompany.email,
+        tax_number: currentCompany.tax_number,
+        logo_url: currentCompany.logo_url
+      } : undefined;
+
       // Generate and "send" statements for customers with email
       for (const statement of selectedWithEmail) {
         const customer = customers?.find(c => c.id === statement.customer_id);
@@ -235,7 +259,7 @@ export default function CustomerStatements() {
 
           await generateCustomerStatementPDF(customer, customerInvoices, customerPayments, {
             statement_date: statementDate
-          });
+          }, companyDetails);
         }
       }
 
