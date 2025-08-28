@@ -117,18 +117,42 @@ export const safeAuthOperation = async <T>(
 };
 
 /**
- * Initialize auth with simplified, fast approach
+ * Initialize auth with ultra-fast, resilient approach
  */
 export const initializeAuth = async () => {
   try {
-    console.log('🔑 Auth initialization...');
+    console.log('🔑 Ultra-fast auth check...');
 
-    // Simple timeout - fail fast
+    // Very short timeout for background calls
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second max
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second max for background retry
 
     try {
-      // Get current session
+      // Quick connectivity test first
+      const connectivityCheck = new Promise((resolve) => {
+        // Simple fetch to test basic connectivity
+        fetch(supabase.supabaseUrl + '/rest/v1/', {
+          method: 'HEAD',
+          signal: controller.signal
+        })
+          .then(() => resolve(true))
+          .catch(() => resolve(false));
+      });
+
+      // Don't wait too long for connectivity
+      const connectivityTimeout = new Promise((resolve) => {
+        setTimeout(() => resolve(false), 2000);
+      });
+
+      const hasConnectivity = await Promise.race([connectivityCheck, connectivityTimeout]);
+
+      if (!hasConnectivity) {
+        console.warn('🌐 No connectivity to Supabase, skipping auth');
+        clearTimeout(timeoutId);
+        return { session: null, error: new Error('No connectivity') };
+      }
+
+      // Get current session with abort signal
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       clearTimeout(timeoutId);
 
@@ -146,7 +170,7 @@ export const initializeAuth = async () => {
         return { session: null, error: sessionError };
       }
 
-      console.log('✅ Auth session retrieved successfully');
+      console.log('✅ Ultra-fast auth completed successfully');
       return { session: sessionData.session, error: null };
 
     } catch (fetchError: any) {
@@ -154,14 +178,15 @@ export const initializeAuth = async () => {
 
       // Handle timeout
       if (fetchError.name === 'AbortError') {
-        console.warn('⏱️ Auth request timed out');
+        console.warn('⏱️ Auth request timed out (background)');
         return { session: null, error: new Error('Auth request timeout') };
       }
 
-      // Handle network errors
+      // Handle network errors gracefully
       if (fetchError.message?.includes('Failed to fetch') ||
-          fetchError.message?.includes('Network request failed')) {
-        console.warn('🌐 Network error during auth:', fetchError.message);
+          fetchError.message?.includes('Network request failed') ||
+          fetchError.message?.includes('fetch')) {
+        console.warn('🌐 Network error during auth (background):', fetchError.message);
         return { session: null, error: new Error('Network connectivity issue') };
       }
 
@@ -169,7 +194,7 @@ export const initializeAuth = async () => {
     }
 
   } catch (error: any) {
-    console.error('❌ Auth initialization failed:', error);
+    console.warn('⚠️ Background auth check failed:', error);
     return { session: null, error: error };
   }
 };
