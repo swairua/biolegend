@@ -126,6 +126,13 @@ const Index = () => {
         {/* Right Column - Takes 1/3 of the space */}
         <div className="space-y-6">
           <QuickActions />
+
+          {/* Auth Performance Monitor - Toggle visibility */}
+          {showAuthPerformance && (
+            <div className="transition-all duration-300 ease-in-out">
+              <AuthPerformanceTest />
+            </div>
+          )}
         </div>
       </div>
     </div>
