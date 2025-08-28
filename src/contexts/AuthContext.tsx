@@ -84,55 +84,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return profileData;
     } catch (error) {
-      // Enhanced error logging to prevent [object Object] and provide better debugging
-      console.error('❌ Exception fetching profile:', {
-        errorType: Object.prototype.toString.call(error),
-        message: error instanceof Error ? error.message : String(error),
-        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
-        details: error && typeof error === 'object' && 'details' in error ? error.details : undefined,
-        hint: error && typeof error === 'object' && 'hint' in error ? error.hint : undefined,
-        statusCode: error && typeof error === 'object' && 'statusCode' in error ? error.statusCode : undefined,
-        stack: error instanceof Error ? error.stack : undefined,
-        userId,
-        timestamp: new Date().toISOString(),
-        rawError: JSON.stringify(error, Object.getOwnPropertyNames(error))
-      });
+      // Use proper error logging utilities to prevent [object Object]
+      logError('Exception fetching profile:', error, { userId, context: 'fetchProfile' });
 
-      // Also log the raw error for debugging
-      console.error('Raw error object:', error);
+      // Handle specific error types using the error type checker
+      if (isErrorType(error, 'auth')) {
+        console.warn('Profile fetch failed due to expired token - user may need to re-authenticate');
+        return null; // Don't show error toast for auth issues
+      }
 
-      // Handle specific error types
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = (error as any).message;
+      if (isErrorType(error, 'network')) {
+        console.warn('Profile fetch failed due to network issue');
+        setTimeout(() => toast.error(
+          'Network connection issue. Profile will retry automatically.',
+          { duration: 3000 }
+        ), 0);
+        return null;
+      }
 
-        // Handle specific Supabase errors
-        if (errorMessage?.includes('JWT expired') || errorMessage?.includes('invalid_token')) {
-          console.warn('Profile fetch failed due to expired token - user may need to re-authenticate');
-          return null; // Don't show error toast for auth issues
-        }
-
-        if (errorMessage?.includes('Failed to fetch') || errorMessage?.includes('Network')) {
-          console.warn('Profile fetch failed due to network issue');
-          setTimeout(() => toast.error(
-            'Network connection issue. Profile will retry automatically.',
-            { duration: 3000 }
-          ), 0);
-          return null;
-        }
-
-        if (errorMessage?.includes('Row level security')) {
-          console.warn('Profile fetch failed due to permissions');
-          setTimeout(() => toast.error(
-            'Permission error accessing profile. Please sign in again.',
-            { duration: 4000 }
-          ), 0);
-          return null;
-        }
+      if (isErrorType(error, 'permission')) {
+        console.warn('Profile fetch failed due to permissions');
+        setTimeout(() => toast.error(
+          'Permission error accessing profile. Please sign in again.',
+          { duration: 4000 }
+        ), 0);
+        return null;
       }
 
       // Show general error message for other cases
+      const friendlyMessage = getUserFriendlyErrorMessage(error);
       setTimeout(() => toast.error(
-        'Failed to load user profile. Please try again.',
+        `Failed to load user profile: ${friendlyMessage}`,
         { duration: 4000 }
       ), 0);
 
