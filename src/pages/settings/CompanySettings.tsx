@@ -256,42 +256,70 @@ export default function CompanySettings() {
   const testStorageAvailability = async () => {
     setTestingStorage(true);
     try {
-      // Check if storage is available by listing buckets
+      // First, try to check if storage is available by listing buckets
       const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
 
       if (bucketsError) {
+        // Handle specific RLS permission errors
+        if (bucketsError.message.includes('row-level security') ||
+            bucketsError.message.includes('permission') ||
+            bucketsError.message.includes('policy')) {
+          setStorageStatus('unavailable');
+          toast.info('Cloud storage requires manual setup. Using local storage for now.');
+          return;
+        }
         throw new Error(`Storage not configured: ${bucketsError.message}`);
       }
 
       const hasLogoBucket = buckets?.some(bucket => bucket.name === 'company-logos');
 
       if (!hasLogoBucket) {
-        // Try to create the bucket
-        const { error: createError } = await supabase.storage.createBucket('company-logos', {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-          allowedMimeTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-        });
-
-        if (createError) {
-          if (createError.message.includes('already exists')) {
-            setStorageStatus('available');
-            toast.success('Storage bucket already exists and is available!');
-          } else {
-            throw new Error(`Cannot create storage bucket: ${createError.message}`);
-          }
-        } else {
-          setStorageStatus('available');
-          toast.success('Storage bucket created successfully!');
-        }
+        // Don't try to create bucket automatically - this requires admin permissions
+        // Instead, provide guidance to user
+        setStorageStatus('unavailable');
+        toast.info('Cloud storage bucket "company-logos" not found. Please create it manually or use local storage.');
+        return;
       } else {
-        setStorageStatus('available');
-        toast.success('Storage bucket is available and ready to use!');
+        // Bucket exists, test if we can actually use it by trying to list files
+        try {
+          const { error: listError } = await supabase.storage
+            .from('company-logos')
+            .list('', { limit: 1 });
+
+          if (listError) {
+            // Can see bucket but can't list - likely permission issue
+            if (listError.message.includes('row-level security') ||
+                listError.message.includes('permission') ||
+                listError.message.includes('policy')) {
+              setStorageStatus('unavailable');
+              toast.warning('Cloud storage bucket exists but access is restricted. Using local storage.');
+              return;
+            }
+            throw listError;
+          }
+
+          // Bucket exists and is accessible
+          setStorageStatus('available');
+          toast.success('Cloud storage is available and ready to use!');
+        } catch (testError) {
+          console.warn('Storage bucket test failed:', testError);
+          setStorageStatus('unavailable');
+          toast.warning('Cloud storage bucket exists but may have access restrictions. Using local storage.');
+        }
       }
     } catch (error) {
       console.error('Storage test failed:', error);
       setStorageStatus('unavailable');
-      toast.warning('Cloud storage not available. Logo uploads will use local storage (max 1MB).');
+
+      // Provide specific error messages based on error type
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('row-level security') ||
+          errorMessage.includes('permission') ||
+          errorMessage.includes('policy')) {
+        toast.info('Cloud storage requires admin setup. Using local storage (max 1MB) for now.');
+      } else {
+        toast.warning('Cloud storage not available. Logo uploads will use local storage (max 1MB).');
+      }
     } finally {
       setTestingStorage(false);
     }
