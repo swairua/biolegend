@@ -251,8 +251,8 @@ export const useCreateProforma = () => {
           const firstMsg = serializeError(itemsError).toLowerCase();
           console.warn('Proforma items insert failed, attempting reduced columns:', firstMsg);
 
-          // Retry without discount_amount / tax fields if schema is older
-          const proformaItemsReduced = items.map((item, index) => ({
+          // Retry without discount_amount / tax fields
+          let proformaItemsReduced = items.map((item, index) => ({
             proforma_id: proformaData.id,
             product_id: item.product_id,
             description: item.description,
@@ -262,6 +262,11 @@ export const useCreateProforma = () => {
             line_total: item.line_total,
             sort_order: index + 1,
           }));
+
+          // If discount_percentage column is missing, remove it too
+          if (firstMsg.includes('discount_percentage')) {
+            proformaItemsReduced = proformaItemsReduced.map(({ discount_percentage, ...rest }) => rest as any);
+          }
 
           const retry = await supabase
             .from('proforma_items')
