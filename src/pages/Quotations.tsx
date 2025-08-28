@@ -120,7 +120,7 @@ export default function Quotations() {
 
   const handleDownloadQuotation = (quotation: Quotation) => {
     try {
-      // Get current company details for PDF
+      // Get current company details for PDF with guaranteed logo URL
       const companyDetails = currentCompany ? {
         name: currentCompany.name,
         address: currentCompany.address,
@@ -129,7 +129,7 @@ export default function Quotations() {
         phone: currentCompany.phone,
         email: currentCompany.email,
         tax_number: currentCompany.tax_number,
-        logo_url: currentCompany.logo_url
+        logo_url: currentCompany.logo_url || 'https://cdn.builder.io/api/v1/image/assets%2F893e58768e5f4de981cdc56ff5e87db2%2Ff23ecbbcd4704426a991220b141c5ffd?format=webp&width=800'
       } : undefined;
 
       downloadQuotationPDF(quotation, companyDetails);

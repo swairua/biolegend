@@ -49,7 +49,7 @@ const DEFAULT_COMPANY: CompanyData = {
   phone: '0741207690/0780165490',
   email: 'biolegend@biolegendscientific.co.ke',
   tax_number: 'P051701091X',
-  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800'
+  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F893e58768e5f4de981cdc56ff5e87db2%2Ff23ecbbcd4704426a991220b141c5ffd?format=webp&width=800'
 };
 
 export const generateCreditNotePDF = (creditNote: CreditNotePDFData, company?: CompanyData) => {
@@ -456,7 +456,11 @@ export const generateCreditNotePDF = (creditNote: CreditNotePDFData, company?: C
         <div class="header">
           <div class="company-info">
             <div class="logo">
-              <img src="${companyData.logo_url || ''}" alt="${companyData.name} Logo" />
+              ${companyData.logo_url ?
+                `<img src="${companyData.logo_url}" alt="${companyData.name} Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" />
+                 <div style="display:none; width:100%; height:100%; background:#f8f9fa; border:2px dashed #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color:#6c757d; text-align:center;">Logo not available</div>` :
+                `<div style="width:100%; height:100%; background:#f8f9fa; border:2px dashed #e9ecef; display:flex; align-items:center; justify-content:center; font-size:12px; color:#6c757d; text-align:center;">No logo configured</div>`
+              }
             </div>
             <div class="company-name">${companyData.name}</div>
             <div class="company-details">

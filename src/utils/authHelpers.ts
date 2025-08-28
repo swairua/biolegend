@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logError, logWarning, getUserFriendlyErrorMessage } from '@/utils/errorLogger';
 
 /**
  * Clear corrupted auth tokens from localStorage
@@ -76,7 +77,7 @@ export const getRateLimitTimeRemaining = (): number => {
 };
 
 /**
- * Safe auth operation with rate limiting protection
+ * Safe auth operation with rate limiting protection and timeout
  */
 export const safeAuthOperation = async <T>(
   operation: () => Promise<T>,
@@ -89,30 +90,45 @@ export const safeAuthOperation = async <T>(
       const error = new Error(`Rate limited. Please wait ${remaining} seconds before trying again.`);
       return { data: null, error };
     }
-    
-    const result = await operation();
+
+    // Add timeout to auth operations (4 seconds max)
+    const operationPromise = operation();
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error(`${operationName} operation timed out after 4 seconds`)), 4000);
+    });
+
+    const result = await Promise.race([operationPromise, timeoutPromise]);
     return { data: result, error: null };
-    
+
   } catch (error: any) {
+    // Check if this is a timeout error
+    const errorMessage = getUserFriendlyErrorMessage(error);
+    if (errorMessage?.includes('timed out')) {
+      logWarning(`${operationName} operation timed out`, error);
+      return { data: null, error: new Error(`${operationName} operation took too long. Please try again.`) };
+    }
+
     // Check if this is a rate limit error
-    if (error?.message?.includes('rate limit') || error?.message?.includes('Rate limit')) {
+    if (errorMessage?.includes('rate limit') || errorMessage?.includes('Rate limit')) {
       markRateLimited();
       const remaining = getRateLimitTimeRemaining();
       const rateLimitError = new Error(`Rate limit reached. Please wait ${remaining} seconds before trying again.`);
       return { data: null, error: rateLimitError };
     }
-    
+
     // Check if this is an invalid token error
-    if (error?.message?.includes('Invalid Refresh Token') || 
-        error?.message?.includes('Refresh Token Not Found') ||
-        error?.message?.includes('invalid_token')) {
-      console.warn('Clearing invalid auth tokens');
+    if (errorMessage?.includes('Invalid Refresh Token') ||
+        errorMessage?.includes('Refresh Token Not Found') ||
+        errorMessage?.includes('invalid_token')) {
+      logWarning('Clearing invalid auth tokens', error);
       clearAuthTokens();
       const tokenError = new Error('Authentication tokens were invalid and have been cleared. Please sign in again.');
       return { data: null, error: tokenError };
     }
-    
-    return { data: null, error: error as Error };
+
+    // Log the original error for debugging
+    logError(`${operationName} operation failed`, error);
+    return { data: null, error: new Error(errorMessage) };
   }
 };
 
@@ -121,39 +137,46 @@ export const safeAuthOperation = async <T>(
  */
 export const initializeAuth = async () => {
   try {
-    console.log('🔑 Ultra-fast auth check...');
+    console.log('🔑 Fast auth check...');
 
-    // Very short timeout for background calls
+    // Shorter timeout for faster initialization
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second max for background retry
+    const timeoutId = setTimeout(() => controller.abort(), 4000); // 4 second max
 
     try {
       // Quick connectivity test first
       const connectivityCheck = new Promise((resolve) => {
-        // Simple fetch to test basic connectivity
         fetch(supabase.supabaseUrl + '/rest/v1/', {
           method: 'HEAD',
-          signal: controller.signal
+          signal: controller.signal,
+          cache: 'no-cache'
         })
           .then(() => resolve(true))
           .catch(() => resolve(false));
       });
 
-      // Don't wait too long for connectivity
+      // Shorter connectivity timeout
       const connectivityTimeout = new Promise((resolve) => {
-        setTimeout(() => resolve(false), 2000);
+        setTimeout(() => resolve(false), 1500);
       });
 
       const hasConnectivity = await Promise.race([connectivityCheck, connectivityTimeout]);
 
       if (!hasConnectivity) {
-        console.warn('🌐 No connectivity to Supabase, skipping auth');
+        console.warn('🌐 No connectivity to Supabase - starting without auth');
         clearTimeout(timeoutId);
         return { session: null, error: new Error('No connectivity') };
       }
 
-      // Get current session with abort signal
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      // Get current session with timeout
+      const sessionPromise = supabase.auth.getSession();
+      const sessionTimeout = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Session timeout')), 2500);
+      });
+
+      const sessionResult = await Promise.race([sessionPromise, sessionTimeout]);
+      const { data: sessionData, error: sessionError } = sessionResult as any;
+
       clearTimeout(timeoutId);
 
       // Handle invalid token errors by clearing them
@@ -170,23 +193,24 @@ export const initializeAuth = async () => {
         return { session: null, error: sessionError };
       }
 
-      console.log('✅ Ultra-fast auth completed successfully');
+      console.log('✅ Fast auth completed successfully');
       return { session: sessionData.session, error: null };
 
     } catch (fetchError: any) {
       clearTimeout(timeoutId);
 
       // Handle timeout
-      if (fetchError.name === 'AbortError') {
-        console.warn('⏱️ Auth request timed out (background)');
+      if (fetchError.name === 'AbortError' || fetchError.message?.includes('timeout')) {
+        logWarning('⏱️ Auth request timed out', fetchError);
         return { session: null, error: new Error('Auth request timeout') };
       }
 
       // Handle network errors gracefully
-      if (fetchError.message?.includes('Failed to fetch') ||
-          fetchError.message?.includes('Network request failed') ||
-          fetchError.message?.includes('fetch')) {
-        console.warn('🌐 Network error during auth (background):', fetchError.message);
+      const errorMessage = getUserFriendlyErrorMessage(fetchError);
+      if (errorMessage?.includes('Failed to fetch') ||
+          errorMessage?.includes('Network request failed') ||
+          errorMessage?.includes('fetch')) {
+        logWarning('🌐 Network error during auth:', fetchError);
         return { session: null, error: new Error('Network connectivity issue') };
       }
 
@@ -194,7 +218,7 @@ export const initializeAuth = async () => {
     }
 
   } catch (error: any) {
-    console.warn('⚠️ Background auth check failed:', error);
+    logWarning('⚠️ Auth check failed:', error);
     return { session: null, error: error };
   }
 };

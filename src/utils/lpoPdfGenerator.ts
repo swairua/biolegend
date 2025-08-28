@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { loadImageAsBase64, calculateLogoDimensions, DEFAULT_LOGO_URL } from './jsPdfImageLoader';
 
 export interface LPOPDFData {
   id: string;
@@ -53,21 +54,47 @@ export interface CompanyData {
   logo_url?: string;
 }
 
-export const generateLPOPDF = (lpo: LPOPDFData, company: CompanyData) => {
+export const generateLPOPDF = async (lpo: LPOPDFData, company: CompanyData) => {
   const doc = new jsPDF();
   let yPosition = 20;
 
   // Set font
   doc.setFont('helvetica');
 
-  // Add logo space reservation if logo URL exists
-  // Note: jsPDF image support requires loading image as base64 and using doc.addImage()
-  // For now, we reserve space and add a placeholder
-  if (company.logo_url) {
-    doc.setFontSize(8);
+  // Add company logo
+  const logoUrl = company.logo_url || DEFAULT_LOGO_URL;
+  let logoHeight = 0;
+
+  try {
+    const logoResult = await loadImageAsBase64(logoUrl);
+    if (logoResult.success && logoResult.dataUrl && logoResult.width && logoResult.height) {
+      const logoDimensions = calculateLogoDimensions(logoResult.width, logoResult.height, 80, 40);
+
+      doc.addImage(
+        logoResult.dataUrl,
+        'PNG',
+        20,
+        yPosition,
+        logoDimensions.width,
+        logoDimensions.height
+      );
+
+      logoHeight = logoDimensions.height + 5;
+      yPosition += logoHeight;
+    } else {
+      // Fallback: Show text instead of logo
+      doc.setFontSize(10);
+      doc.setTextColor(128, 128, 128);
+      doc.text('[Logo not available]', 20, yPosition);
+      yPosition += 10;
+    }
+  } catch (error) {
+    console.warn('Failed to load logo for LPO PDF:', error);
+    // Fallback: Show text instead of logo
+    doc.setFontSize(10);
     doc.setTextColor(128, 128, 128);
-    doc.text('[LOGO PLACEHOLDER - jsPDF Image Support Needed]', 20, yPosition);
-    yPosition += 20; // Reserve space for future logo implementation
+    doc.text('[Logo not available]', 20, yPosition);
+    yPosition += 10;
   }
 
   // Company Header

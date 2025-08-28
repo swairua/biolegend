@@ -1,5 +1,6 @@
 import { AuthError } from '@supabase/supabase-js';
 import { toast } from 'sonner';
+import { getUserFriendlyErrorMessage, logError } from '@/utils/errorLogger';
 
 export interface AuthErrorInfo {
   type: 'invalid_credentials' | 'email_not_confirmed' | 'network_error' | 'rate_limit' | 'server_error' | 'unknown';
@@ -9,25 +10,8 @@ export interface AuthErrorInfo {
 }
 
 export function analyzeAuthError(error: AuthError | Error): AuthErrorInfo {
-  // Safely extract error message with fallback
-  let errorMessage = '';
-
-  if (error && typeof error === 'object') {
-    if ('message' in error && typeof error.message === 'string') {
-      errorMessage = error.message;
-    } else if ('error_description' in error && typeof (error as any).error_description === 'string') {
-      errorMessage = (error as any).error_description;
-    } else if ('details' in error && typeof (error as any).details === 'string') {
-      errorMessage = (error as any).details;
-    } else {
-      errorMessage = 'An authentication error occurred';
-    }
-  } else if (typeof error === 'string') {
-    errorMessage = error;
-  } else {
-    errorMessage = 'An unexpected authentication error occurred';
-  }
-
+  // Use the error logger utility to safely extract error message
+  const errorMessage = getUserFriendlyErrorMessage(error);
   const message = errorMessage.toLowerCase();
 
   if (message.includes('invalid login credentials')) {
@@ -84,11 +68,10 @@ export function analyzeAuthError(error: AuthError | Error): AuthErrorInfo {
 export function handleAuthError(error: AuthError | Error): AuthErrorInfo {
   const errorInfo = analyzeAuthError(error);
   
-  // Log for debugging
-  console.error('Authentication error:', {
+  // Log for debugging using proper error logger
+  logError('Authentication error:', error, {
     type: errorInfo.type,
-    message: errorInfo.message,
-    originalError: error
+    message: errorInfo.message
   });
 
   // Show appropriate toast
