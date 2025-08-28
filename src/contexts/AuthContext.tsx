@@ -166,18 +166,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }
     } catch (error) {
-      console.error('Error in auth state change:', {
-        message: error instanceof Error ? error.message : String(error),
-        code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
+      logError('Error in auth state change:', error, {
         event,
-        hasSession: !!newSession
+        hasSession: !!newSession,
+        context: 'handleAuthStateChange'
       });
-      
+
       // If we get invalid token errors, clear tokens
-      if (error && typeof error === 'object' && 'message' in error) {
-        const errorMessage = (error as any).message;
-        if (errorMessage?.includes('Invalid Refresh Token') || 
-            errorMessage?.includes('Refresh Token Not Found')) {
+      if (isErrorType(error, 'auth')) {
+        const errorMessage = getUserFriendlyErrorMessage(error);
+        if (errorMessage.includes('Invalid Refresh Token') ||
+            errorMessage.includes('Refresh Token Not Found')) {
           clearAuthTokens();
         }
       }
