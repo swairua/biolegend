@@ -543,6 +543,10 @@ export const useCreateProformaWithItems = () => {
           quantity: item.quantity,
           unit_price: item.unit_price,
           discount_percentage: item.discount_percentage || 0,
+          discount_amount: item.discount_amount || 0,
+          tax_percentage: item.tax_percentage || 0,
+          tax_amount: item.tax_amount || 0,
+          tax_inclusive: !!item.tax_inclusive,
           line_total: item.line_total,
           sort_order: index + 1
         }));
