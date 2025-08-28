@@ -9,7 +9,7 @@ import {
   Loader2,
   Database
 } from 'lucide-react';
-import { checkProformaTables, setupProformaTables } from '@/utils/proformaDatabaseSetup';
+import { checkProformaTables, setupProformaTables, ensureProformaSchema } from '@/utils/proformaDatabaseSetup';
 import { toast } from 'sonner';
 
 export function ProformaSetupBanner() {
