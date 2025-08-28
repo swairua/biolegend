@@ -269,8 +269,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               }
             })
             .catch(profileError => {
-              console.warn('⚠️ Background profile fetch failed:', {
-                message: profileError instanceof Error ? profileError.message : String(profileError)
+              logError('⚠️ Background profile fetch failed:', profileError, {
+                userId: quickSession.user.id,
+                context: 'backgroundProfileFetch'
               });
             });
 
