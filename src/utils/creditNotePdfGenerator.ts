@@ -49,7 +49,7 @@ const DEFAULT_COMPANY: CompanyData = {
   phone: '0741207690/0780165490',
   email: 'biolegend@biolegendscientific.co.ke',
   tax_number: 'P051701091X',
-  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F69400b16069b456f9aaefcb4af79d463%2F1183a0a5c37e4fe69d12256c4d461bcd?format=webp&width=800'
+  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F893e58768e5f4de981cdc56ff5e87db2%2Ff23ecbbcd4704426a991220b141c5ffd?format=webp&width=800'
 };
 
 export const generateCreditNotePDF = (creditNote: CreditNotePDFData, company?: CompanyData) => {
