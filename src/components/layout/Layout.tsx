@@ -67,15 +67,15 @@ export function Layout({ children }: LayoutProps) {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
               <div>
                 <p className="text-lg font-medium text-foreground">Starting up...</p>
-                <p className="text-sm text-muted-foreground">Preparing your workspace</p>
-                {loadingDuration > 3 && loadingDuration <= 8 && (
+                <p className="text-sm text-muted-foreground">This should only take a moment</p>
+                {loadingDuration > 2 && loadingDuration <= 4 && (
                   <p className="text-sm text-muted-foreground mt-2">
-                    Just a moment longer...
+                    Almost ready...
                   </p>
                 )}
-                {loadingDuration > 8 && (
-                  <p className="text-sm text-blue-600 mt-1">
-                    Almost ready! If this persists, we'll show you some options to help.
+                {loadingDuration > 4 && (
+                  <p className="text-sm text-orange-600 mt-1">
+                    Taking longer than expected. Help options coming up...
                   </p>
                 )}
               </div>
