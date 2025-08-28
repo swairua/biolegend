@@ -26,7 +26,7 @@ import {
   FileText,
   Search
 } from 'lucide-react';
-import { useCustomers, usePayments } from '@/hooks/useDatabase';
+import { useCustomers, usePayments, useCompanies } from '@/hooks/useDatabase';
 import { useInvoicesFixed as useInvoices } from '@/hooks/useInvoicesFixed';
 import { toast } from 'sonner';
 import { generateCustomerStatementPDF } from '@/utils/pdfGenerator';
@@ -59,6 +59,8 @@ export default function CustomerStatements() {
   const { data: customers } = useCustomers();
   const { data: invoices } = useInvoices();
   const { data: payments } = usePayments();
+  const { data: companies } = useCompanies();
+  const currentCompany = companies?.[0];
 
   // Calculate customer statements
   const calculateCustomerStatements = (): CustomerStatement[] => {
@@ -189,6 +191,18 @@ export default function CustomerStatements() {
         selectedCustomers.includes(s.customer_id)
       );
 
+      // Prepare company details for PDF
+      const companyDetails = currentCompany ? {
+        name: currentCompany.name,
+        address: currentCompany.address,
+        city: currentCompany.city,
+        country: currentCompany.country,
+        phone: currentCompany.phone,
+        email: currentCompany.email,
+        tax_number: currentCompany.tax_number,
+        logo_url: currentCompany.logo_url
+      } : undefined;
+
       for (const statement of selectedStatements) {
         const customer = customers?.find(c => c.id === statement.customer_id);
         if (customer) {
@@ -197,7 +211,7 @@ export default function CustomerStatements() {
 
           await generateCustomerStatementPDF(customer, customerInvoices, customerPayments, {
             statement_date: statementDate
-          });
+          }, companyDetails);
         }
       }
 
@@ -224,6 +238,18 @@ export default function CustomerStatements() {
     }
 
     try {
+      // Prepare company details for PDF
+      const companyDetails = currentCompany ? {
+        name: currentCompany.name,
+        address: currentCompany.address,
+        city: currentCompany.city,
+        country: currentCompany.country,
+        phone: currentCompany.phone,
+        email: currentCompany.email,
+        tax_number: currentCompany.tax_number,
+        logo_url: currentCompany.logo_url
+      } : undefined;
+
       // Generate and "send" statements for customers with email
       for (const statement of selectedWithEmail) {
         const customer = customers?.find(c => c.id === statement.customer_id);
@@ -233,7 +259,7 @@ export default function CustomerStatements() {
 
           await generateCustomerStatementPDF(customer, customerInvoices, customerPayments, {
             statement_date: statementDate
-          });
+          }, companyDetails);
         }
       }
 

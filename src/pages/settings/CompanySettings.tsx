@@ -25,6 +25,8 @@ export default function CompanySettings() {
   const [uploading, setUploading] = useState(false);
   const [schemaError, setSchemaError] = useState<string | null>(null);
   const [fixingCurrency, setFixingCurrency] = useState(false);
+  const [testingStorage, setTestingStorage] = useState(false);
+  const [storageStatus, setStorageStatus] = useState<'unknown' | 'available' | 'unavailable'>('unknown');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [companyData, setCompanyData] = useState({
     name: 'BIOLEGEND SCIENTIFIC LTD',
@@ -102,9 +104,10 @@ export default function CompanySettings() {
     const file = e.target.files?.[0];
     if (!file || !currentCompany) return;
 
-    // Basic validation
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    // Enhanced validation
+    const validImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+    if (!validImageTypes.includes(file.type)) {
+      toast.error('Please select a valid image file (PNG, JPG, GIF, or WebP)');
       return;
     }
 
@@ -116,29 +119,33 @@ export default function CompanySettings() {
 
     setUploading(true);
     try {
-      // Choose a path; e.g. company-{id}/logo-{timestamp}.{ext}
-      const ext = file.name.split('.').pop();
-      const filePath = `company-${currentCompany.id}/logo-${Date.now()}.${ext}`;
+      // Try multiple upload strategies
+      let logoUrl: string | null = null;
 
-      // Upload to Supabase storage bucket 'company-logos'
-      const { data: uploadData, error: uploadError } = await supabase
-        .storage
-        .from('company-logos')
-        .upload(filePath, file, { cacheControl: '3600', upsert: true });
+      // Strategy 1: Try Supabase Storage
+      try {
+        logoUrl = await uploadToSupabaseStorage(file, currentCompany.id);
+        console.log('✅ Supabase storage upload successful');
+      } catch (storageError) {
+        console.warn('⚠️ Supabase storage failed:', storageError);
 
-      if (uploadError) throw uploadError;
+        // Strategy 2: Fallback to base64 for smaller files
+        if (file.size <= 1024 * 1024) { // 1MB limit for base64
+          logoUrl = await convertToBase64(file);
+          console.log('✅ Base64 fallback successful');
+          toast.info('Logo saved locally (storage not available)');
+        } else {
+          throw new Error('File too large for local storage. Please use a smaller image or configure cloud storage.');
+        }
+      }
 
-      // Get public URL
-      const { data: publicUrlData } = supabase
-        .storage
-        .from('company-logos')
-        .getPublicUrl(filePath);
-
-      const publicUrl = publicUrlData.publicUrl;
+      if (!logoUrl) {
+        throw new Error('Failed to process logo upload');
+      }
 
       // Update local state & persist using existing hook
-      setCompanyData(prev => ({ ...prev, logo_url: publicUrl }));
-      await updateCompany.mutateAsync({ id: currentCompany.id, logo_url: publicUrl });
+      setCompanyData(prev => ({ ...prev, logo_url: logoUrl }));
+      await updateCompany.mutateAsync({ id: currentCompany.id, logo_url: logoUrl });
 
       toast.success('Logo uploaded and saved successfully!');
     } catch (err: any) {
@@ -146,9 +153,22 @@ export default function CompanySettings() {
       logError(err, 'Logo Upload');
       let userMessage = getUserFriendlyMessage(err, 'Failed to upload logo');
 
-      // Add specific handling for storage errors
+      // Add specific handling for different error types
       if (userMessage.includes('company-logos') || userMessage.includes('bucket')) {
-        userMessage = 'Storage bucket "company-logos" does not exist. Please create the storage bucket first.';
+        userMessage = 'Cloud storage not configured. Using local storage for smaller files (max 1MB).';
+
+        // Auto-retry with base64 for small files
+        if (file.size <= 1024 * 1024) {
+          try {
+            const base64Url = await convertToBase64(file);
+            setCompanyData(prev => ({ ...prev, logo_url: base64Url }));
+            await updateCompany.mutateAsync({ id: currentCompany.id, logo_url: base64Url });
+            toast.success('Logo saved locally!');
+            return;
+          } catch (base64Error) {
+            userMessage = 'Failed to save logo. Please try again with a smaller file.';
+          }
+        }
       }
 
       toast.error(userMessage);
@@ -160,6 +180,161 @@ export default function CompanySettings() {
       }
     }
   };
+
+  // Helper function to upload to Supabase Storage
+  const uploadToSupabaseStorage = async (file: File, companyId: string): Promise<string> => {
+    // Get file extension safely
+    const fileNameParts = file.name.split('.');
+    const ext = fileNameParts.length > 1 ? fileNameParts.pop() : 'png';
+    const filePath = `company-${companyId}/logo-${Date.now()}.${ext}`;
+
+    // Check if storage is available by listing buckets first
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+
+    if (bucketsError) {
+      // Handle RLS permission errors specifically
+      if (bucketsError.message.includes('row-level security') ||
+          bucketsError.message.includes('permission') ||
+          bucketsError.message.includes('policy')) {
+        throw new Error('Cloud storage requires admin permissions. Please use local storage or contact your administrator.');
+      }
+      throw new Error(`Storage not available: ${bucketsError.message}`);
+    }
+
+    const hasLogoBucket = buckets?.some(bucket => bucket.name === 'company-logos');
+    if (!hasLogoBucket) {
+      // Don't try to create bucket - this requires admin permissions
+      throw new Error('Storage bucket "company-logos" not found. Please create it manually in Supabase dashboard or use local storage.');
+    }
+
+    // Upload the file
+    const { data: uploadData, error: uploadError } = await supabase
+      .storage
+      .from('company-logos')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: file.type
+      });
+
+    if (uploadError) {
+      // Handle RLS permission errors during upload
+      if (uploadError.message.includes('row-level security') ||
+          uploadError.message.includes('permission') ||
+          uploadError.message.includes('policy')) {
+        throw new Error('You don\'t have permission to upload to cloud storage. Please use local storage or contact your administrator.');
+      }
+      throw new Error(`Upload failed: ${uploadError.message}`);
+    }
+
+    // Get public URL
+    const { data: publicUrlData } = supabase
+      .storage
+      .from('company-logos')
+      .getPublicUrl(filePath);
+
+    if (!publicUrlData.publicUrl) {
+      throw new Error('Failed to get public URL for uploaded file');
+    }
+
+    return publicUrlData.publicUrl;
+  };
+
+  // Helper function to convert file to base64
+  const convertToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === 'string') {
+          resolve(reader.result);
+        } else {
+          reject(new Error('Failed to convert file to base64'));
+        }
+      };
+      reader.onerror = () => reject(new Error('File reading failed'));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Test storage availability
+  const testStorageAvailability = async () => {
+    setTestingStorage(true);
+    try {
+      // First, try to check if storage is available by listing buckets
+      const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+
+      if (bucketsError) {
+        // Handle specific RLS permission errors
+        if (bucketsError.message.includes('row-level security') ||
+            bucketsError.message.includes('permission') ||
+            bucketsError.message.includes('policy')) {
+          setStorageStatus('unavailable');
+          toast.info('Cloud storage requires manual setup. Using local storage for now.');
+          return;
+        }
+        throw new Error(`Storage not configured: ${bucketsError.message}`);
+      }
+
+      const hasLogoBucket = buckets?.some(bucket => bucket.name === 'company-logos');
+
+      if (!hasLogoBucket) {
+        // Don't try to create bucket automatically - this requires admin permissions
+        // Instead, provide guidance to user
+        setStorageStatus('unavailable');
+        toast.info('Cloud storage bucket "company-logos" not found. Please create it manually or use local storage.');
+        return;
+      } else {
+        // Bucket exists, test if we can actually use it by trying to list files
+        try {
+          const { error: listError } = await supabase.storage
+            .from('company-logos')
+            .list('', { limit: 1 });
+
+          if (listError) {
+            // Can see bucket but can't list - likely permission issue
+            if (listError.message.includes('row-level security') ||
+                listError.message.includes('permission') ||
+                listError.message.includes('policy')) {
+              setStorageStatus('unavailable');
+              toast.warning('Cloud storage bucket exists but access is restricted. Using local storage.');
+              return;
+            }
+            throw listError;
+          }
+
+          // Bucket exists and is accessible
+          setStorageStatus('available');
+          toast.success('Cloud storage is available and ready to use!');
+        } catch (testError) {
+          console.warn('Storage bucket test failed:', testError);
+          setStorageStatus('unavailable');
+          toast.warning('Cloud storage bucket exists but may have access restrictions. Using local storage.');
+        }
+      }
+    } catch (error) {
+      console.error('Storage test failed:', error);
+      setStorageStatus('unavailable');
+
+      // Provide specific error messages based on error type
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes('row-level security') ||
+          errorMessage.includes('permission') ||
+          errorMessage.includes('policy')) {
+        toast.info('Cloud storage requires admin setup. Using local storage (max 1MB) for now.');
+      } else {
+        toast.warning('Cloud storage not available. Logo uploads will use local storage (max 1MB).');
+      }
+    } finally {
+      setTestingStorage(false);
+    }
+  };
+
+  // Test storage on component mount
+  useEffect(() => {
+    if (currentCompany && storageStatus === 'unknown') {
+      testStorageAvailability();
+    }
+  }, [currentCompany, storageStatus]);
 
   const validateCompanyData = (data: any) => {
     const errors = [];
@@ -568,12 +743,37 @@ export default function CompanySettings() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start space-x-6">
-              <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25">
-                {companyData.logo_url ? (
+              <div className="w-24 h-24 bg-muted rounded-lg flex items-center justify-center overflow-hidden border-2 border-dashed border-muted-foreground/25 relative">
+                {uploading ? (
+                  <div className="flex flex-col items-center justify-center text-muted-foreground">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                    <span className="text-xs mt-1">Uploading...</span>
+                  </div>
+                ) : companyData.logo_url ? (
                   <img
                     src={companyData.logo_url}
                     alt="Company Logo"
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      console.error('Logo failed to load:', companyData.logo_url);
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      // Show fallback
+                      const parent = target.parentElement;
+                      if (parent) {
+                        parent.innerHTML = `
+                          <div class="flex flex-col items-center justify-center text-muted-foreground">
+                            <svg class="h-6 w-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <span class="text-xs">Load Failed</span>
+                          </div>
+                        `;
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log('Logo loaded successfully');
+                    }}
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center text-muted-foreground">
@@ -584,15 +784,39 @@ export default function CompanySettings() {
               </div>
               <div className="flex-1 space-y-3">
                 <div>
-                  <Label className="text-sm font-medium">Company Logo</Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Company Logo</Label>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={storageStatus === 'available' ? 'success' :
+                                    storageStatus === 'unavailable' ? 'warning' : 'outline'}>
+                        {storageStatus === 'available' && '✓ Cloud Ready'}
+                        {storageStatus === 'unavailable' && '⚠ Local Storage'}
+                        {storageStatus === 'unknown' && '⏳ Testing...'}
+                      </Badge>
+                      {storageStatus === 'unavailable' && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={testStorageAvailability}
+                          disabled={testingStorage}
+                          className="text-xs h-6 px-2"
+                        >
+                          {testingStorage ? 'Testing...' : 'Retry'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Upload your company logo. Recommended size: 200x200px, max 5MB. Supports PNG, JPG, GIF, WebP.
+                    {storageStatus === 'available' && ' Cloud storage is configured and ready for any file size.'}
+                    {storageStatus === 'unavailable' && ' Cloud storage not configured - files ≤1MB stored locally. Larger files need cloud storage setup.'}
+                    {storageStatus === 'unknown' && ' Checking storage configuration...'}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <input
                     type="file"
-                    accept="image/*"
+                    accept="image/png,image/jpeg,image/jpg,image/gif,image/webp"
                     ref={fileInputRef}
                     onChange={handleFileChange}
                     style={{ display: 'none' }}
@@ -621,9 +845,47 @@ export default function CompanySettings() {
                   )}
                 </div>
                 {companyData.logo_url && (
-                  <p className="text-xs text-muted-foreground">
-                    Current: Custom uploaded logo
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-muted-foreground">
+                      Current: {companyData.logo_url.startsWith('data:') ? 'Local storage (Base64)' : 'Cloud storage'}
+                    </p>
+                    {companyData.logo_url.startsWith('data:') && (
+                      <div className="text-xs text-orange-600 space-y-1">
+                        <p>Note: Logo is stored locally. For production use, consider setting up cloud storage.</p>
+                        {storageStatus === 'unavailable' && (
+                          <details className="cursor-pointer">
+                            <summary className="hover:text-orange-700">View cloud storage setup instructions</summary>
+                            <div className="mt-2 p-2 bg-orange-50 rounded text-orange-800 space-y-2">
+                              <div>
+                                <p className="font-medium">Option 1: Create storage bucket (Admin required)</p>
+                                <ol className="list-decimal list-inside space-y-1 text-xs mt-1">
+                                  <li>Go to your Supabase dashboard</li>
+                                  <li>Navigate to Storage section</li>
+                                  <li>Create a new bucket named "company-logos"</li>
+                                  <li>Set as Public bucket with 5MB file size limit</li>
+                                  <li>Allow MIME types: image/jpeg, image/png, image/gif, image/webp</li>
+                                  <li>Configure RLS policies to allow authenticated users to upload</li>
+                                  <li>Click "Retry" button above to test</li>
+                                </ol>
+                              </div>
+                              <div className="border-t pt-2">
+                                <p className="font-medium">Option 2: Use local storage (Current)</p>
+                                <p className="text-xs">Files up to 1MB are stored as base64 data. This works for most logos but files won't be accessible via direct URLs.</p>
+                              </div>
+                              <div className="border-t pt-2">
+                                <p className="font-medium">RLS Policy Example:</p>
+                                <code className="text-xs bg-orange-100 p-1 rounded block mt-1">
+                                  CREATE POLICY "Authenticated users can upload logos" ON storage.objects
+                                  FOR INSERT TO authenticated
+                                  WITH CHECK (bucket_id = 'company-logos');
+                                </code>
+                              </div>
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

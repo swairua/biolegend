@@ -68,7 +68,7 @@ interface CompanyDetails {
   logo_url?: string;
 }
 
-// Default company details (fallback)
+// Default company details (fallback) - logo will be determined dynamically
 const DEFAULT_COMPANY: CompanyDetails = {
   name: 'Biolegend Scientific Ltd',
   address: 'P.O. Box 85988-00200, Nairobi\nAlpha Center, Eastern Bypass, Membley',
@@ -77,7 +77,7 @@ const DEFAULT_COMPANY: CompanyDetails = {
   phone: '0741207690/0780165490',
   email: 'biolegend@biolegendscientific.co.ke',
   tax_number: 'P051701091X',
-  logo_url: 'https://cdn.builder.io/api/v1/image/assets%2F0dc223c975394fb180f961daff51284e%2Fc6326902fe5c42489708ae2804c1b10b?format=webp&width=800'
+  logo_url: '' // Will use company settings or fallback gracefully
 };
 
 // Helper function to determine which columns have values

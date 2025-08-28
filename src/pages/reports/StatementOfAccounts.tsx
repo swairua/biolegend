@@ -141,10 +141,22 @@ const StatementOfAccounts = () => {
       const customerInvoices = invoices?.filter(inv => inv.customer_id === customer.id) || [];
       const customerPayments = payments?.filter(pay => pay.customer_id === customer.id) || [];
 
+      // Prepare company details for PDF
+      const companyDetails = currentCompany ? {
+        name: currentCompany.name,
+        address: currentCompany.address,
+        city: currentCompany.city,
+        country: currentCompany.country,
+        phone: currentCompany.phone,
+        email: currentCompany.email,
+        tax_number: currentCompany.tax_number,
+        logo_url: currentCompany.logo_url
+      } : undefined;
+
       // Generate PDF with real data
       await generateCustomerStatementPDF(customer, customerInvoices, customerPayments, {
         statement_date: new Date().toISOString().split('T')[0]
-      });
+      }, companyDetails);
 
       toast.success(`Statement PDF generated for ${statement.customerName}`);
     } catch (error) {
