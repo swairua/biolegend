@@ -35,6 +35,7 @@ import { ViewProformaModal } from '@/components/proforma/ViewProformaModal';
 import { ProformaSetupBanner } from '@/components/proforma/ProformaSetupBanner';
 import { downloadInvoicePDF, downloadQuotationPDF } from '@/utils/pdfGenerator';
 import { formatCurrency } from '@/utils/taxCalculation';
+import { ensureProformaSchema } from '@/utils/proformaDatabaseSetup';
 
 export default function Proforma() {
   const [showCreateModal, setShowCreateModal] = useState(false);
