@@ -17,6 +17,7 @@ export function useCreditNotePDFDownload() {
         address: currentCompany?.address || '',
         tax_number: currentCompany?.tax_number || '',
         registration_number: currentCompany?.registration_number || '',
+        logo_url: currentCompany?.logo_url || '',
       };
 
       // Generate and download PDF
