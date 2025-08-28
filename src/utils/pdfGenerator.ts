@@ -2,6 +2,8 @@
 // Since we don't have jsPDF installed, I'll create a simple HTML-to-print function
 // In a real app, you'd want to use a proper PDF library like jsPDF or react-pdf
 
+import { generateLPOPDF } from './lpoPdfGenerator';
+
 export interface DocumentData {
   type: 'quotation' | 'invoice' | 'remittance' | 'proforma' | 'delivery' | 'statement' | 'receipt' | 'lpo';
   number: string;
