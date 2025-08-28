@@ -83,15 +83,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return profileData;
     } catch (error) {
-      // Properly log error details instead of [object Object]
-      console.error('Exception fetching profile:', {
+      // Enhanced error logging to prevent [object Object] and provide better debugging
+      console.error('❌ Exception fetching profile:', {
+        errorType: Object.prototype.toString.call(error),
         message: error instanceof Error ? error.message : String(error),
         code: error && typeof error === 'object' && 'code' in error ? error.code : undefined,
         details: error && typeof error === 'object' && 'details' in error ? error.details : undefined,
         hint: error && typeof error === 'object' && 'hint' in error ? error.hint : undefined,
+        statusCode: error && typeof error === 'object' && 'statusCode' in error ? error.statusCode : undefined,
+        stack: error instanceof Error ? error.stack : undefined,
         userId,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        rawError: JSON.stringify(error, Object.getOwnPropertyNames(error))
       });
+
+      // Also log the raw error for debugging
+      console.error('Raw error object:', error);
 
       // Handle specific error types
       if (error && typeof error === 'object' && 'message' in error) {
