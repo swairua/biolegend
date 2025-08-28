@@ -259,7 +259,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
                 // Update last login silently
                 if (userProfile) {
-                  updateLastLogin(quickSession.user.id).catch(console.error);
+                  updateLastLogin(quickSession.user.id).catch(err =>
+                    logError('Background update last login failed:', err, {
+                      userId: quickSession.user.id,
+                      context: 'quickAuth'
+                    })
+                  );
                 }
               }
             })
