@@ -175,7 +175,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           
           // Update last login for sign-in events, but don't await to prevent blocking
           if (event === 'SIGNED_IN' && userProfile) {
-            updateLastLogin(newSession.user.id).catch(console.error);
+            updateLastLogin(newSession.user.id).catch(err =>
+              logError('Sign-in last login update failed:', err, {
+                userId: newSession.user.id,
+                context: 'handleAuthStateChange'
+              })
+            );
           }
         }
       } else {
