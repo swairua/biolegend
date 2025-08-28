@@ -329,8 +329,20 @@ export function ViewQuotationModal({
 
           {/* Footer */}
           <div className="text-center text-sm text-muted-foreground pt-6 border-t">
-            <div className="mb-2">
-              <BiolegendLogo size="sm" showText={true} className="justify-center" />
+            <div className="mb-2 flex justify-center">
+              {currentCompany?.logo_url ? (
+                <img
+                  src={currentCompany.logo_url}
+                  alt={`${currentCompany.name} Logo`}
+                  className="h-8 w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback to BiolegendLogo if company logo fails to load
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLElement).nextElementSibling?.setAttribute('style', 'display: block');
+                  }}
+                />
+              ) : null}
+              <BiolegendLogo size="sm" showText={true} className="justify-center" style={{ display: currentCompany?.logo_url ? 'none' : 'block' }} />
             </div>
             <div>Your Medical & Laboratory Supplies Partner</div>
             <div className="mt-1">Medical Supplies • Laboratory Supplies • Technical Equipment</div>
