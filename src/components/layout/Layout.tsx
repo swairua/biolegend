@@ -4,7 +4,6 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { useAuth } from '@/contexts/AuthContext';
 import { EnhancedLogin } from '@/components/auth/EnhancedLogin';
-import { EmergencyAuthReset } from '@/components/auth/EmergencyAuthReset';
 
 interface LayoutProps {
   children: ReactNode;
@@ -14,25 +13,6 @@ export function Layout({ children }: LayoutProps) {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
   const [loadingStartTime] = useState(Date.now());
-  const [showEmergencyReset, setShowEmergencyReset] = useState(false);
-
-
-  // Check for loading timeout and show emergency reset after 4 seconds (since app should start in 1-3s)
-  useEffect(() => {
-    if (!loading) {
-      setShowEmergencyReset(false);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      if (loading) {
-        console.warn('App startup exceeded 4 seconds, showing reset option');
-        setShowEmergencyReset(true);
-      }
-    }, 4000); // 4 second timeout (app should start in 1-3s max)
-
-    return () => clearTimeout(timer);
-  }, [loading]);
 
   // Routes that don't require authentication
   const publicRoutes = ['/auth-test', '/manual-setup', '/database-fix-page', '/auto-fix', '/audit', '/auto-payment-sync', '/payment-sync'];
@@ -61,27 +41,12 @@ export function Layout({ children }: LayoutProps) {
 
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6">
-        <div className="text-center space-y-6 w-full max-w-lg">
-          {!showEmergencyReset ? (
-            <>
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <div>
-                <p className="text-lg font-medium text-foreground">Starting up...</p>
-                <p className="text-sm text-muted-foreground">This should only take a moment</p>
-                {loadingDuration > 2 && loadingDuration <= 4 && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Almost ready...
-                  </p>
-                )}
-                {loadingDuration > 4 && (
-                  <p className="text-sm text-orange-600 mt-1">
-                    Taking longer than expected. Help options coming up...
-                  </p>
-                )}
-              </div>
-            </>
-          ) : (
-            <EmergencyAuthReset />
+        <div className="text-center space-y-2 w-full max-w-lg">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-lg font-medium text-foreground">Starting up...</p>
+          <p className="text-sm text-muted-foreground">This should only take a moment</p>
+          {loadingDuration > 2 && (
+            <p className="text-sm text-muted-foreground mt-2">Almost ready...</p>
           )}
         </div>
       </div>
